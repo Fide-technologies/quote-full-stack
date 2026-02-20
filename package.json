@@ -1,0 +1,22 @@
+{
+    "name": "merchant-full-stack",
+    "devDependencies": {
+        "@shopify/cli": "^3.0.0"
+    },
+    "license": "UNLICENSED",
+    "private": true,
+    "scripts": {
+        "build:frontend": "cd frontend && bun run build",
+        "shopify": "shopify",
+        "dev": "shopify app dev",
+        "dev:backend": "bun workspace server-express dev",
+        "dev:frontend:": "cd frontend && bun run dev",
+        "migrate:dev": "bun workspace server-express prisma:migrate",
+        "build": "bun run build:frontend && shopify app build",
+        "deploy": "bun run build:frontend && shopify app deploy"
+    },
+    "workspaces": [
+        "server-express",
+        "frontend"
+    ]
+}
