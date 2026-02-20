@@ -1,0 +1,39 @@
+{
+  "name": "backend-express",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun --watch ./src/index.ts",
+    "build": "tsc -b",
+    "start": "bun run ./dist/index.js",
+    "prebuild": "../frontend/bun run build",
+    "postinstall": "bun run prebuild && bun run build",
+    "seed:plans": "bun run ./src/scripts/seed-plans.ts",
+    "lint": "biome lint ./src",
+    "format": "biome format --write ./src",
+    "check": "biome check --write ./src"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/bun": "latest",
+    "@types/nodemailer": "^7.0.9"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@ngrok/ngrok": "^1.7.0",
+    "@shopify/shopify-api": "^12.3.0",
+    "@shopify/shopify-app-express": "^6.0.5",
+    "@shopify/shopify-app-session-storage-mongodb": "^5.0.5",
+    "@types/express": "^5.0.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "inversify": "^7.11.0",
+    "mongoose": "^9.1.5",
+    "nodemailer": "^7.0.13",
+    "reflect-metadata": "^0.2.2",
+    "zod": "^4.3.6"
+  }
+}
