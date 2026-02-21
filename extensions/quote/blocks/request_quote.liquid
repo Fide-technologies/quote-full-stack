@@ -1,0 +1,72 @@
+{% assign show_all = shop.metafields.request_q.show_on_all.value %}
+
+{% if show_all == true %}
+    <style id="rq-instant-hide-main">
+      .product-form__buttons, .shopify-payment-button, .price, .product-price, .product__price,
+      .product-single__price, .product-form__item--quantity, .quantity,
+      [name="add"], .product-form__submit, .payment-buttons,
+      .shopify-payment-button__button--unbranded, .product-form__payment-container,
+      .price-item, .product__tax, form[action*="/cart/add"], .cart-submit, .add-to-cart, .btn--add-to-cart {
+        display: none !important; margin: 0 !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important;
+      }
+    </style>
+    {{ 'request-quote.css' | asset_url | stylesheet_tag }}
+    <script src="{{ 'rq-validation.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'rq-api.js' | asset_url }}" defer="defer"></script>
+
+
+    <script src="{{ 'rq-ui.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'request-quote.js' | asset_url }}" defer="defer"></script>
+
+    <div class="rq-product-page-form" id="rq-app-root-{{ block.id }}" data-shop="{{ shop.permanent_domain }}" data-page-type="{{ request.page_type }}">
+        {% if product %}
+        <div class="rq-page-qty-wrapper">
+            <label for="rqPageQtyInput">Quantity</label>
+            <div class="rq-qty-controls">
+                <button type="button" class="rq-qty-btn" onclick="rqUpdatePageQty(-1)" aria-label="Decrease quantity">−</button>
+                <input 
+                    type="number" 
+                    id="rqPageQtyInput" 
+                    class="rq-qty-input" 
+                    value="1" 
+                    min="1" 
+                    oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value.startsWith('0')) this.value = this.value.substring(1); if(this.value === '') this.value = '1';"
+                >
+                <button type="button" class="rq-qty-btn" onclick="rqUpdatePageQty(1)" aria-label="Increase quantity">+</button>
+            </div>
+        </div>
+        {% endif %}
+        
+        <button
+            class="rq-btn"
+            style="--rq-primary: {{ block.settings.button_color }}; --rq-primary-hover: {{ block.settings.button_color }};"
+            onclick="rqAddToQuoteCart('{{ product.handle }}', '{{ block.id }}', event)"
+        >
+            {{ block.settings.button_text | default: "Add to Quote" }}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+            </svg>
+        </button>
+    </div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Request Quote",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text",
+      "default": "Add to Quote"
+    },
+    {
+      "type": "color",
+      "id": "button_color",
+      "label": "Button color",
+      "default": "#000000"
+    }
+  ]
+}
+{% endschema %}
