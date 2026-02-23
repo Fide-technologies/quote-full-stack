@@ -2,7 +2,7 @@ import { Container } from "inversify";
 import { TYPES } from "./types/types";
 import { MerchantRepository } from "./repositorys/merchants";
 import { QuoteRepository } from "./repositorys/quotes";
-import { PlanRepository } from "./repositorys/plans";
+import { PlanRepository } from "@/repositorys/plan";
 import { MerchantService } from "./services/merchant.service";
 import { QuoteService } from "./services/quote.service";
 import { PlanService } from "./services/plan.service";

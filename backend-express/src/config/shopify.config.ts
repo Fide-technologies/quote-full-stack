@@ -17,7 +17,7 @@ const shopify = shopifyApp({
         hostScheme: env.HOST_SCHEMA,
         hostName: env.HOST_NAME,
         isEmbeddedApp: true,
-        scopes: env.SHOPIFY_SCOPES,
+        scopes: env.SHOPIFY_SCOPES.split(","),
         restResources,
         logger: {
             level: env.NODE_ENV === "development" ? LogSeverity.Debug : LogSeverity.Error,
