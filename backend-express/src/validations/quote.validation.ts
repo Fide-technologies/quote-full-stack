@@ -26,6 +26,7 @@ export const createQuoteSchema = z.object({
         productTitle: z.string().min(1, "Product title is required"),
         quantity: z.union([z.string(), z.number()]).transform((val) => Number(val)),
         price: z.union([z.string(), z.number()]).transform((val) => Number(val)).optional(),
+        customData: z.record(z.string(), z.any()).optional(),
     }),
 });
 
