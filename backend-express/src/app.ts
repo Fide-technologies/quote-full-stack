@@ -13,6 +13,7 @@ import merchantsRouter from "./routes/merchants.routes";
 import settingsRouter from "./routes/settings.routes";
 import draftOrderRouter from "./routes/draft-order.routes";
 import planRouter from "./routes/plan.routes";
+import formRouter from "./routes/form.routes";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,6 +40,7 @@ export class App {
 
         // Serve Static files
         this.app.use(express.static(STATIC_PATH));
+        this.app.use('/public', express.static(path.join(__dirname, '..', 'public')));
     }
 
     private routes(): void {
@@ -55,6 +57,7 @@ export class App {
         this.app.use("/api/settings", settingsRouter);
         this.app.use("/api/draft-orders", draftOrderRouter);
         this.app.use("/api/plans", planRouter);
+        this.app.use("/api/forms", formRouter);
 
         // Frontend Fallback (SPA)
         // Must be last
