@@ -32,6 +32,7 @@ export const QuoteMapper = {
             requestedPrice: quote.requestedPrice ? Number(quote.requestedPrice.toString()) : undefined,
             draftOrderId: quote.draftOrderId,
             draftOrderUrl: quote.draftOrderUrl,
+            customData: quote.customData,
             productDetails: quote.productDetails || (quote.productImage ? {
                 featuredImage: {
                     url: quote.productImage,

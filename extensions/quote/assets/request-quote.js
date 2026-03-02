@@ -5,7 +5,37 @@
     };
 
 
-    window.rqOpenModal = function (blockId) {
+    window.rqOpenModal = async function (blockId) {
+        const modal = document.getElementById(`rqModal-${blockId}`);
+        if (!modal) return;
+
+        // Check if the form is already loaded so we don't fetch it every time
+        if (modal.dataset.formLoaded !== 'true') {
+            const dynamicContainer = document.getElementById(`rq-dynamic-form-${blockId}`);
+            if (dynamicContainer) {
+                dynamicContainer.innerHTML = '<div style="text-align:center; padding: 2rem;">Loading form...</div>';
+            }
+
+            try {
+                // Determine the shop domain
+                const shop = window.Shopify ? window.Shopify.shop : window.location.hostname;
+                const formConfig = await window.RqApi.fetchFormConfig(shop);
+                if (formConfig && formConfig.steps) {
+                    window.RqUi.buildDynamicForm(blockId, formConfig);
+                    modal.dataset.formLoaded = 'true';
+                } else {
+                    if (dynamicContainer) {
+                        dynamicContainer.innerHTML = '<div style="color:red; text-align:center; padding: 2rem;">Error loading form configuration.</div>';
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch and build form:", err);
+                if (dynamicContainer) {
+                    dynamicContainer.innerHTML = '<div style="color:red; text-align:center; padding: 2rem;">An error occurred while loading the form.</div>';
+                }
+            }
+        }
+
         window.RqUi.openModal(blockId);
     };
 
@@ -74,27 +104,37 @@
 
         window.RqCart.closeCart();
         window.RqUi.showBulkSummary(modal, cart);
-        window.RqUi.openModal(blockId);
+
+        // This will also handle fetching/building the dynamic form if not loaded yet
+        window.rqOpenModal(blockId);
 
         // Mark this as a bulk submission
         modal.dataset.isBulk = 'true';
     };
 
     function rqPopulateReviewStep(blockId) {
+        // Collect all inputs from the dynamic form up to the review step
+        const formContainer = document.getElementById(`rq-dynamic-form-${blockId}`);
+        if (!formContainer) return;
+
         const getVal = (id) => document.getElementById(id + blockId)?.value || '';
         const setText = (id, text) => {
             const el = document.getElementById(id + blockId);
             if (el) el.innerText = text;
         };
 
-        // Contact Info
+        // Standard Contact Info (if available in form)
         const fname = getVal('rq-fname-');
         const lname = getVal('rq-lname-');
         const email = getVal('rq-email-');
         const phone = getVal('rq-phone-');
-        setText('rq-review-contact-', `${fname} ${lname}\n${email}\n${phone}`);
+        if (fname || lname || email || phone) {
+            setText('rq-review-contact-', `${fname} ${lname}\n${email}\n${phone}`);
+        } else {
+            setText('rq-review-contact-', 'N/A');
+        }
 
-        // Address
+        // Standard Address
         const addr1 = getVal('rq-address1-');
         const addr2 = getVal('rq-address2-');
         const city = getVal('rq-city-');
@@ -102,29 +142,44 @@
         const state = getVal('rq-state-');
         const pin = getVal('rq-pincode-');
 
-        let addressText = addr1;
-        if (addr2) addressText += `\n${addr2}`;
-        addressText += `\n${city}, ${dist}\n${state} - ${pin}`;
-        setText('rq-review-address-', addressText);
+        if (addr1 || city || state || dist || pin) {
+            let addressText = addr1;
+            if (addr2) addressText += `\n${addr2}`;
+            addressText += `\n${city}, ${dist}\n${state} - ${pin}`;
+            setText('rq-review-address-', addressText);
+        } else {
+            setText('rq-review-address-', 'N/A');
+        }
 
-        // Message
+        // Standard Message
         const msg = getVal('rq-message-');
         setText('rq-review-message-', msg || '(No message included)');
+
+        // Note: A truly dynamic review step would iterate all non-system fields and append them.
+        // But for this initial version, rendering standard mapped fields is the minimum requirement.
     }
 
     window.rqNextStep = function (blockId, currentStep) {
         let isValid = false;
-        if (currentStep === 1) isValid = window.RqValidation.validateStep1(blockId);
-        if (currentStep === 2) isValid = window.RqValidation.validateStep2(blockId);
-        if (currentStep === 3) isValid = window.RqValidation.validateStep3(blockId);
+        if (window.RqValidation && window.RqValidation.validateStep) {
+            isValid = window.RqValidation.validateStep(blockId, currentStep);
+        }
 
         if (isValid) {
-            if (currentStep === 3) {
+            const nextStepContainer = document.getElementById('rq-step-' + (currentStep + 1) + '-' + blockId);
+            if (!nextStepContainer) {
+                console.error("Next step container not found.");
+                return;
+            }
+
+            // If the next step is the last step (Review), populate it
+            const isReviewStep = nextStepContainer.querySelector('.rq-review-container') !== null;
+            if (isReviewStep) {
                 rqPopulateReviewStep(blockId);
             }
 
             document.getElementById('rq-step-' + currentStep + '-' + blockId).classList.remove('active');
-            document.getElementById('rq-step-' + (currentStep + 1) + '-' + blockId).classList.add('active');
+            nextStepContainer.classList.add('active');
 
             if (window.RqUi && window.RqUi.updateProgressIndicator) {
                 window.RqUi.updateProgressIndicator(blockId, currentStep + 1);

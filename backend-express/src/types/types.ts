@@ -18,4 +18,7 @@ export const TYPES = {
     DraftOrderController: Symbol.for("DraftOrderController"),
     DraftOrderMapper: Symbol.for("DraftOrderMapper"),
     PlanController: Symbol.for("PlanController"),
+    IFormRepository: Symbol.for("IFormRepository"),
+    IFormService: Symbol.for("IFormService"),
+    FormController: Symbol.for("FormController"),
 };

@@ -9,6 +9,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
         switch (path) {
             case '/': return 'Dashboard';
             case '/settings': return 'Settings';
+            case '/form-builder': return 'Form Builder';
             case '/quotes': return 'Quotes';
             case '/draft-orders': return 'Draft Orders';
             case '/plans': return 'Plans & Billing';
@@ -21,6 +22,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             <NavMenu>
                 <a href="/" rel="home">Dashboard</a>
                 <a href="/settings">Settings</a>
+                <a href='/form-builder'>Form Builder</a>
                 <a href='/quotes'>Quotes</a>
                 <a href='/draft-orders'>Draft Orders</a>
                 <a href='/plans'>Plans & Billing</a>
