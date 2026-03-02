@@ -28,7 +28,7 @@ export class MerchantService implements IMerchantService {
         const dataToCreate = {
             ...merchantData,
             planId: freePlan?._id,
-            usage: { quotesUsed: 0 }
+            usage: { quotesUsed: 0, quotaPeriodStart: new Date() }
         };
 
         return await this.merchantRepository.createMerchant(dataToCreate);
