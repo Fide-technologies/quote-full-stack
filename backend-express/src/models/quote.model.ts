@@ -115,6 +115,14 @@ const quoteSchema = new Schema<IQuote>(
         // --------------------
         draftOrderId: String,
         draftOrderUrl: String,
+
+        // --------------------
+        // Custom Form Data
+        // --------------------
+        customData: {
+            type: Schema.Types.Mixed,
+            default: {}
+        },
     },
     { timestamps: true }
 );
