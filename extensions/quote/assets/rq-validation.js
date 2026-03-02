@@ -5,75 +5,83 @@
             if (el) el.innerText = '';
         },
 
-        validateStep1: function (blockId) {
-            ['fname', 'lname', 'email', 'phone'].forEach(id => this.clearError(id, blockId));
+        validateStep: function (blockId, stepNum) {
             let isValid = true;
+            const stepContainer = document.getElementById(`rq-step-${stepNum}-${blockId}`);
+            if (!stepContainer) return isValid;
 
-            const fnameInput = document.getElementById('rq-fname-' + blockId);
-            if (!/^[a-zA-Z]+$/.test(fnameInput.value.trim())) {
-                const err = document.getElementById('rq-error-fname-' + blockId);
-                if (err) err.innerText = 'First name must contain only letters.';
-                isValid = false;
-            }
+            const inputs = stepContainer.querySelectorAll('input, textarea, select');
 
-            const lnameInput = document.getElementById('rq-lname-' + blockId);
-            if (!/^[a-zA-Z]+$/.test(lnameInput.value.trim())) {
-                const err = document.getElementById('rq-error-lname-' + blockId);
-                if (err) err.innerText = 'Last name must contain only letters.';
-                isValid = false;
-            }
+            inputs.forEach(input => {
+                const fieldName = input.name;
+                this.clearError(fieldName, blockId);
 
-            const emailInput = document.getElementById('rq-email-' + blockId);
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
-                const err = document.getElementById('rq-error-email-' + blockId);
-                if (err) err.innerText = 'Invalid email address.';
-                isValid = false;
-            }
+                const errSpan = document.getElementById(`rq-error-${fieldName}-${blockId}`);
+                let fieldValid = true;
+                let errMsg = '';
 
-            const phoneInput = document.getElementById('rq-phone-' + blockId);
-            if (!/^\d{10}$/.test(phoneInput.value.trim())) {
-                const err = document.getElementById('rq-error-phone-' + blockId);
-                if (err) err.innerText = 'Phone must be 10 digits.';
-                isValid = false;
-            }
+                if (input.required && !input.value.trim() && input.type !== 'file') {
+                    fieldValid = false;
+                    errMsg = 'This field is required.';
+                } else if (input.required && input.type === 'file' && !input.files.length) {
+                    fieldValid = false;
+                    errMsg = 'Please select a file.';
+                } else if (input.value.trim() || input.files?.length) {
 
-            return isValid;
-        },
+                    // Advanced Validations Handlers
+                    const patternAttr = input.getAttribute('pattern');
+                    const valMsgAttr = input.getAttribute('data-val-msg') || 'Invalid format.';
+                    const minLenAttr = input.getAttribute('minlength');
+                    const maxLenAttr = input.getAttribute('maxlength');
+                    const maxMbAttr = input.getAttribute('data-max-mb');
 
-        validateStep2: function (blockId) {
-            ['address1', 'city', 'district', 'state', 'pincode'].forEach(id => this.clearError(id, blockId));
-            let isValid = true;
+                    // Regex validation
+                    if (patternAttr && input.type !== 'file') {
+                        const regex = new RegExp(patternAttr);
+                        if (!regex.test(input.value.trim())) {
+                            fieldValid = false;
+                            errMsg = valMsgAttr;
+                        }
+                    }
 
-            const required = ['address1', 'city', 'district', 'state', 'pincode'];
-            required.forEach(field => {
-                const input = document.getElementById(`rq-${field}-${blockId}`);
-                if (!input || !input.value.trim()) {
-                    const err = document.getElementById(`rq-error-${field}-${blockId}`);
-                    if (err) err.innerText = 'This field is required.';
+                    // Length validation
+                    if (fieldValid && minLenAttr && input.value.trim().length < parseInt(minLenAttr)) {
+                        fieldValid = false;
+                        errMsg = `Must be at least ${minLenAttr} characters.`;
+                    }
+                    if (fieldValid && maxLenAttr && input.value.trim().length > parseInt(maxLenAttr)) {
+                        fieldValid = false;
+                        errMsg = `Cannot exceed ${maxLenAttr} characters.`;
+                    }
+
+                    // File Size Validation
+                    if (fieldValid && input.type === 'file' && input.files.length && maxMbAttr) {
+                        const maxBytes = parseFloat(maxMbAttr) * 1024 * 1024;
+                        if (input.files[0].size > maxBytes) {
+                            fieldValid = false;
+                            errMsg = `File must be smaller than ${maxMbAttr}MB.`;
+                        }
+                    }
+
+                    // Legacy system fallbacks
+                    if (fieldValid) {
+                        if (input.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim())) {
+                            fieldValid = false;
+                            errMsg = 'Invalid email address.';
+                        } else if (input.type === 'tel' && !/^\d{10}$/.test(input.value.trim())) {
+                            fieldValid = false;
+                            errMsg = 'Phone must be 10 digits.';
+                        }
+                    }
+                }
+
+                if (!fieldValid) {
                     isValid = false;
+                    if (errSpan) errSpan.innerText = errMsg;
                 }
             });
 
-            const pincodeInput = document.getElementById('rq-pincode-' + blockId);
-            if (pincodeInput && pincodeInput.value.trim() && !/^\d{6}$/.test(pincodeInput.value.trim())) {
-                const err = document.getElementById('rq-error-pincode-' + blockId);
-                if (err) err.innerText = 'Pincode must be exactly 6 digits.';
-                isValid = false;
-            }
-
             return isValid;
-        },
-
-        validateStep3: function (blockId) {
-            const msgInput = document.getElementById('rq-message-' + blockId);
-            const err = document.getElementById('rq-error-message-' + blockId);
-            if (err) err.innerText = '';
-
-            if (msgInput.value.trim().length > 500) {
-                if (err) err.innerText = 'Message exceeds character limit.';
-                return false;
-            }
-            return true;
         }
     };
 })();
