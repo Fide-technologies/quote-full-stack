@@ -1,0 +1,5 @@
+type = "frontend"
+
+[commands]
+build = "bun run build"
+dev = "bun dev"

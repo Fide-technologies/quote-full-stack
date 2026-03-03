@@ -16,6 +16,6 @@ router.use(json());
 
 router.post("/", validateAppProxy, validate(createQuoteSchema), planGuard(PlanAction.QUOTE_CREATE), quoteController.createQuote);
 
-router.get("/", shopify.validateAuthenticatedSession(), quoteController.getQuotes);
+router.get("/", shopify.validateAuthenticatedSession(), planGuard(), quoteController.getQuotes);
 
 export default router;

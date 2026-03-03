@@ -14,10 +14,60 @@
     .product-single__price, .product-form__item--quantity, .quantity,
     [name="add"], .product-form__submit, .payment-buttons,
     .shopify-payment-button__button--unbranded, .product-form__payment-container,
-    .price-item, .product__tax, form[action*="/cart/add"], .cart-submit, .add-to-cart, .btn--add-to-cart {
+    .price-item, .product__tax, form[action*="/cart/add"], .cart-submit, .add-to-cart, .btn--add-to-cart,
+    a[href="{{ routes.cart_url }}"], a[href*="/cart"], a[href="#cart-drawer"],
+    .header__icon--cart, #cart-icon-bubble, .site-header__cart, .cart-link, form[action="/cart"], .cart-count-bubble,
+    [id*="cart-icon"], [class*="cart-icon"], [class*="icon-cart"], [class*="header__cart"] {
       display: none !important; margin: 0 !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important;
     }
   </style>
+
+  <script>
+    // Redirect away from the cart page if the settings are set to hide prices globally
+    if (window.location.pathname.toLowerCase() === '{{ routes.cart_url }}' || window.location.pathname.toLowerCase().startsWith('{{ routes.cart_url }}/')) {
+        window.location.replace('/');
+    }
+
+    // Forcefully remove cart icons from the DOM dynamically
+    document.addEventListener("DOMContentLoaded", function() {
+        const hideCartElements = () => {
+            const selectors = [
+                'a[href="{{ routes.cart_url }}"]', 'a[href*="/cart"]', 'a[href="#cart-drawer"]', 
+                '#cart-icon-bubble', '.header__icon--cart', 'cart-drawer', 'cart-notification',
+                '[id*="cart-icon"]', '[class*="cart-icon"]', '[class*="icon-cart"]', '[class*="header__cart"]'
+            ];
+            
+            document.querySelectorAll(selectors.join(', ')).forEach(el => {
+                if (el) {
+                    el.style.setProperty('display', 'none', 'important');
+                    el.style.setProperty('visibility', 'hidden', 'important');
+                    el.style.setProperty('opacity', '0', 'important');
+                    el.style.setProperty('width', '0', 'important');
+                    el.style.setProperty('height', '0', 'important');
+                    el.style.setProperty('margin', '0', 'important');
+                    el.style.setProperty('padding', '0', 'important');
+                    el.style.setProperty('overflow', 'hidden', 'important');
+                    el.style.setProperty('pointer-events', 'none', 'important');
+                    el.style.setProperty('position', 'absolute', 'important');
+                }
+            });
+        };
+        
+        // Run immediately
+        hideCartElements();
+        
+        // Also run on a slight delay to catch any late rendering (like React/Web Components)
+        setTimeout(hideCartElements, 500);
+        setTimeout(hideCartElements, 1000);
+        setTimeout(hideCartElements, 2000);
+        
+        // Observe body for changes
+        const observer = new MutationObserver(hideCartElements);
+        if (document.body) {
+            observer.observe(document.body, { childList: true, subtree: true });
+        }
+    });
+  </script>
 
   {{ 'request-quote.css' | asset_url | stylesheet_tag }}
   <script src="{{ 'rq-validation.js' | asset_url }}" defer="defer"></script>

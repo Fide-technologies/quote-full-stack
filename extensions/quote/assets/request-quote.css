@@ -443,8 +443,19 @@ form[action*="/cart/add"] {
 }
 
 /* Form Inputs */
+.rq-step-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
 .rq-input-group {
     margin-bottom: 20px;
+    width: 100%;
+}
+
+.rq-input-group.rq-col-half {
+    width: calc(50% - 8px);
 }
 
 .rq-input-group label {

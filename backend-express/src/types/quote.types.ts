@@ -60,6 +60,9 @@ export interface IQuote {
     createdAt: Date;
     updatedAt: Date;
 
+    // Custom Form Data
+    customData?: Record<string, any>;
+
     // Draft Order Integration
     draftOrderId?: string;
     draftOrderUrl?: string;

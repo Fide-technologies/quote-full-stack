@@ -2,7 +2,7 @@ import { Container } from "inversify";
 import { TYPES } from "./types/types";
 import { MerchantRepository } from "./repositorys/merchants";
 import { QuoteRepository } from "./repositorys/quotes";
-import { PlanRepository } from "./repositorys/plans";
+import { PlanRepository } from "@/repositorys/plans";
 import { MerchantService } from "./services/merchant.service";
 import { QuoteService } from "./services/quote.service";
 import { PlanService } from "./services/plan.service";
@@ -19,8 +19,11 @@ import { MerchantController } from "./controllers/merchant.controller";
 import { SettingsController } from "./controllers/settings.controller";
 import { DraftOrderController } from "./controllers/draft-order.controller";
 import { PlanController } from "./controllers/plan.controller";
-import type { IMerchantRepository, IQuoteRepository, IPlanRepository } from "./interfaces";
-import type { IMerchantService, IQuoteService, IPlanService, IEmailService, ISettingsService, IDraftOrderService, IWebhookRegistry, IUsageService } from "./interfaces";
+import { FormRepository } from "./repositories/form.repository";
+import { FormService } from "./services/form.service";
+import { FormController } from "./controllers/form.controller";
+import type { IMerchantRepository, IQuoteRepository, IPlanRepository, IFormRepository } from "./interfaces";
+import type { IMerchantService, IQuoteService, IPlanService, IEmailService, ISettingsService, IDraftOrderService, IWebhookRegistry, IUsageService, IFormService } from "./interfaces";
 
 const container = new Container();
 
@@ -46,5 +49,9 @@ container.bind<MerchantController>(TYPES.MerchantController).to(MerchantControll
 container.bind<SettingsController>(TYPES.SettingsController).to(SettingsController).inSingletonScope();
 container.bind<DraftOrderController>(TYPES.DraftOrderController).to(DraftOrderController).inSingletonScope();
 container.bind<PlanController>(TYPES.PlanController).to(PlanController).inSingletonScope();
+
+container.bind<IFormRepository>(TYPES.IFormRepository).to(FormRepository).inSingletonScope();
+container.bind<IFormService>(TYPES.IFormService).to(FormService).inSingletonScope();
+container.bind<FormController>(TYPES.FormController).to(FormController).inSingletonScope();
 
 export { container };

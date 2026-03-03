@@ -35,6 +35,7 @@ export interface QuoteResponseDto {
     requestedPrice?: number;
     draftOrderId?: string;
     draftOrderUrl?: string;
+    customData?: Record<string, any>;
     productDetails?: {
         featuredImage?: {
             url: string;

@@ -49,7 +49,8 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
                     },
                     body: JSON.stringify(dataObj)
                 });
@@ -71,6 +72,26 @@
             } catch (err) {
                 console.error('Quote Submission Error:', err);
                 return { success: false, error: 'An error occurred. Please try again.' };
+            }
+        },
+
+        fetchFormConfig: async function (shop) {
+            try {
+                // We use the proxy path + forms/proxy endpoint.
+                const response = await fetch(`${PROXY_PATH}/forms/proxy?shop=${encodeURIComponent(shop)}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to fetch form configuration');
+                }
+                const data = await response.json();
+                return data.data; // The config is returned inside { data: ... } by backend BaseController.ok
+            } catch (err) {
+                console.error('Failed fetching form config:', err);
+                return null;
             }
         },
 

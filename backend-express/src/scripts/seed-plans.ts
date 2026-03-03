@@ -14,7 +14,8 @@ const plans = [
         permissions: [
             PlanAction.QUOTE_CREATE,
             PlanAction.QUOTE_UPDATE,
-            PlanAction.QUOTE_SEND
+            PlanAction.QUOTE_SEND,
+            PlanAction.SETTINGS_UPDATE
         ],
         isActive: true
     },
