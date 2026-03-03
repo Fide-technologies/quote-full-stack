@@ -5,7 +5,7 @@ import type { IForm, IFormStep, IFormField } from '../api/forms';
 import {
     Page, Layout, Card, Text, TextField, Button, BlockStack, InlineStack,
     Select, Checkbox, Divider, Banner, Spinner, Box, Icon, Tooltip, Badge, Collapsible,
-    Modal
+    Tabs
 } from '@shopify/polaris';
 import { DragHandleIcon, DeleteIcon, PlusIcon, ChevronDownIcon, ChevronUpIcon } from '@shopify/polaris-icons';
 import {
@@ -112,16 +112,16 @@ function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setFormState }
             >
                 <InlineStack align="start" blockAlign="center" gap="400" wrap={false}>
                     {field.isSystem ? (
-                        <div style={{ padding: '4px', opacity: 0.3, cursor: 'not-allowed' }}>
+                        <div className="p-1 opacity-30 cursor-not-allowed">
                             <Icon source={DragHandleIcon} tone="base" />
                         </div>
                     ) : (
-                        <div {...attributes} {...listeners} style={{ cursor: 'grab', padding: '4px' }}>
+                        <div {...attributes} {...listeners} className="cursor-grab p-1">
                             <Icon source={DragHandleIcon} tone="base" />
                         </div>
                     )}
 
-                    <div style={{ flex: 2 }}>
+                    <div className="flex-[2]">
                         <TextField
                             label="Label"
                             labelHidden
@@ -132,7 +132,7 @@ function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setFormState }
                         />
                     </div>
 
-                    <div style={{ flex: 1 }}>
+                    <div className="flex-1">
                         <Select
                             label="Type"
                             labelHidden
@@ -143,7 +143,7 @@ function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setFormState }
                         />
                     </div>
 
-                    <div style={{ flex: 1 }}>
+                    <div className="flex-1">
                         <Select
                             label="Layout Width"
                             labelHidden
@@ -156,7 +156,7 @@ function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setFormState }
                         />
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', width: '100px' }}>
+                    <div className="flex items-center w-[100px]">
                         <Checkbox
                             label="Required"
                             checked={field.required}
@@ -166,11 +166,11 @@ function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setFormState }
                     </div>
 
                     {field.isSystem ? (
-                        <div style={{ minWidth: '85px', display: 'flex', justifyContent: 'center' }}>
+                        <div className="min-w-[85px] flex justify-center">
                             <Badge tone="info">System</Badge>
                         </div>
                     ) : (
-                        <div style={{ minWidth: '85px', display: 'flex', justifyContent: 'center' }}>
+                        <div className="min-w-[85px] flex justify-center">
                             <Tooltip content="Remove field">
                                 <Button variant="plain" tone="critical" icon={DeleteIcon} onClick={removeField} accessibilityLabel="Remove field" />
                             </Tooltip>
@@ -190,7 +190,7 @@ function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setFormState }
 
                                     {(field.type === 'text' || field.type === 'textarea') && (
                                         <>
-                                            <div style={{ flex: 1 }}>
+                                            <div className="flex-1">
                                                 <TextField
                                                     label="Min Length"
                                                     type="number"
@@ -199,7 +199,7 @@ function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setFormState }
                                                     autoComplete="off"
                                                 />
                                             </div>
-                                            <div style={{ flex: 1 }}>
+                                            <div className="flex-1">
                                                 <TextField
                                                     label="Max Length"
                                                     type="number"
@@ -212,7 +212,7 @@ function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setFormState }
                                     )}
 
                                     {field.type === 'text' && (
-                                        <div style={{ flex: 2 }}>
+                                        <div className="flex-[2]">
                                             <Select
                                                 label="Validation Rule (Regex)"
                                                 options={regexOptions}
@@ -224,7 +224,7 @@ function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setFormState }
 
                                     {field.type === 'file' && (
                                         <>
-                                            <div style={{ flex: 2 }}>
+                                            <div className="flex-[2]">
                                                 <TextField
                                                     label="Allowed File Types (e.g. image/jpeg, .pdf)"
                                                     value={field.allowedFileTypes || ''}
@@ -233,7 +233,7 @@ function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setFormState }
                                                     autoComplete="off"
                                                 />
                                             </div>
-                                            <div style={{ flex: 1 }}>
+                                            <div className="flex-1">
                                                 <TextField
                                                     label="Max File Size (MB)"
                                                     type="number"
@@ -269,7 +269,30 @@ export const FormBuilder: React.FC = () => {
     const queryClient = useQueryClient();
     const [formState, setFormState] = useState<IForm | null>(null);
     const [expandedStep, setExpandedStep] = useState<string | null>(null);
-    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [selectedTab, setSelectedTab] = useState(0);
+    const [previewStepIndex, setPreviewStepIndex] = useState(0);
+
+    const tabs = [
+        {
+            id: 'builder',
+            content: 'Form Builder',
+            accessibilityLabel: 'Form Builder',
+            panelID: 'builder-panel',
+        },
+        {
+            id: 'preview',
+            content: 'Form Preview',
+            accessibilityLabel: 'Form Preview',
+            panelID: 'preview-panel',
+        },
+    ];
+
+    const handleTabChange = (selectedTabIndex: number) => {
+        setSelectedTab(selectedTabIndex);
+        if (selectedTabIndex === 1) {
+            setPreviewStepIndex(0);
+        }
+    };
 
     const { data: initialData, isLoading, error } = useQuery({
         queryKey: ['formConfig'],
@@ -449,204 +472,281 @@ export const FormBuilder: React.FC = () => {
             primaryAction={{ content: 'Save Form', onAction: handleSave, loading: updateMutation.isPending }}
         >
             <BlockStack gap="400">
-                <InlineStack align="end">
-                    <Button variant="primary" tone="success" size="large" onClick={() => setIsPreviewOpen(true)}>
-                        Preview Entire Form
-                    </Button>
-                </InlineStack>
-
-                <Layout>
-                    <Layout.Section>
-                        <BlockStack gap="400">
-                            {formState.steps.map((step, stepIdx) => (
-                                <Card key={step.id}>
+                <Tabs tabs={tabs} selected={selectedTab} onSelect={handleTabChange}>
+                    <Box padding="400">
+                        {selectedTab === 0 ? (
+                            <Layout>
+                                <Layout.Section>
                                     <BlockStack gap="400">
-                                        <div
-                                            style={{ cursor: 'pointer' }}
-                                            onClick={() => setExpandedStep(expandedStep === step.id ? null : step.id)}
-                                        >
-                                            <InlineStack align="space-between" blockAlign="center">
-                                                <Text variant="headingMd" as="h2">Step {stepIdx + 1}: {step.title}</Text>
-                                                <InlineStack gap="300" blockAlign="center">
-                                                    <Text variant="bodySm" as="span" tone="subdued">
-                                                        {step.fields.length} / 6 fields
-                                                    </Text>
-                                                    {!step.isSystem && (
-                                                        <Button tone="critical" variant="plain" onClick={() => {
-                                                            const updated = [...formState.steps];
-                                                            updated.splice(stepIdx, 1);
-                                                            setFormState({ ...formState, steps: updated });
-                                                        }}>Remove Step</Button>
-                                                    )}
-                                                    <Button
-                                                        variant="plain"
-                                                        icon={expandedStep === step.id ? ChevronUpIcon : ChevronDownIcon}
-                                                        accessibilityLabel="Toggle step"
-                                                    />
-                                                </InlineStack>
-                                            </InlineStack>
+                                        {formState.steps.map((step, stepIdx) => (
+                                            <Card key={step.id}>
+                                                <BlockStack gap="400">
+                                                    <div
+                                                        className="cursor-pointer"
+                                                        onClick={() => setExpandedStep(expandedStep === step.id ? null : step.id)}
+                                                    >
+                                                        <InlineStack align="space-between" blockAlign="center">
+                                                            <Text variant="headingMd" as="h2">Step {stepIdx + 1}: {step.title}</Text>
+                                                            <InlineStack gap="300" blockAlign="center">
+                                                                <Text variant="bodySm" as="span" tone="subdued">
+                                                                    {step.fields.length} / 6 fields
+                                                                </Text>
+                                                                {!step.isSystem && (
+                                                                    <Button tone="critical" variant="plain" onClick={() => {
+                                                                        const updated = [...formState.steps];
+                                                                        updated.splice(stepIdx, 1);
+                                                                        setFormState({ ...formState, steps: updated });
+                                                                    }}>Remove Step</Button>
+                                                                )}
+                                                                <Button
+                                                                    variant="plain"
+                                                                    icon={expandedStep === step.id ? ChevronUpIcon : ChevronDownIcon}
+                                                                    accessibilityLabel="Toggle step"
+                                                                />
+                                                            </InlineStack>
+                                                        </InlineStack>
+                                                    </div>
+
+                                                    <Collapsible
+                                                        open={expandedStep === step.id}
+                                                        id={`collapsible-${step.id}`}
+                                                        transition={{ duration: '500ms', timingFunction: 'ease-in-out' }}
+                                                        expandOnPrint
+                                                    >
+                                                        <BlockStack gap="400">
+                                                            <Box paddingBlockStart="200">
+                                                                <TextField
+                                                                    label="Step Title"
+                                                                    value={step.title}
+                                                                    onChange={(val) => {
+                                                                        const updated = [...formState.steps];
+                                                                        updated[stepIdx].title = val;
+                                                                        setFormState({ ...formState, steps: updated });
+                                                                    }}
+                                                                    autoComplete="off"
+                                                                    disabled={step.isSystem}
+                                                                />
+                                                            </Box>
+
+                                                            <Divider />
+
+                                                            <InlineStack align="space-between" blockAlign="center">
+                                                                <Text variant="headingSm" as="h3">Fields</Text>
+                                                                <Button
+                                                                    icon={PlusIcon}
+                                                                    size="micro"
+                                                                    variant="plain"
+                                                                    onClick={() => addField(stepIdx)}
+                                                                    disabled={step.fields.length >= 6}
+                                                                >
+                                                                    Add Field
+                                                                </Button>
+                                                            </InlineStack>
+
+                                                            <DndContext
+                                                                sensors={sensors}
+                                                                collisionDetection={closestCenter}
+                                                                onDragEnd={(e) => handleDragEnd(e, stepIdx)}
+                                                            >
+                                                                <SortableContext
+                                                                    items={step.fields.map(f => f.id)}
+                                                                    strategy={verticalListSortingStrategy}
+                                                                >
+                                                                    <BlockStack gap="200">
+                                                                        {step.fields.map((field, fieldIdx) => (
+                                                                            <SortableFieldItem
+                                                                                key={field.id}
+                                                                                field={field}
+                                                                                fieldIdx={fieldIdx}
+                                                                                stepIdx={stepIdx}
+                                                                                formState={formState}
+                                                                                setFormState={setFormState}
+                                                                            />
+                                                                        ))}
+                                                                    </BlockStack>
+                                                                </SortableContext>
+                                                            </DndContext>
+                                                        </BlockStack>
+                                                    </Collapsible>
+                                                </BlockStack>
+                                            </Card>
+                                        ))}
+                                    </BlockStack>
+
+                                    <Box paddingBlockStart="400">
+                                        <Button variant="primary" onClick={addStep} icon={PlusIcon} disabled={formState.steps.length >= 5}>Add New Step</Button>
+                                    </Box>
+                                </Layout.Section>
+
+                                <Layout.Section variant="oneThird">
+                                    <Card>
+                                        <BlockStack gap="400">
+                                            <Text variant="headingMd" as="h2">Form Settings</Text>
+                                            <TextField
+                                                label="Submit Button Text"
+                                                value={formState.settings?.submitButtonText || ''}
+                                                onChange={(val) => setFormState({
+                                                    ...formState,
+                                                    settings: { ...formState.settings, submitButtonText: val }
+                                                })}
+                                                autoComplete="off"
+                                            />
+                                            <TextField
+                                                label="Success Message"
+                                                value={formState.settings?.successMessage || ''}
+                                                onChange={(val) => setFormState({
+                                                    ...formState,
+                                                    settings: { ...formState.settings, successMessage: val }
+                                                })}
+                                                autoComplete="off"
+                                                multiline={3}
+                                            />
+                                        </BlockStack>
+                                    </Card>
+                                </Layout.Section>
+                            </Layout>
+                        ) : (
+                            <div className="bg-[#f0f2f4] py-16 px-5 min-h-[600px] rounded-xl flex items-center justify-center">
+                                {/* Browser Mockup Frame */}
+                                <div className="bg-white rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full max-w-[550px] overflow-hidden border border-[#e1e3e5]">
+                                    {/* Browser Header */}
+                                    <div className="bg-[#f1f2f3] p-4 border-b border-[#e1e3e5] flex items-center gap-2">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+                                        <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                                        <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+                                        <div className="bg-white rounded flex-1 mx-5 h-6 text-[11px] flex items-center px-2.5 text-[#8c9196] border border-[#e1e3e5]">
+                                            your-store.myshopify.com/request-quote
+                                        </div>
+                                    </div>
+
+                                    {/* Form Content Area */}
+                                    <div className="p-10 md:p-8">
+                                        {/* Progress Section */}
+                                        <div className="mb-8">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <Text variant="bodySm" as="span" tone="subdued" fontWeight="medium">
+                                                    Step {previewStepIndex + 1} of {formState.steps.length}
+                                                </Text>
+                                                <Badge tone="info" progress="partiallyComplete">
+                                                    {`${Math.round(((previewStepIndex + 1) / formState.steps.length) * 100)}% Complete`}
+                                                </Badge>
+                                            </div>
+                                            <div className="h-2 bg-[#f1f2f4] rounded-full overflow-hidden border border-[#f0f0f0]">
+                                                <div
+                                                    className="h-full bg-gradient-to-r from-[#0066FF] to-[#00a2ff] transition-all duration-500 ease-in-out shadow-[0_0_10px_rgba(0,102,255,0.3)]"
+                                                    style={{ width: `${((previewStepIndex + 1) / formState.steps.length) * 100}%` }}
+                                                />
+                                            </div>
                                         </div>
 
-                                        <Collapsible
-                                            open={expandedStep === step.id}
-                                            id={`collapsible-${step.id}`}
-                                            transition={{ duration: '500ms', timingFunction: 'ease-in-out' }}
-                                            expandOnPrint
-                                        >
-                                            <BlockStack gap="400">
-                                                <Box paddingBlockStart="200">
-                                                    <TextField
-                                                        label="Step Title"
-                                                        value={step.title}
-                                                        onChange={(val) => {
-                                                            const updated = [...formState.steps];
-                                                            updated[stepIdx].title = val;
-                                                            setFormState({ ...formState, steps: updated });
-                                                        }}
-                                                        autoComplete="off"
-                                                        disabled={step.isSystem}
-                                                    />
-                                                </Box>
+                                        {formState.steps[previewStepIndex] && (
+                                            <div className="animate-fadeIn">
 
-                                                <Divider />
-
-                                                <InlineStack align="space-between" blockAlign="center">
-                                                    <Text variant="headingSm" as="h3">Fields</Text>
-                                                    <Button
-                                                        icon={PlusIcon}
-                                                        size="micro"
-                                                        variant="plain"
-                                                        onClick={() => addField(stepIdx)}
-                                                        disabled={step.fields.length >= 6}
-                                                    >
-                                                        Add Field
-                                                    </Button>
-                                                </InlineStack>
-
-                                                <DndContext
-                                                    sensors={sensors}
-                                                    collisionDetection={closestCenter}
-                                                    onDragEnd={(e) => handleDragEnd(e, stepIdx)}
-                                                >
-                                                    <SortableContext
-                                                        items={step.fields.map(f => f.id)}
-                                                        strategy={verticalListSortingStrategy}
-                                                    >
-                                                        <BlockStack gap="200">
-                                                            {step.fields.map((field, fieldIdx) => (
-                                                                <SortableFieldItem
-                                                                    key={field.id}
-                                                                    field={field}
-                                                                    fieldIdx={fieldIdx}
-                                                                    stepIdx={stepIdx}
-                                                                    formState={formState}
-                                                                    setFormState={setFormState}
-                                                                />
-                                                            ))}
-                                                        </BlockStack>
-                                                    </SortableContext>
-                                                </DndContext>
-                                            </BlockStack>
-                                        </Collapsible>
-                                    </BlockStack>
-                                </Card>
-                            ))}
-                        </BlockStack>
-
-                        <Box paddingBlockStart="400">
-                            <Button variant="primary" onClick={addStep} icon={PlusIcon} disabled={formState.steps.length >= 5}>Add New Step</Button>
-                        </Box>
-                    </Layout.Section>
-
-                    <Layout.Section variant="oneThird">
-                        <Card>
-                            <BlockStack gap="400">
-                                <Text variant="headingMd" as="h2">Form Settings</Text>
-                                <TextField
-                                    label="Submit Button Text"
-                                    value={formState.settings?.submitButtonText || ''}
-                                    onChange={(val) => setFormState({
-                                        ...formState,
-                                        settings: { ...formState.settings, submitButtonText: val }
-                                    })}
-                                    autoComplete="off"
-                                />
-                                <TextField
-                                    label="Success Message"
-                                    value={formState.settings?.successMessage || ''}
-                                    onChange={(val) => setFormState({
-                                        ...formState,
-                                        settings: { ...formState.settings, successMessage: val }
-                                    })}
-                                    autoComplete="off"
-                                    multiline={3}
-                                />
-                                <Box paddingBlockStart="200">
-                                    <Button size="large" fullWidth onClick={() => setIsPreviewOpen(true)}>
-                                        Preview Form
-                                    </Button>
-                                </Box>
-                            </BlockStack>
-                        </Card>
-                    </Layout.Section>
-                </Layout>
-
-                <Modal
-                    title="Form Preview"
-                    open={isPreviewOpen}
-                    onClose={() => setIsPreviewOpen(false)}
-                    size="large"
-                >
-                    <Modal.Section>
-                        <div style={{
-                            background: '#ffffff',
-                            borderRadius: '8px',
-                            padding: '24px',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                            border: '1px solid #dfe3e8',
-                            maxWidth: '500px',
-                            margin: '0 auto'
-                        }}>
-                            {/* We will loop through the steps to show the whole form preview stacked cleanly */}
-                            {formState.steps.map((step, idx) => (
-                                <div key={step.id} style={{ marginBottom: idx === formState.steps.length - 1 ? '0' : '32px' }}>
-                                    <div style={{ paddingBottom: '20px', textAlign: 'center' }}>
-                                        <Text variant="headingLg" as="h3">{step.title}</Text>
-                                    </div>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px 0', justifyContent: 'space-between' }}>
-                                        {step.fields.map((field) => (
-                                            <div key={field.id} style={{
-                                                width: field.layoutWidth === 'half' ? 'calc(50% - 8px)' : '100%',
-                                                marginBottom: '6px'
-                                            }}>
-                                                <BlockStack gap="100">
-                                                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#202223', marginBottom: '2px' }}>
-                                                        {field.label} {field.required && <span style={{ color: 'red' }}>*</span>}
-                                                    </label>
-                                                    {field.type === 'textarea' ? (
-                                                        <textarea style={{ width: '100%', padding: '10px 12px', boxSizing: 'border-box', border: '1px solid #c9cccf', borderRadius: '4px', resize: 'vertical', minHeight: '80px', fontSize: '14px' }} placeholder={field.placeholder || ''} disabled />
-                                                    ) : field.type === 'file' ? (
-                                                        <div style={{ width: '100%', padding: '10px 12px', boxSizing: 'border-box', border: '1px dashed #c9cccf', borderRadius: '4px', background: '#f4f6f8', textAlign: 'center', fontSize: '14px', color: '#6d7175' }}>Select a File</div>
-                                                    ) : (
-                                                        <input type={field.type === 'number' ? 'number' : 'text'} style={{ boxSizing: 'border-box', width: '100%', padding: '10px 12px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '14px', background: '#fff' }} placeholder={field.placeholder || ''} disabled />
+                                                <div className="mb-7 text-center">
+                                                    <h2 className="text-2xl font-bold text-[#1a1c1d] mb-2 tracking-tight">
+                                                        {formState.steps[previewStepIndex].title}
+                                                    </h2>
+                                                    {previewStepIndex === 0 && (
+                                                        <p className="text-[#6d7175] text-sm">
+                                                            Please fill in the details below to receive a custom quote.
+                                                        </p>
                                                     )}
-                                                </BlockStack>
-                                            </div>
-                                        ))}
-                                        {idx === formState.steps.length - 1 && (
-                                            <div style={{ width: '100%', marginTop: '16px' }}>
-                                                <button style={{ width: '100%', background: '#0066FF', color: 'white', border: 'none', padding: '12px 16px', borderRadius: '4px', fontSize: '15px', fontWeight: 600, cursor: 'not-allowed' }} disabled>
-                                                    {formState.settings?.submitButtonText || 'Submit'}
-                                                </button>
+                                                </div>
+
+                                                {formState.steps[previewStepIndex].id === 'step-review' ? (
+                                                    <div className="mb-8">
+                                                        <div className="bg-[#f8f9fa] rounded-xl p-5 border border-[#ebeef0]">
+                                                            <BlockStack gap="400">
+                                                                {formState.steps.filter(s => s.id !== 'step-review' && s.fields.length > 0).map((s, sIdx) => (
+                                                                    <div key={s.id}>
+                                                                        <div className="flex items-center gap-2 mb-2">
+                                                                            <div className="w-1 h-3.5 bg-[#0066FF] rounded-sm" />
+                                                                            <Text variant="bodySm" as="span" fontWeight="bold" tone="base">{s.title}</Text>
+                                                                        </div>
+                                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 pl-3">
+                                                                            {s.fields.map(f => (
+                                                                                <div key={f.id} className="text-[13px]">
+                                                                                    <span className="text-[#6d7175] mr-1">{f.label}:</span>
+                                                                                    <span className="text-[#202223] font-medium">Sample data</span>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                        {sIdx < formState.steps.filter(st => st.id !== 'step-review' && st.fields.length > 0).length - 1 && (
+                                                                            <div className="mt-4"><Divider /></div>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </BlockStack>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-wrap gap-y-5 justify-between">
+                                                        {formState.steps[previewStepIndex].fields.map((field) => (
+                                                            <div key={field.id} className={field.layoutWidth === 'half' ? 'w-[calc(50%-10px)]' : 'w-full'}>
+                                                                <div className="mb-1">
+                                                                    <label className="block text-[13px] font-semibold text-[#1a1c1d] mb-1.5">
+                                                                        {field.label} {field.required && <span className="text-[#d72c0d]">*</span>}
+                                                                    </label>
+                                                                    {field.type === 'textarea' ? (
+                                                                        <textarea
+                                                                            className="w-full px-3.5 py-3 border border-[#d2d5d8] rounded-lg resize-none min-h-[100px] text-sm bg-white transition-colors duration-200 outline-none focus:border-[#0066FF]"
+                                                                            placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}...`}
+                                                                            disabled
+                                                                        />
+                                                                    ) : field.type === 'file' ? (
+                                                                        <div className="w-full py-6 px-4 border-2 border-dashed border-[#d2d5d8] rounded-lg bg-[#f9fafb] text-center cursor-not-allowed transition-all duration-200">
+                                                                            <div className="text-[#0066FF] font-semibold text-sm mb-1">Click to upload</div>
+                                                                            <div className="text-xs text-[#6d7175]">PDF, JPG, PNG up to 10MB</div>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <input
+                                                                            type={field.type === 'number' ? 'number' : 'text'}
+                                                                            className="box-border w-full px-3.5 py-3 border border-[#d2d5d8] rounded-lg text-sm bg-white outline-none transition-colors duration-200 focus:border-[#0066FF]"
+                                                                            placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}...`}
+                                                                            disabled
+                                                                        />
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                <div className="flex gap-4 mt-10">
+                                                    {previewStepIndex > 0 && (
+                                                        <button
+                                                            onClick={() => setPreviewStepIndex(previewStepIndex - 1)}
+                                                            className="flex-1 bg-white text-[#202223] border border-[#d2d5d8] py-3.5 px-5 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-200 hover:bg-slate-50 active:scale-95"
+                                                        >
+                                                            Back
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => {
+                                                            if (previewStepIndex < formState.steps.length - 1) {
+                                                                setPreviewStepIndex(previewStepIndex + 1);
+                                                            } else {
+                                                                shopify.toast.show("Form submitted successfully! (Preview Mode)");
+                                                            }
+                                                        }}
+                                                        className="flex-[2] bg-[#0066FF] text-white border-none py-3.5 px-5 rounded-lg text-sm font-semibold cursor-pointer shadow-[0_4px_12px_rgba(0,102,255,0.25)] transition-all duration-200 hover:bg-[#0052cc] active:scale-95 flex items-center justify-center"
+                                                    >
+                                                        {previewStepIndex < formState.steps.length - 1 ? 'Continue to Next Step' : (formState.settings?.submitButtonText || 'Submit Request')}
+                                                    </button>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
-                                    {idx < formState.steps.length - 1 && <Divider />}
+
+                                    {/* Browser Footer */}
+                                    <div className="p-4 border-t border-[#f0f1f2] text-center bg-[#fafbfc]">
+                                        <Text variant="bodyXs" as="p" tone="subdued">Powered by Request Quote App</Text>
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
-                    </Modal.Section>
-                </Modal>
+                            </div>
+                        )}
+                    </Box>
+                </Tabs>
             </BlockStack>
         </Page>
     );
