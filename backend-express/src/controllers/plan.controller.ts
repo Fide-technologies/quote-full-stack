@@ -3,8 +3,7 @@ import { injectable, inject } from "inversify";
 import { BaseController } from "./base.controller";
 import { TYPES } from "@/types";
 import type { IPlanService, IMerchantService } from "@/interfaces";
-import { env } from "@/validations/env.validation";
-import { shopify } from "@/config/shopify.config";
+
 
 @injectable()
 export class PlanController extends BaseController {
