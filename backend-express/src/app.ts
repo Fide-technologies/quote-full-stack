@@ -35,11 +35,6 @@ export class App {
         // Security headers for Shopify
         this.app.use(shopify.cspHeaders());
 
-        // Body parsing is handled by Shopify for some routes, or Express for others
-        // If needed, add express.json() for non-webhook routes, but be careful with raw body requirements
-        this.app.use(express.json());
-        this.app.use(express.urlencoded({ extended: true }));
-
         // Serve Static files
         this.app.use(express.static(STATIC_PATH));
         this.app.use('/public', express.static(path.join(__dirname, '..', 'public')));
@@ -51,10 +46,17 @@ export class App {
             res.status(HTTP_STATUS.OK).json({ message: "OK", timestamp: new Date().toISOString() });
         });
 
+        // 1. Webhooks MUST be registered before any body-parsing middleware
+        // This is because shopify.processWebhooks needs the raw request body for HMAC verification
+        this.app.use("/api/webhooks", webhooksRouter);
+
+        // 2. Global body parsers for all other routes
+        this.app.use(express.json());
+        this.app.use(express.urlencoded({ extended: true }));
+
         // API Routes
         this.app.use("/api/auth", authRouter);
         this.app.use("/api/quotes", quotesRouter);
-        this.app.use("/api/webhooks", webhooksRouter);
         this.app.use("/api/merchants", merchantsRouter);
         this.app.use("/api/settings", settingsRouter);
         this.app.use("/api/draft-orders", draftOrderRouter);
@@ -62,6 +64,7 @@ export class App {
         this.app.use("/api/forms", formRouter);
         this.app.use("/api/dashboard", dashboardRouter);
         this.app.use("/api/upload", uploadRouter);
+
 
         // Frontend Fallback (SPA)
         // Must be last

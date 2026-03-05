@@ -29,7 +29,9 @@ const quoteSchema = new Schema<IQuote>(
         shop: {
             type: String,
             required: true,
+            index: true,
         },
+
 
         // --------------------
         // Customer

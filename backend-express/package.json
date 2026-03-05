@@ -7,8 +7,12 @@
     "dev": "bun --watch ./src/index.ts",
     "build": "tsc -b",
     "start": "bun run ./dist/index.js",
-    "prebuild": "../frontend/bun run build",
-    "postinstall": "bun run prebuild && bun run build",
+    "prebuild": "cd ../frontend && bun run build",
+    "postinstall": "bun run build",
+    "test": "NODE_ENV=development vitest run",
+    "test:watch": "NODE_ENV=development vitest",
+    "test:coverage": "NODE_ENV=development vitest run --coverage",
+    "test:e2e": "playwright test",
     "seed:plans": "bun run ./src/scripts/seed-plans.ts",
     "lint": "biome lint ./src",
     "format": "biome format --write ./src",
@@ -16,10 +20,14 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@playwright/test": "^1.58.2",
     "@types/bun": "latest",
     "@types/multer": "^2.0.0",
     "@types/nodemailer": "^7.0.9",
-    "multer": "^2.1.0"
+    "@vitest/coverage-v8": "^4.0.18",
+    "multer": "^2.1.0",
+    "tsconfig-paths": "^4.2.0",
+    "vitest": "^4.0.18"
   },
   "peerDependencies": {
     "typescript": "^5"

@@ -9,14 +9,14 @@
         "build:frontend": "cd frontend && bun run build",
         "shopify": "shopify",
         "dev": "shopify app dev",
-        "dev:backend": "bun workspace server-express dev",
-        "dev:frontend:": "cd frontend && bun run dev",
-        "migrate:dev": "bun workspace server-express prisma:migrate",
+        "dev:backend": "bun run --filter backend-express dev",
+        "dev:frontend": "cd frontend && bun run dev",
+        "test": "bun run --filter backend-express test",
         "build": "bun run build:frontend && shopify app build",
         "deploy": "bun run build:frontend && shopify app deploy"
     },
     "workspaces": [
-        "server-express",
+        "backend-express",
         "frontend"
     ]
 }

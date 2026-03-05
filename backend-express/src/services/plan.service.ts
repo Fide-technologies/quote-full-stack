@@ -65,14 +65,14 @@ export class PlanService implements IPlanService {
             plan = await this.planRepository.findById(merchant.planId.toString());
         }
 
-        const features = plan?.features || (plan?.name === PlanType.PRO ? this.defaultProFeatures : this.defaultFreeFeatures);
+        const quoteLimit = plan?.quoteLimit ?? (plan?.name === PlanType.PRO ? this.defaultProFeatures.quoteLimit : this.defaultFreeFeatures.quoteLimit);
         const currentUsage = merchant.usage?.quotesUsed || 0;
 
-        if (currentUsage >= features.quoteLimit) {
+        if (currentUsage >= quoteLimit) {
             const planName = plan?.name || PlanType.FREE;
             return {
                 allowed: false,
-                message: ERROR_MESSAGES.PLAN.LIMIT_REACHED(planName, features.quoteLimit)
+                message: ERROR_MESSAGES.PLAN.LIMIT_REACHED(planName, quoteLimit)
             };
         }
 
@@ -81,20 +81,25 @@ export class PlanService implements IPlanService {
 
     async getQuoteLimit(shop: string): Promise<number> {
         const plan = await this.getMerchantPlan(shop);
-        const features = plan?.features || this.defaultFreeFeatures;
-        return features.quoteLimit;
+        return plan?.quoteLimit ?? this.defaultFreeFeatures.quoteLimit;
     }
 
     async hasFeature(shop: string, feature: keyof IPlanFeatures): Promise<boolean> {
         const plan = await this.getMerchantPlan(shop);
-        const features = plan?.features || (plan?.name === PlanType.PRO ? this.defaultProFeatures : this.defaultFreeFeatures);
 
-        const value = features[feature];
-        if (typeof value === 'boolean') {
-            return value;
+        // If it's a direct property on the plan (like permissions check)
+        if (feature === 'removeBranding' || feature === 'emailNotifications') {
+            // Check if plan exists and has permissions or features (adjusting for schema)
+            // Currently our schema has permissions array.
+            const hasPermission = plan?.permissions?.includes(feature.toUpperCase());
+            if (hasPermission) return true;
+
+            // Fallback to defaults based on name
+            const defaults = plan?.name === PlanType.PRO ? this.defaultProFeatures : this.defaultFreeFeatures;
+            return !!defaults[feature];
         }
 
-        return !!value;
+        return false;
     }
 
     async createSubscription(session: any, planName: string): Promise<string> {

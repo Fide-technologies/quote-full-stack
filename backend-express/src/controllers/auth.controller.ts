@@ -2,6 +2,7 @@ import { inject, injectable } from "inversify";
 import { TYPES } from "@/types";
 import type { IMerchantService } from "@/interfaces";
 import { shopify } from "@/config";
+import { logger } from "@/utils/logger";
 import type { Request, Response, NextFunction } from "express";
 
 @injectable()
@@ -22,16 +23,20 @@ export class AuthController {
                 currency: string;
             }
 
-            const shop = (shopResponse.body as { shop: Shop }).shop;
+            const shopData = (shopResponse.body as { shop: Shop })?.shop;
 
+            if (!shopData) {
+                logger.error(`Auth Callback: Failed to fetch shop data for ${session.shop}`);
+                return res.status(500).send("Failed to fetch shop details from Shopify");
+            }
 
             await this.merchantService.createOrUpdateMerchant({
                 shop: session.shop,
                 accessToken: session.accessToken,
                 scopes: session.scope,
-                email: shop.email,
-                shopOwner: shop.shop_owner,
-                currency: shop.currency,
+                email: shopData.email,
+                shopOwner: shopData.shop_owner,
+                currency: shopData.currency,
                 isActive: true,
                 installedAt: new Date(),
             });

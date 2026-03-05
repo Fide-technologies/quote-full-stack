@@ -1,6 +1,6 @@
 import { ApiVersion, shopifyApp } from "@shopify/shopify-app-express";
 import { LogSeverity, BillingInterval, BillingReplacementBehavior } from "@shopify/shopify-api";
-import { restResources } from "@shopify/shopify-api/rest/admin/2024-01"; // TODO: Upgrade to match ApiVersion
+import { restResources } from "@shopify/shopify-api/rest/admin/2026-01";
 import { MongoDBSessionStorage } from "@shopify/shopify-app-session-storage-mongodb";
 import { env } from "@/validations/env.validation";
 
@@ -13,7 +13,7 @@ const shopify = shopifyApp({
     api: {
         apiKey: env.SHOPIFY_API_KEY,
         apiSecretKey: env.SHOPIFY_API_SECRET,
-        apiVersion: ApiVersion.July24,
+        apiVersion: "2026-01" as ApiVersion,
         hostScheme: env.HOST_SCHEMA,
         hostName: env.HOST_NAME,
         isEmbeddedApp: true,

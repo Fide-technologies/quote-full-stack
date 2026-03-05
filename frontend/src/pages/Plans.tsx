@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Page, Layout, Card, BlockStack, Text, Button, InlineStack, Badge, Banner, Box, Icon, Divider, Link } from '@shopify/polaris';
+import { Page, Layout, Card, BlockStack, Text, Button, InlineStack, Badge, Banner, Box, Icon, Divider, Link, InlineGrid } from '@shopify/polaris';
 import { CheckIcon, XIcon } from "@shopify/polaris-icons";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getCurrentPlan, upgradePlan } from "../api/plans";
@@ -40,8 +40,10 @@ export const Plans: React.FC = () => {
         onSuccess: (data: any) => {
             const url = data.data?.confirmationUrl || data.confirmationUrl;
             if (url) {
-                window.open(url, "_top");
+                (shopify as any).open(url, "_top");
             }
+
+
         },
         onError: (error: any) => {
             setUpgradeError(error.message);
@@ -90,68 +92,75 @@ export const Plans: React.FC = () => {
                     </Layout.Section>
 
                     <Layout.Section>
-                        <div className="max-w-[1100px] mx-auto w-full px-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-                                {(planData as Plan[]).map((plan) => (
-                                    <div key={plan.id} className="flex flex-col">
-                                        <div className={`h-full ${plan.isPopular ? 'border-2 border-[var(--p-color-border-brand)] rounded-[var(--p-border-radius-300)] overflow-hidden' : ''}`}>
-                                            <Card padding="400">
-                                                <div className="flex flex-col h-[300px]">
-                                                    <BlockStack gap="200">
-                                                        <div className="min-h-[40px]">
-                                                            <div className="flex justify-between items-start">
-                                                                <BlockStack gap="200">
-                                                                    <Text as="h2" variant="headingLg" fontWeight={plan.isPopular ? "bold" : undefined}>{plan.name}</Text>
-                                                                    <Text as="p" variant="bodyMd" tone="subdued">{plan.description}</Text>
-                                                                </BlockStack>
-                                                                {plan.isPopular && <Badge tone="info">Popular</Badge>}
-                                                            </div>
-                                                        </div>
+                        <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
+                            {(planData as Plan[]).map((plan) => {
+                                const isCurrent = currentPlanData?.name === plan.id;
+                                return (
+                                    <Box key={plan.id}>
+                                        <Card padding="400" roundedAbove="sm">
 
-                                                        <div className="flex flex-col gap-1 min-h-[40px] justify-center">
-                                                            <div className="flex items-baseline gap-1">
-                                                                <Text as="span" variant="heading3xl" fontWeight={plan.price !== 'Free' ? 'bold' : undefined}>{plan.price}</Text>
-                                                                <Text as="span" variant="bodyMd" tone="subdued">{plan.period}</Text>
-                                                            </div>
-                                                            {plan.trialDays && (
-                                                                <Text as="p" variant="bodySm" tone="success" fontWeight="bold">{plan.trialDays} DAY FREE TRIAL</Text>
-                                                            )}
-                                                        </div>
-
-                                                        <Button
-                                                            variant={currentPlanData?.name === plan.id ? "secondary" : (plan.id === 'PRO' ? 'primary' : 'secondary')}
-                                                            fullWidth
-                                                            size="large"
-                                                            loading={upgradeMutation.isPending && upgradeMutation.variables === plan.id}
-                                                            disabled={currentPlanData?.name === plan.id}
-                                                            onClick={() => handleUpgrade(plan.id)}
-                                                        >
-                                                            {currentPlanData?.name === plan.id ? "Current plan" : (plan.id === 'FREE' ? "Switch to Free" : `Upgrade to ${plan.name}`)}
-                                                        </Button>
-
-                                                        <Divider />
-
-                                                        <BlockStack gap="200">
-                                                            {plan.features.map((feature, idx) => (
-                                                                <div key={idx} className={`flex items-start gap-3 ${!feature.included ? 'opacity-30' : ''}`}>
-                                                                    <div className="min-w-[20px]">
-                                                                        <Icon source={feature.included ? CheckIcon : XIcon} tone={feature.included ? "success" : "critical"} />
-                                                                    </div>
-                                                                    <Text as="span" variant="bodyMd" fontWeight={feature.bold ? 'bold' : (feature.highlighted ? 'semibold' : undefined)} tone={feature.highlighted ? 'success' : undefined}>
-                                                                        {feature.text}
-                                                                    </Text>
-                                                                </div>
-                                                            ))}
+                                            <BlockStack gap="400">
+                                                <BlockStack gap="200">
+                                                    <InlineStack align="space-between">
+                                                        <BlockStack gap="100">
+                                                            <Text as="h2" variant="headingLg" fontWeight={plan.isPopular ? "bold" : undefined}>
+                                                                {plan.name}
+                                                            </Text>
+                                                            {plan.isPopular && <Badge tone="info">Popular</Badge>}
                                                         </BlockStack>
-                                                    </BlockStack>
-                                                </div>
-                                            </Card>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                                                    </InlineStack>
+                                                    <Text as="p" variant="bodyMd" tone="subdued">{plan.description}</Text>
+                                                </BlockStack>
+
+                                                <BlockStack gap="100">
+                                                    <InlineStack align="start" blockAlign="baseline" gap="100">
+                                                        <Text as="span" variant="heading3xl" fontWeight={plan.price !== 'Free' ? 'bold' : undefined}>
+                                                            {plan.price}
+                                                        </Text>
+                                                        <Text as="span" variant="bodyMd" tone="subdued">{plan.period}</Text>
+                                                    </InlineStack>
+                                                    {plan.trialDays && (
+                                                        <Text as="p" variant="bodySm" tone="success" fontWeight="bold">
+                                                            {plan.trialDays} DAY FREE TRIAL
+                                                        </Text>
+                                                    )}
+                                                </BlockStack>
+
+                                                <Button
+                                                    variant={isCurrent ? "secondary" : (plan.isPopular ? 'primary' : 'secondary')}
+                                                    fullWidth
+                                                    size="large"
+                                                    loading={upgradeMutation.isPending && upgradeMutation.variables === plan.id}
+                                                    disabled={isCurrent}
+                                                    onClick={() => handleUpgrade(plan.id)}
+                                                >
+                                                    {isCurrent ? "Current plan" : (plan.id === 'FREE' ? "Switch to Free" : `Upgrade to ${plan.name}`)}
+                                                </Button>
+
+                                                <Divider />
+
+                                                <BlockStack gap="200">
+                                                    {plan.features.map((feature, idx) => (
+                                                        <InlineStack key={idx} wrap={false} gap="300">
+                                                            <Box width="20px" opacity={!feature.included ? "0.3" : "1"}>
+                                                                <Icon source={feature.included ? CheckIcon : XIcon} tone={feature.included ? "success" : "critical"} />
+                                                            </Box>
+                                                            <Box opacity={!feature.included ? "0.3" : "1"}>
+                                                                <Text as="span" variant="bodyMd" fontWeight={feature.bold ? 'bold' : (feature.highlighted ? 'semibold' : undefined)} tone={feature.highlighted ? 'success' : undefined}>
+                                                                    {feature.text}
+                                                                </Text>
+                                                            </Box>
+                                                        </InlineStack>
+                                                    ))}
+                                                </BlockStack>
+                                            </BlockStack>
+                                        </Card>
+                                    </Box>
+                                );
+                            })}
+                        </InlineGrid>
                     </Layout.Section>
+
 
                     <Layout.Section>
                         <Box paddingBlockStart="400" paddingBlockEnd="400">
