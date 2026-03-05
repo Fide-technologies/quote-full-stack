@@ -23,4 +23,5 @@ export const TYPES = {
     FormController: Symbol.for("FormController"),
     IDashboardService: Symbol.for("IDashboardService"),
     DashboardController: Symbol.for("DashboardController"),
+    UploadController: Symbol.for("UploadController"),
 };

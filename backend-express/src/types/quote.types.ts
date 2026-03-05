@@ -62,6 +62,7 @@ export interface IQuote {
 
     // Custom Form Data
     customData?: Record<string, any>;
+    customImages?: string[];
 
     // Draft Order Integration
     draftOrderId?: string;

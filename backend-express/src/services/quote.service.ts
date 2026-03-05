@@ -74,7 +74,8 @@ export class QuoteService implements IQuoteService {
                         quantity: quantity,
                         price: price
                     }
-                ]
+                ],
+                customImages: quoteData.customImages || []
             };
 
 

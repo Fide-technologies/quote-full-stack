@@ -11,7 +11,9 @@ export interface IFormField {
     validationRegex?: string;
     validationMessage?: string;
     allowedFileTypes?: string;
+    allowedImageFormats?: string[];
     maxFileSizeMB?: number;
+    allowMultiple?: boolean;
     // UI layout
     layoutWidth?: 'full' | 'half';
     isSystem?: boolean;

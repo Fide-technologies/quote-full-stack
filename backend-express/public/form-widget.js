@@ -86,6 +86,15 @@ class CustomQuoteForm extends HTMLElement {
                     ${(field.options || []).map(opt => `<option value="${opt}">${opt}</option>`).join('')}
                 </select>`;
                 break;
+            case 'file':
+                let accept = field.allowedFileTypes || '';
+                if (field.allowedImageFormats && field.allowedImageFormats.length > 0) {
+                    const formats = field.allowedImageFormats.join(',');
+                    accept = accept ? `${formats},${accept}` : formats;
+                }
+                if (!accept) accept = 'image/*';
+                inputHtml = `<input type="file" ${commonAttrs} ${field.allowMultiple ? 'multiple' : ''} accept="${accept}" />`;
+                break;
             default: // text, email, phone
                 inputHtml = `<input type="${field.type === 'phone' ? 'tel' : field.type}" ${commonAttrs} />`;
         }
@@ -151,19 +160,47 @@ class CustomQuoteForm extends HTMLElement {
 
             // Standard payload expects customerEmail, etc. We'll map them if the merchant used standard names
             // Or just send it all as customData for the backend to process
-            const payload = {
-                shop: this.getAttribute('shop'),
-                customData: formData,
-                customerEmail: formData['email'] || 'custom-form@example.com', // fallback
-                customerName: formData['name'] || 'Customer',
-                // Additional standard fields...
-            };
-
             const msgDiv = this.shadowRoot.getElementById('b2b-message');
             submitBtn.disabled = true;
+            submitBtn.textContent = 'Uploading...';
+
+            let customImages = [];
+
+            // Check for files to upload
+            const fileInputs = form.querySelectorAll('input[type="file"]');
+            for (const input of fileInputs) {
+                if (input.files.length > 0) {
+                    const formDataUpload = new FormData();
+                    for (let i = 0; i < input.files.length; i++) {
+                        formDataUpload.append('images', input.files[i]);
+                    }
+
+                    try {
+                        const uploadRes = await fetch('/apps/proxy/quotes/upload', {
+                            method: 'POST',
+                            body: formDataUpload
+                        });
+                        if (uploadRes.ok) {
+                            const uploadData = await uploadRes.json();
+                            customImages = customImages.concat(uploadData.data.urls);
+                        }
+                    } catch (uploadErr) {
+                        console.error('File upload failed:', uploadErr);
+                    }
+                }
+            }
+
             submitBtn.textContent = 'Submitting...';
 
             try {
+                const payload = {
+                    shop: this.getAttribute('shop'),
+                    customData: formData,
+                    customImages: customImages, // Include the uploaded image URLs
+                    customerEmail: formData['email'] || 'custom-form@example.com',
+                    customerName: formData['name'] || 'Customer',
+                };
+
                 const response = await fetch('/apps/proxy/quotes', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

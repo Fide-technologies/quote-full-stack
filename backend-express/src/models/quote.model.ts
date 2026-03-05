@@ -123,6 +123,10 @@ const quoteSchema = new Schema<IQuote>(
             type: Schema.Types.Mixed,
             default: {}
         },
+        customImages: {
+            type: [String],
+            default: []
+        },
     },
     { timestamps: true }
 );

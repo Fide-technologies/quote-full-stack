@@ -10,6 +10,7 @@ import { QuoteMessage } from "./details/QuoteMessage";
 import { QuoteDraftOrderInfo } from "./details/QuoteDraftOrderInfo";
 import { QuoteSystemInfo } from "./details/QuoteSystemInfo";
 import { QuoteCustomDataDetails } from "./details/QuoteCustomDataDetails";
+import { QuoteImages } from "./details/QuoteImages";
 
 interface QuoteDetailsModalProps {
     quote: Quote | null;
@@ -114,6 +115,7 @@ export function QuoteDetailsModal({ quote, isOpen, onClose }: QuoteDetailsModalP
                     <QuoteMessage message={quote.customerMessage || null} />
 
                     <QuoteCustomDataDetails customData={quote.customData} />
+                    <QuoteImages images={quote.customImages} />
 
                     <QuoteDraftOrderInfo
                         draftOrderId={quote.draftOrderId || null}

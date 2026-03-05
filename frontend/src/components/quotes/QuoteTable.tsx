@@ -103,6 +103,9 @@ export function QuoteTable({
                         {quote.draftOrderId && (
                             <Badge tone="success">Draft Created</Badge>
                         )}
+                        {quote.customImages && quote.customImages.length > 0 && (
+                            <Badge tone="info">Images</Badge>
+                        )}
                     </BlockStack>
                 </IndexTable.Cell>
                 <IndexTable.Cell>

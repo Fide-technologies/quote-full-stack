@@ -26,6 +26,7 @@ export interface Quote {
     draftOrderId?: string;
     draftOrderUrl?: string;
     customData?: Record<string, any>;
+    customImages?: string[];
 }
 
 export interface QuotesResponse {
