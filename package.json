@@ -1,6 +1,7 @@
 {
     "name": "merchant-full-stack",
     "devDependencies": {
+        "@playwright/test": "^1.58.2",
         "@shopify/cli": "^3.0.0"
     },
     "license": "UNLICENSED",
