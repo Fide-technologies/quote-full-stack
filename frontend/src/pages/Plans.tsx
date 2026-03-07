@@ -98,7 +98,7 @@ export const Plans: React.FC = () => {
                     <Layout.Section>
                         <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
                             {(planData as Plan[]).map((plan) => {
-                                const isCurrent = currentPlanData?.name === plan.id;
+                                const isCurrent = currentPlanData?.plan?.name === plan.id;
                                 return (
                                     <Box key={plan.id}>
                                         <Card padding="400" roundedAbove="sm">
