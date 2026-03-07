@@ -17,8 +17,9 @@ export class PlanController extends BaseController {
     async getCurrentPlan(req: Request, res: Response) {
         try {
             const session = res.locals.shopify.session;
+            const merchant = await this.merchantService.getMerchantByShop(session.shop);
             const plan = await this.planService.getMerchantPlan(session.shop);
-            return this.ok(res, plan);
+            return this.ok(res, { merchant, plan });
         } catch (error) {
             return this.handleError(res, error);
         }
