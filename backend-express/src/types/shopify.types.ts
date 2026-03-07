@@ -35,6 +35,7 @@ export interface DraftOrderInput {
     billingAddress?: DraftOrderShippingAddress;
     note?: string;
     customAttributes?: Array<{ key: string; value: string }>;
+    marketRegionCountryCode?: string;
 }
 
 export interface DraftOrderCreateResponse {
