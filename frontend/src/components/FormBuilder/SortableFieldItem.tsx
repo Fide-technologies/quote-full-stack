@@ -33,9 +33,10 @@ interface SortableFieldProps {
     stepIdx: number;
     formState: IForm;
     setFormState: React.Dispatch<React.SetStateAction<IForm | null>>;
+    readOnly?: boolean;
 }
 
-export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setFormState }: SortableFieldProps) {
+export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setFormState, readOnly = false }: SortableFieldProps) {
     const {
         attributes,
         listeners,
@@ -43,7 +44,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
         transform,
         transition,
         isDragging
-    } = useSortable({ id: field.id, disabled: field.isSystem });
+    } = useSortable({ id: field.id, disabled: field.isSystem || readOnly });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -93,7 +94,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                 shadow={isDragging ? '400' : '100'}
             >
                 <InlineStack align="start" blockAlign="center" gap="400" wrap={false}>
-                    {field.isSystem ? (
+                    {field.isSystem || readOnly ? (
                         <div className="p-1 opacity-30 cursor-not-allowed">
                             <Icon source={DragHandleIcon} tone="base" />
                         </div>
@@ -110,7 +111,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                             value={field.label}
                             onChange={updateFieldLabel}
                             autoComplete="off"
-                            disabled={field.isSystem}
+                            disabled={field.isSystem || readOnly}
                         />
                     </div>
 
@@ -121,7 +122,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                             options={fieldTypes}
                             value={field.type}
                             onChange={updateFieldType}
-                            disabled={field.isSystem}
+                            disabled={field.isSystem || readOnly}
                         />
                     </div>
 
@@ -135,6 +136,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                             ]}
                             value={field.layoutWidth || 'full'}
                             onChange={(val) => updateFieldProperty('layoutWidth', val)}
+                            disabled={readOnly}
                         />
                     </div>
 
@@ -143,13 +145,13 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                             label="Required"
                             checked={field.required}
                             onChange={updateFieldRequired}
-                            disabled={field.isSystem && field.required}
+                            disabled={(field.isSystem && field.required) || readOnly}
                         />
                     </div>
 
-                    {field.isSystem ? (
+                    {field.isSystem || readOnly ? (
                         <div className="min-w-[85px] flex justify-center">
-                            <Badge tone="info">System</Badge>
+                            <Badge tone="info">{field.isSystem ? 'System' : 'Read Only'}</Badge>
                         </div>
                     ) : (
                         <div className="min-w-[85px] flex justify-center">
@@ -179,6 +181,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                                     value={field.minLength?.toString() || ''}
                                                     onChange={(val) => updateFieldProperty('minLength', val ? parseInt(val) : undefined)}
                                                     autoComplete="off"
+                                                    disabled={readOnly}
                                                 />
                                             </div>
                                             <div className="flex-1">
@@ -188,6 +191,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                                     value={field.maxLength?.toString() || ''}
                                                     onChange={(val) => updateFieldProperty('maxLength', val ? parseInt(val) : undefined)}
                                                     autoComplete="off"
+                                                    disabled={readOnly}
                                                 />
                                             </div>
                                         </>
@@ -200,6 +204,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                                 options={regexOptions}
                                                 value={field.validationRegex || ''}
                                                 onChange={(val) => updateFieldProperty('validationRegex', val)}
+                                                disabled={readOnly}
                                             />
                                         </div>
                                     )}
@@ -217,6 +222,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                                             ]}
                                                             value={field.allowMultiple ? 'multiple' : 'single'}
                                                             onChange={(val) => updateFieldProperty('allowMultiple', val === 'multiple')}
+                                                            disabled={readOnly}
                                                         />
                                                     </div>
                                                     <div className="flex-1">
@@ -226,6 +232,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                                             value={field.maxFileSizeMB?.toString() || ''}
                                                             onChange={(val) => updateFieldProperty('maxFileSizeMB', val ? parseInt(val) : undefined)}
                                                             autoComplete="off"
+                                                            disabled={readOnly}
                                                         />
                                                     </div>
                                                 </InlineStack>
@@ -243,6 +250,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                                         ]}
                                                         selected={field.allowedImageFormats || []}
                                                         onChange={(val) => updateFieldProperty('allowedImageFormats', val)}
+                                                        disabled={readOnly}
                                                     />
                                                 </Box>
 
@@ -253,6 +261,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                                     placeholder="application/pdf, .zip"
                                                     autoComplete="off"
                                                     helpText="If you select image formats above, they will be combined with these."
+                                                    disabled={readOnly}
                                                 />
                                             </BlockStack>
                                         </div>
@@ -266,6 +275,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                         onChange={(val) => updateFieldProperty('validationMessage', val)}
                                         placeholder="Please enter a valid format."
                                         autoComplete="off"
+                                        disabled={readOnly}
                                     />
                                 )}
                             </BlockStack>

@@ -27,11 +27,17 @@ const envSchema = z.object({
     NGROK_DOMAIN: z.string().min(1).optional(),
 
     SMTP_HOST: z.string().optional(),
-    SMTP_PORT: z.string().optional(),
+    SMTP_PORT: z.coerce.number().optional(),
     SMTP_USER: z.string().optional(),
     SMTP_PASS: z.string().optional(),
     SMTP_SECURE: z.string().optional(),
     SMTP_FROM: z.string().optional(),
+
+    // AWS S3 Configuration
+    AWS_ACCESS_KEY_ID: z.string().optional(),
+    AWS_SECRET_ACCESS_KEY: z.string().optional(),
+    AWS_REGION: z.string().optional(),
+    AWS_S3_BUCKET: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

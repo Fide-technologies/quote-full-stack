@@ -16,6 +16,7 @@ interface FormStepProps {
     sensors: SensorDescriptor<SensorOptions>[];
     handleDragEnd: (event: any, stepIdx: number) => void;
     addField: (stepIdx: number) => void;
+    readOnly?: boolean;
 }
 
 export const FormStep: React.FC<FormStepProps> = ({
@@ -27,7 +28,8 @@ export const FormStep: React.FC<FormStepProps> = ({
     setExpandedStep,
     sensors,
     handleDragEnd,
-    addField
+    addField,
+    readOnly = false
 }) => {
     return (
         <Card key={step.id}>
@@ -42,7 +44,7 @@ export const FormStep: React.FC<FormStepProps> = ({
                             <Text variant="bodySm" as="span" tone="subdued">
                                 {step.fields.length} / 6 fields
                             </Text>
-                            {!step.isSystem && (
+                            {!step.isSystem && !readOnly && (
                                 <div onClick={(e) => e.stopPropagation()}>
                                     <Button
                                         tone="critical"
@@ -83,7 +85,7 @@ export const FormStep: React.FC<FormStepProps> = ({
                                     setFormState({ ...formState, steps: updated });
                                 }}
                                 autoComplete="off"
-                                disabled={step.isSystem}
+                                disabled={step.isSystem || readOnly}
                             />
                         </Box>
 
@@ -91,15 +93,17 @@ export const FormStep: React.FC<FormStepProps> = ({
 
                         <InlineStack align="space-between" blockAlign="center">
                             <Text variant="headingSm" as="h3">Fields</Text>
-                            <Button
-                                icon={PlusIcon}
-                                size="micro"
-                                variant="plain"
-                                onClick={() => addField(stepIdx)}
-                                disabled={step.fields.length >= 6}
-                            >
-                                Add Field
-                            </Button>
+                            {!readOnly && (
+                                <Button
+                                    icon={PlusIcon}
+                                    size="micro"
+                                    variant="plain"
+                                    onClick={() => addField(stepIdx)}
+                                    disabled={step.fields.length >= 6}
+                                >
+                                    Add Field
+                                </Button>
+                            )}
                         </InlineStack>
 
                         <DndContext
@@ -120,6 +124,7 @@ export const FormStep: React.FC<FormStepProps> = ({
                                             stepIdx={stepIdx}
                                             formState={formState}
                                             setFormState={setFormState}
+                                            readOnly={readOnly}
                                         />
                                     ))}
                                 </BlockStack>

@@ -1,5 +1,6 @@
 import { Modal, Box, Banner, Text, BlockStack } from "@shopify/polaris";
 import { LockIcon } from "@shopify/polaris-icons";
+import { useNavigate } from "react-router-dom";
 import { type Quote } from "@/api/quotes";
 import { useQuoteDraftOrder } from "@/hooks/useQuoteDraftOrder";
 import { generateWhatsAppUrl } from "@/utils/whatsapp";
@@ -19,6 +20,7 @@ interface QuoteDetailsModalProps {
 }
 
 export function QuoteDetailsModal({ quote, isOpen, onClose }: QuoteDetailsModalProps) {
+    const navigate = useNavigate();
     const {
         handleCreateDraftOrder,
         isPending,
@@ -43,9 +45,9 @@ export function QuoteDetailsModal({ quote, isOpen, onClose }: QuoteDetailsModalP
         }
         : {
             content: isSettingsLoading ? 'Loading...' : (isPro ? 'Create Draft Order' : 'Upgrade to Create Order'),
-            onAction: isPro ? () => handleCreateDraftOrder() : () => { }, // Maybe redirect to billing?
+            onAction: isPro ? () => handleCreateDraftOrder() : () => navigate('/plans'),
             loading: isPending || isSettingsLoading,
-            disabled: isPending || isSettingsLoading || !isPro,
+            disabled: isPending || isSettingsLoading,
             helpText: (!isPro && !isSettingsLoading) ? "Available on PRO plan" : undefined
         };
 

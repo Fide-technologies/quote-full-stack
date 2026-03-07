@@ -24,4 +24,5 @@ export const TYPES = {
     IDashboardService: Symbol.for("IDashboardService"),
     DashboardController: Symbol.for("DashboardController"),
     UploadController: Symbol.for("UploadController"),
+    IUploadService: Symbol.for("IUploadService"),
 };

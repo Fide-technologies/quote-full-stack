@@ -15,6 +15,41 @@
                 dataObj[key] = value;
             });
 
+            // Handle file uploads separately via App Proxy
+            const fileInputs = form.querySelectorAll('input[type="file"]');
+            const filesToUpload = [];
+
+            fileInputs.forEach(input => {
+                const files = input._rq_files || input.files;
+                if (files && files.length) {
+                    Array.from(files).forEach(f => filesToUpload.push(f));
+                }
+            });
+
+            if (filesToUpload.length > 0) {
+                try {
+                    const uploadFormData = new FormData();
+                    filesToUpload.forEach(file => {
+                        uploadFormData.append('images', file);
+                    });
+
+                    const uploadRes = await fetch(`${PROXY_PATH}/upload`, {
+                        method: 'POST',
+                        body: uploadFormData
+                    });
+
+                    if (uploadRes.ok) {
+                        const uploadData = await uploadRes.json();
+                        const urls = uploadData.data?.urls || uploadData.urls;
+                        if (urls) {
+                            dataObj['customImages'] = urls;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Image upload failed, submitting quote without images:', err);
+                }
+            }
+
             // If cartItems are provided, we use them (Bulk Quote)
             if (cartItems && cartItems.length > 0) {
                 dataObj['items'] = cartItems.map(item => ({

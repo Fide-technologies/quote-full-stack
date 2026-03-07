@@ -6,17 +6,18 @@ import {
     BlockStack,
     Box,
     Text,
+    Banner,
 } from '@shopify/polaris';
 import { ExportIcon } from '@shopify/polaris-icons';
 
 import { useQuotes } from '../hooks/quotes/useQuotes';
+import { usePlanUsage } from '../hooks/usePlanUsage';
+import { useNavigate } from 'react-router-dom';
 import { QuoteFilters } from '../components/quotes/QuoteFilters';
 import { QuoteTable } from '../components/quotes/QuoteTable';
 import { QuoteDetailsModal } from '../components/quotes/QuoteDetailsModal';
 
 export const Quotes: React.FC = () => {
-    console.log('Quotes component mounted');
-
     const {
         quotes,
         totalCount,
@@ -40,6 +41,8 @@ export const Quotes: React.FC = () => {
         closeModal
     } = useQuotes();
 
+    const navigate = useNavigate();
+    const { isUsageExceeded, usage, isLoading: isPlanLoading } = usePlanUsage();
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
@@ -62,6 +65,22 @@ export const Quotes: React.FC = () => {
             <Layout>
                 <Layout.Section>
                     <BlockStack gap="400">
+                        {isUsageExceeded() && !isPlanLoading && (
+                            <Banner
+                                tone="critical"
+                                title="Quote limit reached"
+                                action={{
+                                    content: 'Upgrade Plan',
+                                    onAction: () => navigate('/plans')
+                                }}
+                            >
+                                <p>
+                                    You have reached your limit of {usage?.plan?.quoteLimit} quotes for the current plan.
+                                    New quotes will not be captured until you upgrade or your cycle resets.
+                                </p>
+                            </Banner>
+                        )}
+
                         <Box paddingBlockEnd="400">
                             <BlockStack gap="100">
                                 <Text variant="headingLg" as="h2">Manage your inquiries</Text>

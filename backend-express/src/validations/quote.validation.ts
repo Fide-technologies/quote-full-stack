@@ -10,8 +10,10 @@ const quoteItemSchema = z.object({
 export const createQuoteSchema = z.object({
     body: z.object({
         email: z.string().email("Invalid email format"),
-        firstName: z.string().min(1, "First name is required"),
-        lastName: z.string().min(1, "Last name is required"),
+        firstName: z.string().optional(),
+        lastName: z.string().optional(),
+        fname: z.string().optional(),
+        lname: z.string().optional(),
         phone: z.string().min(1, "Phone number is required"),
         address1: z.string().min(1, "Address is required"),
         address2: z.string().optional(),
@@ -21,12 +23,25 @@ export const createQuoteSchema = z.object({
         pincode: z.string().min(1, "Pincode is required"),
         message: z.string().optional(),
         shop: z.string().min(1, "Shop is required"),
-        productId: z.string().min(1, "Product ID is required"),
+        productId: z.union([z.string(), z.number()]).transform((val) => String(val)),
         variantId: z.union([z.string(), z.number()]).transform((val) => String(val)).optional(),
         productTitle: z.string().min(1, "Product title is required"),
-        quantity: z.union([z.string(), z.number()]).transform((val) => Number(val)),
-        price: z.union([z.string(), z.number()]).transform((val) => Number(val)).optional(),
+        quantity: z.union([z.string(), z.number()]).optional().default(1).transform((val) => {
+            const num = Number(val);
+            return isNaN(num) ? 1 : num;
+        }),
+        price: z.union([z.string(), z.number()]).optional().default(0).transform((val) => {
+            const num = Number(val);
+            return isNaN(num) ? 0 : num;
+        }),
         customData: z.record(z.string(), z.any()).optional(),
+    }).transform(data => ({
+        ...data,
+        firstName: data.firstName || data.fname || "",
+        lastName: data.lastName || data.lname || "",
+    })).refine(data => data.firstName.length > 0, {
+        message: "First name is required",
+        path: ["firstName"]
     }),
 });
 

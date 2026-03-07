@@ -38,8 +38,8 @@ export class FormController extends BaseController {
                             title: "Contact",
                             isSystem: true,
                             fields: [
-                                { id: "field-fname", type: "text", label: "First Name", required: true, isSystem: true, layoutWidth: "half" },
-                                { id: "field-lname", type: "text", label: "Last Name", required: true, isSystem: true, layoutWidth: "half" },
+                                { id: "field-firstName", type: "text", label: "First Name", required: true, isSystem: true, layoutWidth: "half" },
+                                { id: "field-lastName", type: "text", label: "Last Name", required: true, isSystem: true, layoutWidth: "half" },
                                 { id: "field-email", type: "email", label: "Email Address", required: true, isSystem: true, layoutWidth: "full" },
                                 { id: "field-phone", type: "phone", label: "Phone Number", required: true, isSystem: true, layoutWidth: "full" }
                             ]

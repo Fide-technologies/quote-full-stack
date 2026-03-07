@@ -22,7 +22,7 @@ const shopify = shopifyApp({
         logger: {
             level: env.NODE_ENV === "development" ? LogSeverity.Debug : LogSeverity.Error,
         },
-        isTesting: true,
+        isTesting: env.NODE_ENV !== "production",
         isCustomStoreApp: false,
         billing: {
             "PRO": {

@@ -23,10 +23,10 @@
                 if (input.required && !input.value.trim() && input.type !== 'file') {
                     fieldValid = false;
                     errMsg = 'This field is required.';
-                } else if (input.required && input.type === 'file' && !input.files.length) {
+                } else if (input.required && input.type === 'file' && !input.files.length && (!input._rq_files || !input._rq_files.length)) {
                     fieldValid = false;
                     errMsg = 'Please select a file.';
-                } else if (input.value.trim() || input.files?.length) {
+                } else if (input.value.trim() || input.files?.length || (input._rq_files && input._rq_files.length)) {
 
                     // Advanced Validations Handlers
                     const patternAttr = input.getAttribute('pattern');
@@ -55,11 +55,17 @@
                     }
 
                     // File Size Validation
-                    if (fieldValid && input.type === 'file' && input.files.length && maxMbAttr) {
-                        const maxBytes = parseFloat(maxMbAttr) * 1024 * 1024;
-                        if (input.files[0].size > maxBytes) {
-                            fieldValid = false;
-                            errMsg = `File must be smaller than ${maxMbAttr}MB.`;
+                    if (fieldValid && input.type === 'file' && maxMbAttr) {
+                        const files = input._rq_files || input.files;
+                        if (files && files.length) {
+                            const maxBytes = parseFloat(maxMbAttr) * 1024 * 1024;
+                            for (let i = 0; i < files.length; i++) {
+                                if (files[i].size > maxBytes) {
+                                    fieldValid = false;
+                                    errMsg = `Each file must be smaller than ${maxMbAttr}MB.`;
+                                    break;
+                                }
+                            }
                         }
                     }
 

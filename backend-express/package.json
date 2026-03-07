@@ -23,6 +23,7 @@
     "@playwright/test": "^1.58.2",
     "@types/bun": "latest",
     "@types/multer": "^2.0.0",
+    "@types/multer-s3": "^3.0.3",
     "@types/nodemailer": "^7.0.9",
     "@vitest/coverage-v8": "^4.0.18",
     "multer": "^2.1.0",
@@ -33,6 +34,8 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1003.0",
+    "@aws-sdk/s3-request-presigner": "^3.1003.0",
     "@ngrok/ngrok": "^1.7.0",
     "@shopify/shopify-api": "^12.3.0",
     "@shopify/shopify-app-express": "^6.0.5",
@@ -42,6 +45,7 @@
     "express": "^5.2.1",
     "inversify": "^7.11.0",
     "mongoose": "^9.1.5",
+    "multer-s3": "^3.0.1",
     "nodemailer": "^7.0.13",
     "reflect-metadata": "^0.2.2",
     "zod": "^4.3.6"

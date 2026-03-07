@@ -3,6 +3,9 @@
         openModal: function (blockId) {
             const modal = document.getElementById(`rqModal-${blockId}`);
             if (modal) {
+                // Ensure form is reset whenever opened, just in case
+                this.resetForm(blockId);
+
                 document.body.style.overflow = 'hidden';
                 modal.classList.add('open');
                 modal.setAttribute('aria-hidden', 'false');
@@ -16,6 +19,9 @@
                 modal.setAttribute('aria-hidden', 'true');
             });
             document.body.style.overflow = '';
+
+            // Always reset the form when closing so it's fresh next time
+            this.resetForm(blockId);
         },
 
         showProductSummary: function (modal, product) {
@@ -130,6 +136,8 @@
             const backIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
             const nextIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
             const submitIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+            const fileIcon = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`;
+            const trashIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`;
 
             let html = '';
 
@@ -170,15 +178,25 @@
                             html += `<textarea name="${fieldName}" id="${fieldId}" rows="5" placeholder="Tell us more about your requirements..." ${attrs}></textarea>`;
                             if (field.maxLength) html += `<small class="rq-char-count">Max ${field.maxLength} characters</small>`;
                         } else if (field.type === 'file') {
-                            const acceptAttr = field.allowedFileTypes ? `accept="${field.allowedFileTypes}"` : '';
-                            const maxMbAttr = field.maxFileSizeMB ? `data-max-mb="${field.maxFileSizeMB}"` : '';
-                            html += `<input type="file" name="${fieldName}" id="${fieldId}" ${acceptAttr} ${maxMbAttr} ${requiredAttr}>`;
-                            if (field.allowedFileTypes || field.maxFileSizeMB) {
-                                html += `<small class="rq-file-hints" style="font-size: 11px; color: #666; display: block; margin-top: 4px;">`;
-                                if (field.allowedFileTypes) html += `Allowed: ${field.allowedFileTypes}. `;
-                                if (field.maxFileSizeMB) html += `Max: ${field.maxFileSizeMB}MB.`;
-                                html += `</small>`;
-                            }
+                            const isMultiple = field.isMultiple || field.id.includes('multiple') || (field.label && field.label.toLowerCase().includes('multiple'));
+                            const maxFiles = isMultiple ? 3 : 1;
+                            const acceptAttr = field.allowedFileTypes ? `accept="${field.allowedFileTypes}"` : 'accept="image/*"';
+                            const maxMbAttr = field.maxFileSizeMB ? `data-max-mb="${field.maxFileSizeMB}"` : 'data-max-mb="5"';
+
+                            html += `
+                                <div class="rq-image-upload-wrapper" id="rq-file-wrapper-${fieldId}">
+                                    <div class="rq-dropzone" onclick="document.getElementById('${fieldId}').click()" 
+                                         ondragover="event.preventDefault(); this.classList.add('dragover')" 
+                                         ondragleave="this.classList.remove('dragover')"
+                                         ondrop="window.RqUi.handleFileDrop(event, '${fieldId}', ${maxFiles})">
+                                        <div class="rq-dropzone-icon">${fileIcon}</div>
+                                        <div class="rq-dropzone-text">Click to upload or drag and drop</div>
+                                        <div class="rq-dropzone-subtext">${field.allowedFileTypes || 'Images only'} (Max ${maxFiles} file${maxFiles > 1 ? 's' : ''}, ${field.maxFileSizeMB || '5'}MB each)</div>
+                                        <input type="file" name="${fieldName}" id="${fieldId}" ${acceptAttr} ${maxMbAttr} ${requiredAttr} ${isMultiple ? 'multiple' : ''} style="display:none;" onchange="window.RqUi.handleFileSelect(event, '${fieldId}', ${maxFiles})">
+                                    </div>
+                                    <div class="rq-file-previews" id="rq-previews-${fieldId}"></div>
+                                </div>
+                            `;
                         } else {
                             if (fieldName === 'pincode' || field.validationRegex === '^[0-9]+$') {
                                 html += `<input type="text" name="${fieldName}" id="${fieldId}" oninput="this.value = this.value.replace(/[^0-9]/g, '');" ${attrs}>`;
@@ -287,6 +305,9 @@
             const errorSpans = document.querySelectorAll(`#rq-form-${blockId} .rq-error`);
             errorSpans.forEach(el => el.innerText = '');
 
+            const modal = document.getElementById(`rqModal-${blockId}`);
+            if (modal) modal.dataset.isBulk = 'false';
+
             const steps = document.querySelectorAll(`#rq-step-input-${blockId} .rq-step`);
             steps.forEach(s => s.classList.remove('active'));
             const firstStep = document.getElementById(`rq-step-1-${blockId}`);
@@ -299,6 +320,16 @@
 
             document.getElementById('rq-step-success-' + blockId).style.display = 'none';
             document.getElementById('rq-step-input-' + blockId).style.display = 'block';
+
+            // Clear any file uploads
+            if (form) {
+                const fileInputs = form.querySelectorAll('input[type="file"]');
+                fileInputs.forEach(input => {
+                    input._rq_files = [];
+                    const previewContainer = document.getElementById(`rq-previews-${input.id}`);
+                    if (previewContainer) previewContainer.innerHTML = '';
+                });
+            }
 
             const nextBtns = document.querySelectorAll(`#rq-step-input-${blockId} .rq-submit-btn`);
             nextBtns.forEach(b => {
@@ -394,6 +425,121 @@
             // Hide progress indicator on success
             const progressWrapper = document.querySelector(`#rqModal-${blockId} .rq-progress-wrapper`);
             if (progressWrapper) progressWrapper.style.display = 'none';
+        },
+
+        handleFileDrop: function (event, fieldId, maxFiles) {
+            event.preventDefault();
+            const dropzone = event.currentTarget;
+            dropzone.classList.remove('dragover');
+
+            const files = event.dataTransfer.files;
+            if (files.length) {
+                this.processFiles(files, fieldId, maxFiles);
+            }
+        },
+
+        handleFileSelect: function (event, fieldId, maxFiles) {
+            const files = event.target.files;
+            if (files.length) {
+                this.processFiles(files, fieldId, maxFiles);
+            }
+        },
+
+        processFiles: function (fileList, fieldId, maxFiles) {
+            const input = document.getElementById(fieldId);
+            const previewContainer = document.getElementById(`rq-previews-${fieldId}`);
+            if (!input || !previewContainer) return;
+
+            const maxMb = parseFloat(input.dataset.maxMb) || 5;
+            const allowedTypesAttr = input.getAttribute('accept');
+
+            // Get existing files if any
+            let existingFiles = input._rq_files || [];
+
+            for (const file of fileList) {
+                // 1. Image Format Check
+                if (!file.type.startsWith('image/')) {
+                    alert(`File "${file.name}" is not an image.`);
+                    continue;
+                }
+
+                // 2. Size Validation
+                if (file.size > maxMb * 1024 * 1024) {
+                    alert(`File "${file.name}" exceeds the ${maxMb}MB limit.`);
+                    continue;
+                }
+
+                // 3. Logic for Single vs Multiple
+                if (maxFiles === 1) {
+                    existingFiles = [file]; // Overwrite for single
+                } else {
+                    // Strictly cap at 3 for multiple
+                    if (existingFiles.length < 3) {
+                        // Prevent duplicates by name if possible (basic check)
+                        const isDup = existingFiles.some(f => f.name === file.name && f.size === file.size);
+                        if (!isDup) existingFiles.push(file);
+                    } else if (fileList.length > 0) {
+                        alert('Maximum 3 images allowed.');
+                        break;
+                    }
+                }
+            }
+
+            input._rq_files = existingFiles;
+            this.renderPreviews(fieldId, existingFiles);
+
+            // Clear errors if we have files
+            if (existingFiles.length > 0) {
+                const fieldName = input.name;
+                const blockId = fieldId.split('-').pop();
+                const errSpan = document.getElementById(`rq-error-${fieldName}-${blockId}`);
+                if (errSpan) errSpan.innerText = '';
+            }
+        },
+
+        renderPreviews: function (fieldId, files) {
+            const previewContainer = document.getElementById(`rq-previews-${fieldId}`);
+            if (!previewContainer) return;
+
+            previewContainer.innerHTML = '';
+
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                const previewItem = document.createElement('div');
+                previewItem.className = 'rq-preview-item';
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'rq-preview-remove';
+                removeBtn.type = 'button';
+                removeBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    this.removeFile(fieldId, index);
+                };
+
+                const img = document.createElement('img');
+                reader.onload = (e) => {
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+
+                const filename = document.createElement('div');
+                filename.className = 'rq-preview-filename';
+                filename.innerText = file.name;
+
+                previewItem.appendChild(img);
+                previewItem.appendChild(removeBtn);
+                previewItem.appendChild(filename);
+                previewContainer.appendChild(previewItem);
+            });
+        },
+
+        removeFile: function (fieldId, index) {
+            const input = document.getElementById(fieldId);
+            if (!input || !input._rq_files) return;
+
+            input._rq_files.splice(index, 1);
+            this.renderPreviews(fieldId, input._rq_files);
         }
     };
 })();

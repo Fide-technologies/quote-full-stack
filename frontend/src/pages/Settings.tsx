@@ -4,6 +4,8 @@ import { getSettings, updateSettings } from "../api/settings"
 import { GlobalSettingsCard } from "../components/settings/GlobalSettingsCard";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { useEffect } from "react";
+import { Link as RouterLink } from "react-router-dom";
+import { Link } from "@shopify/polaris";
 
 
 export const Settings: React.FC = () => {
@@ -99,6 +101,26 @@ export const Settings: React.FC = () => {
                                     </BlockStack>
                                     <Badge tone="info">Always Active</Badge>
                                 </InlineStack>
+                            </Box>
+                        </BlockStack>
+                    </Card>
+                </Layout.AnnotatedSection>
+
+                <Layout.AnnotatedSection
+                    title="Legal & Compliance"
+                    description="View our privacy policy and terms of service."
+                >
+                    <Card>
+                        <BlockStack gap="200">
+                            <Text as="p" variant="bodyMd">
+                                To comply with Shopify App Store requirements, you can find our full data protection and privacy details on our legal page.
+                            </Text>
+                            <Box>
+                                <RouterLink to="/legal" style={{ textDecoration: 'none' }}>
+                                    <Link monochrome removeUnderline url="/legal">
+                                        View Privacy Policy & Terms
+                                    </Link>
+                                </RouterLink>
                             </Box>
                         </BlockStack>
                     </Card>

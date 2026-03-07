@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createDraftOrder, type Quote } from "@/api/quotes";
-import { useSettings } from "./useSettings";
+import { usePlanUsage } from "./usePlanUsage";
+import { PlanAction } from "../constants/plan.constants";
 
 interface UseQuoteDraftOrderProps {
     quote: Quote | null;
@@ -10,7 +11,7 @@ interface UseQuoteDraftOrderProps {
 
 export function useQuoteDraftOrder({ quote }: UseQuoteDraftOrderProps) {
     const queryClient = useQueryClient();
-    const { settings, isLoading: isSettingsLoading } = useSettings();
+    const { hasPermission, isLoading: isPlanLoading } = usePlanUsage();
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [localDraftOrderUrl, setLocalDraftOrderUrl] = useState<string | null>(null);
@@ -42,14 +43,14 @@ export function useQuoteDraftOrder({ quote }: UseQuoteDraftOrderProps) {
         },
     });
 
-    const isPro = settings?.plan === 'PRO';
+    const isPro = hasPermission(PlanAction.DRAFT_ORDER_CREATE);
     const currentDraftOrderUrl = quote?.draftOrderUrl || localDraftOrderUrl;
 
     return {
         handleCreateDraftOrder,
         isPending,
         isPro,
-        isSettingsLoading,
+        isSettingsLoading: isPlanLoading,
         error,
         success,
         currentDraftOrderUrl,

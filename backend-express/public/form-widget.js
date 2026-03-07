@@ -193,13 +193,62 @@ class CustomQuoteForm extends HTMLElement {
             submitBtn.textContent = 'Submitting...';
 
             try {
+                // Determine product info from attributes or page context
+                const productId = this.getAttribute('product-id');
+                const variantId = this.getAttribute('variant-id');
+                const productTitle = this.getAttribute('product-title');
+                const productPrice = this.getAttribute('product-price');
+                const shop = this.getAttribute('shop');
+
+                // Map form fields to standard names if they follow the field-XYZ pattern
+                const systemFields = [
+                    'field-firstName', 'field-lastName', 'field-email', 'field-phone',
+                    'field-address1', 'field-address2', 'field-city', 'field-district',
+                    'field-state', 'field-pincode', 'field-message', 'field-quantity'
+                ];
+
                 const payload = {
-                    shop: this.getAttribute('shop'),
-                    customData: formData,
-                    customImages: customImages, // Include the uploaded image URLs
-                    customerEmail: formData['email'] || 'custom-form@example.com',
-                    customerName: formData['name'] || 'Customer',
+                    shop: shop,
+                    customData: {},
+                    customImages: customImages,
                 };
+
+                const mapping = {
+                    'field-firstName': 'firstName',
+                    'field-lastName': 'lastName',
+                    'field-email': 'email',
+                    'field-phone': 'phone',
+                    'field-address1': 'address1',
+                    'field-address2': 'address2',
+                    'field-city': 'city',
+                    'field-district': 'district',
+                    'field-state': 'state',
+                    'field-pincode': 'pincode',
+                    'field-message': 'message',
+                    'field-quantity': 'quantity'
+                };
+
+                Object.keys(formData).forEach(key => {
+                    if (systemFields.includes(key)) {
+                        const mappedKey = mapping[key];
+                        payload[mappedKey] = formData[key];
+                    } else {
+                        // Truly custom field from Form Builder
+                        payload.customData[key] = formData[key];
+                    }
+                });
+
+                // Ensure required fields for backend validation are present
+                payload.email = payload.email || formData['email'] || 'custom-form@example.com';
+                payload.firstName = payload.firstName || formData['name'] || 'Customer';
+                payload.lastName = payload.lastName || '';
+
+                // Use product info if available
+                payload.productId = productId || formData['productId'] || '0';
+                payload.productTitle = productTitle || formData['productTitle'] || 'Quote Request';
+                payload.variantId = variantId || formData['variantId'];
+                payload.quantity = payload.quantity || formData['quantity'] || '1';
+                payload.price = productPrice || formData['price'] || '0';
 
                 const response = await fetch('/apps/proxy/quotes', {
                     method: 'POST',

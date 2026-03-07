@@ -1,10 +1,18 @@
-import { injectable } from "inversify";
+import { injectable, inject } from "inversify";
 import type { Request, Response } from "express";
 import { BaseController } from "./base.controller";
-import { API_MESSAGES, HTTP_STATUS } from "@/constants";
+import { TYPES } from "@/types";
+import type { IUploadService } from "@/interfaces";
+import { HTTP_STATUS } from "@/constants";
 
 @injectable()
 export class UploadController extends BaseController {
+    constructor(
+        @inject(TYPES.IUploadService) private readonly uploadService: IUploadService
+    ) {
+        super();
+    }
+
     public uploadImages = async (req: Request, res: Response) => {
         try {
             if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
@@ -12,16 +20,16 @@ export class UploadController extends BaseController {
             }
 
             const files = req.files as Express.Multer.File[];
-            // Create full URLs for the uploaded images
-            // In a real production app, this would be a Cloudinary/S3 URL
-            const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-            const host = req.get('host');
 
-            const urls = files.map(file => `${protocol}://${host}/public/uploads/${file.filename}`);
+            // Upload to S3 (returns keys/names)
+            const keys = await this.uploadService.uploadImages(files);
 
-            return this.ok(res, { urls }, "Images uploaded successfully");
+            // Get presigned URLs for each key
+            const urls = await Promise.all(keys.map(key => this.uploadService.getPresignedUrl(key)));
+
+            return this.ok(res, { urls, keys }, "Images uploaded successfully to S3");
         } catch (error) {
-            return this.handleError(res, error, "Failed to upload images");
+            return this.handleError(res, error, "Failed to upload images to S3");
         }
     };
 }

@@ -40,7 +40,11 @@ export const Plans: React.FC = () => {
         onSuccess: (data: any) => {
             const url = data.data?.confirmationUrl || data.confirmationUrl;
             if (url) {
-                (shopify as any).open(url, "_top");
+                if (window.top) {
+                    window.top.location.href = url;
+                } else {
+                    window.location.href = url;
+                }
             }
 
 

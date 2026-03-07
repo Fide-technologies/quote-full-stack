@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import type { ZodError, ZodSchema } from "zod";
 import type { ErrorResponseDto } from "@/dtos/quote.dto";
+import { logger } from "@/utils/logger";
 
 /**
  * Middleware to validate request data against a Zod schema
@@ -19,6 +20,10 @@ export const validate = (schema: ZodSchema) => {
             next();
         } catch (error) {
             const zodError = error as ZodError;
+            logger.warn(`Validation failed for ${req.path}:`, {
+                errors: zodError.issues,
+                body: req.body
+            });
             const errorResponse: ErrorResponseDto = {
                 success: false,
                 message: "Validation failed",

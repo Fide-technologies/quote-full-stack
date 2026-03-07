@@ -5,9 +5,10 @@ import type { IForm } from '../../api/forms';
 interface FormSettingsProps {
     formState: IForm;
     setFormState: React.Dispatch<React.SetStateAction<IForm | null>>;
+    readOnly?: boolean;
 }
 
-export const FormSettings: React.FC<FormSettingsProps> = ({ formState, setFormState }) => {
+export const FormSettings: React.FC<FormSettingsProps> = ({ formState, setFormState, readOnly = false }) => {
     return (
         <Card>
             <BlockStack gap="400">
@@ -20,6 +21,7 @@ export const FormSettings: React.FC<FormSettingsProps> = ({ formState, setFormSt
                         settings: { ...formState.settings, submitButtonText: val }
                     })}
                     autoComplete="off"
+                    disabled={readOnly}
                 />
                 <TextField
                     label="Success Message"
@@ -30,6 +32,7 @@ export const FormSettings: React.FC<FormSettingsProps> = ({ formState, setFormSt
                     })}
                     autoComplete="off"
                     multiline={3}
+                    disabled={readOnly}
                 />
             </BlockStack>
         </Card>
