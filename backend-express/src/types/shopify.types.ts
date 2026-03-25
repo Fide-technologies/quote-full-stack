@@ -19,12 +19,16 @@ export interface DraftOrderShippingAddress {
     address1?: string;
     address2?: string;
     city?: string;
+    company?: string;
+    province?: string;
     provinceCode?: string;
     zip?: string;
     phone?: string;
     firstName?: string;
     lastName?: string;
+    country?: string;
     countryCode?: string;
+    countryCodeV2?: string;
 }
 
 export interface DraftOrderInput {
@@ -44,7 +48,13 @@ export interface DraftOrderCreateResponse {
             id: string;
             name: string;
             invoiceUrl: string;
-            totalPrice: string;
+            totalPriceSet: {
+                shopMoney: {
+                    amount: string;
+                    currencyCode: string;
+                };
+            };
+            shippingAddress?: DraftOrderShippingAddress;
             customer?: {
                 id: string;
                 email: string;

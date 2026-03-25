@@ -8,4 +8,7 @@ export interface IQuoteRepository {
     updateStatus(id: string, status: IQuote["status"]): Promise<QuoteDocument | null>;
     countByMerchant(shop: string): Promise<number>;
     countConvertedByMerchant(shop: string): Promise<number>;
+    deleteByShop(shop: string): Promise<any>;
+    redactByCustomerEmail(email: string): Promise<any>;
 }
+

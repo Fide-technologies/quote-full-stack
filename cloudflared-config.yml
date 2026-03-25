@@ -1,0 +1,7 @@
+tunnel: shopify-dev
+credentials-file: /home/uday/.cloudflared/74bd4a85-d77b-4b8a-9e99-faae6d2d603f.json
+
+ingress:
+  - hostname: dev.request-quote.online
+    service: http://localhost:3001
+  - service: http_status:404

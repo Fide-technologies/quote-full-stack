@@ -11,9 +11,28 @@
 
             const formData = new FormData(form);
             const dataObj = {};
+            const customData = {};
+            
+            // System fields that shouldn't go into customData
+            const systemFields = [
+                'shop', 'productId', 'productTitle', 'variantId', 'variantTitle', 
+                'productImage', 'productUrl', 'price', 'quantity',
+                'firstName', 'lastName', 'fname', 'lname', 'email', 'phone',
+                'address1', 'address2', 'city', 'district', 'state', 'pincode', 'message'
+            ];
+
             formData.forEach((value, key) => {
-                dataObj[key] = value;
+                if (systemFields.includes(key)) {
+                    dataObj[key] = value;
+                } else {
+                    // Find the readable label for this custom field to make Quote Management better
+                    const input = form.querySelector(`[name="${key}"]`);
+                    const label = input?.closest('.rq-input-group')?.querySelector('label')?.innerText.replace('*', '').trim() || key;
+                    customData[label] = value;
+                }
             });
+            
+            dataObj['customData'] = customData;
 
             // Handle file uploads separately via App Proxy
             const fileInputs = form.querySelectorAll('input[type="file"]');

@@ -86,4 +86,33 @@ export class QuoteRepository
             draftOrderId: { $exists: true, $ne: "" }
         });
     }
+
+    async deleteByShop(shop: string): Promise<any> {
+        return await Quote.deleteMany({ shop });
+    }
+
+    async redactByCustomerEmail(email: string): Promise<any> {
+        return await Quote.updateMany(
+            { $or: [{ email: email }, { customerEmail: email }] },
+            {
+                $set: {
+                    firstName: "[REDACTED]",
+                    lastName: "[REDACTED]",
+                    customerName: "[REDACTED]",
+                    email: "[REDACTED]",
+                    customerEmail: "[REDACTED]",
+                    phone: "[REDACTED]",
+                    address1: "[REDACTED]",
+                    address2: "[REDACTED]",
+                    city: "[REDACTED]",
+                    state: "[REDACTED]",
+                    pincode: "[REDACTED]",
+                    country: "[REDACTED]",
+                    message: "[REDACTED]",
+                    customerMessage: "[REDACTED]"
+                }
+            }
+        );
+    }
 }
+

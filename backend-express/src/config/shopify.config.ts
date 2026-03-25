@@ -2,6 +2,7 @@ import { ApiVersion, shopifyApp } from "@shopify/shopify-app-express";
 import { LogSeverity, BillingInterval, BillingReplacementBehavior } from "@shopify/shopify-api";
 import { restResources } from "@shopify/shopify-api/rest/admin/2026-01";
 import { MongoDBSessionStorage } from "@shopify/shopify-app-session-storage-mongodb";
+import { PlanType } from "@/constants/plan.constants";
 import { env } from "@/validations/env.validation";
 
 const sessionStorage = new MongoDBSessionStorage(
@@ -25,29 +26,21 @@ const shopify = shopifyApp({
         isTesting: env.NODE_ENV !== "production",
         isCustomStoreApp: false,
         billing: {
-            "PRO": {
-                test: true,
+            [PlanType.PRO]: {
+                amount: 14.99,
+                currencyCode: "USD",
+                interval: BillingInterval.Every30Days,
+                trialDays: 7,
                 replacementBehavior: BillingReplacementBehavior.ApplyImmediately,
-                lineItems: [
-                    {
-                        amount: 14.99,
-                        currencyCode: "USD",
-                        interval: BillingInterval.Every30Days,
-                    },
-                ]
             },
-            "ULTIMATE": {
-                test: true,
+            [PlanType.ULTIMATE]: {
+                amount: 49.99,
+                currencyCode: "USD",
+                interval: BillingInterval.Every30Days,
+                trialDays: 14,
                 replacementBehavior: BillingReplacementBehavior.ApplyImmediately,
-                lineItems: [
-                    {
-                        amount: 49.99,
-                        currencyCode: "USD",
-                        interval: BillingInterval.Every30Days,
-                    },
-                ]
             }
-        }
+        } as any
     },
     auth: {
         path: "/api/auth",

@@ -23,24 +23,19 @@ async function bootstrap() {
         // 3. Create HTTP Server
         const server = http.createServer(app);
 
+
+        logger.info("port is: ", env.PORT)
+
         // 4. Start Server
         server.listen(env.PORT, async () => {
-            logger.info(`🚀 Server running on port ${env.PORT}`);
-            logger.info(`👉 Health check: http://localhost:${env.PORT}/health`);
+            const actualPort = env.PORT
+
+            console.log(`🚀 SERVER IS LIVE ON PORT: ${actualPort}`);
+            console.log(`👉 Health check: http://${env.HOST_NAME}/health`);
+            console.log(`🔧 Configuration: HOST_NAME=${env.HOST_NAME}, API_KEY=${env.SHOPIFY_API_KEY?.substring(0, 5)}...`);
 
             // 5. Setup Ngrok (Development Only)
-            if (env.NODE_ENV === "development" && env.NGROK_AUTHTOKEN) {
-                try {
-                    const url = await ngrok.connect({
-                        addr: env.PORT,
-                        domain: env.NGROK_DOMAIN,
-                        authtoken: env.NGROK_AUTHTOKEN,
-                    });
-                    logger.info(`🌍 Ngrok tunnel established at: ${url}`);
-                } catch (ngrokError) {
-                    logger.error("Failed to connect to Ngrok:", ngrokError);
-                }
-            }
+            // Removed Ngrok setup since we are using Cloudflare Tunnels
         });
 
         // 6. Graceful Shutdown Implementation

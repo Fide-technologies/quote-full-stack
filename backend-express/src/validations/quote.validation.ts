@@ -35,6 +35,7 @@ export const createQuoteSchema = z.object({
             return isNaN(num) ? 0 : num;
         }),
         customData: z.record(z.string(), z.any()).optional(),
+        customImages: z.array(z.string()).optional(),
     }).transform(data => ({
         ...data,
         firstName: data.firstName || data.fname || "",

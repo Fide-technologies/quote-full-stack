@@ -5,4 +5,7 @@ export interface IMerchantService {
     getMerchantByShop(shop: string): Promise<MerchantDocument | null>;
     createOrUpdateMerchant(merchantData: Partial<IMerchant> & { shop: string }): Promise<MerchantDocument | UpdateWriteOpResult>;
     incrementQuoteUsage(shop: string, limit: number): Promise<MerchantDocument | null>;
+    uninstallMerchant(shop: string): Promise<void>;
+    redactMerchantData(shop: string): Promise<void>;
 }
+

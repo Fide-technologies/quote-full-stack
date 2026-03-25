@@ -7,6 +7,8 @@ import {
 } from '@shopify/polaris';
 import { PlusIcon } from '@shopify/polaris-icons';
 import {
+    DndContext,
+    closestCenter,
     KeyboardSensor,
     PointerSensor,
     useSensor,
@@ -15,6 +17,8 @@ import {
 import type { DragEndEvent } from '@dnd-kit/core';
 import {
     arrayMove,
+    SortableContext,
+    verticalListSortingStrategy,
     sortableKeyboardCoordinates
 } from '@dnd-kit/sortable';
 import { usePlanUsage } from '../hooks/usePlanUsage';
@@ -114,13 +118,22 @@ export const FormBuilder: React.FC = () => {
 
     const addStep = () => {
         if (!formState) return;
+        const updatedSteps = [...formState.steps];
         const newStep: IFormStep = {
             id: `step-${Date.now()}`,
-            title: `Step ${formState.steps.length + 1}`,
+            title: `Step ${updatedSteps.length}`,
             fields: []
         };
-        setFormState({ ...formState, steps: [...formState.steps, newStep] });
+        const reviewIndex = updatedSteps.findIndex(s => s.id === 'step-review');
+        if (reviewIndex !== -1) {
+            updatedSteps.splice(reviewIndex, 0, newStep);
+        } else {
+            updatedSteps.push(newStep);
+        }
+        setFormState({ ...formState, steps: updatedSteps });
     };
+
+
 
     const addField = (stepIndex: number) => {
         if (!formState) return;
@@ -135,15 +148,47 @@ export const FormBuilder: React.FC = () => {
         setFormState({ ...formState, steps: updatedSteps });
     };
 
-    const handleDragEnd = (event: DragEndEvent, stepIdx: number) => {
+    const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
-        if (over && active.id !== over.id && formState) {
-            const updated = { ...formState, steps: [...formState.steps] };
-            const fields = [...updated.steps[stepIdx].fields];
-            const oldIndex = fields.findIndex(f => f.id === active.id);
-            const newIndex = fields.findIndex(f => f.id === over.id);
-            updated.steps[stepIdx].fields = arrayMove(fields, oldIndex, newIndex);
-            setFormState(updated);
+        if (!over || active.id === over.id || !formState) return;
+
+        const updated = { ...formState, steps: [...formState.steps] };
+        const activeId = String(active.id);
+        const overId = String(over.id);
+
+        if (activeId.startsWith('step-') && overId.startsWith('step-')) {
+            if (overId === 'step-review') return;
+            const oldIndex = updated.steps.findIndex(s => s.id === activeId);
+            const newIndex = updated.steps.findIndex(s => s.id === overId);
+            if (newIndex !== -1 && oldIndex !== -1) {
+                updated.steps = arrayMove(updated.steps, oldIndex, newIndex);
+                setFormState(updated);
+            }
+        } else if (activeId.startsWith('field-') && overId.startsWith('field-')) {
+            const stepIdx = formState.steps.findIndex(s => s.fields.some(f => f.id === activeId));
+            if (stepIdx !== -1) {
+                const overStepIdx = formState.steps.findIndex(s => s.fields.some(f => f.id === overId));
+                if (stepIdx === overStepIdx) {
+                    const fields = [...updated.steps[stepIdx].fields];
+                    const oldIndex = fields.findIndex(f => f.id === activeId);
+                    const newIndex = fields.findIndex(f => f.id === overId);
+                    updated.steps[stepIdx].fields = arrayMove(fields, oldIndex, newIndex);
+                    setFormState(updated);
+                } else {
+                    const activeField = formState.steps[stepIdx].fields.find(f => f.id === activeId);
+                    if (activeField) {
+                        const newFieldsArr = [...updated.steps[stepIdx].fields];
+                        newFieldsArr.splice(newFieldsArr.findIndex(f => f.id === activeId), 1);
+                        updated.steps[stepIdx].fields = newFieldsArr;
+
+                        const overFieldsArr = [...updated.steps[overStepIdx].fields];
+                        const newIndex = overFieldsArr.findIndex(f => f.id === overId);
+                        overFieldsArr.splice(newIndex, 0, activeField);
+                        updated.steps[overStepIdx].fields = overFieldsArr;
+                        setFormState(updated);
+                    }
+                }
+            }
         }
     };
 
@@ -183,28 +228,37 @@ export const FormBuilder: React.FC = () => {
                         {selectedTab === 0 ? (
                             <Layout>
                                 <Layout.Section>
-                                    <BlockStack gap="400">
-                                        {formState.steps.map((step, idx) => (
-                                            <FormStep
-                                                key={step.id}
-                                                step={step}
-                                                stepIdx={idx}
-                                                formState={formState}
-                                                setFormState={setFormState}
-                                                expandedStep={expandedStep}
-                                                setExpandedStep={setExpandedStep}
-                                                sensors={sensors}
-                                                handleDragEnd={handleDragEnd}
-                                                addField={addField}
-                                                readOnly={false}
-                                            />
-                                        ))}
-                                        <Box paddingBlockStart="400">
-                                            <Button variant="primary" onClick={addStep} icon={PlusIcon} disabled={formState.steps.length >= 5}>
-                                                Add New Step
-                                            </Button>
-                                        </Box>
-                                    </BlockStack>
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={closestCenter}
+                                        onDragEnd={handleDragEnd}
+                                    >
+                                        <SortableContext
+                                            items={formState.steps.filter(s => s.id !== 'step-review').map(s => s.id)}
+                                            strategy={verticalListSortingStrategy}
+                                        >
+                                            <BlockStack gap="400">
+                                                {formState.steps.map((step, idx) => (
+                                                    <FormStep
+                                                        key={step.id}
+                                                        step={step}
+                                                        stepIdx={idx}
+                                                        formState={formState}
+                                                        setFormState={setFormState}
+                                                        expandedStep={expandedStep}
+                                                        setExpandedStep={setExpandedStep}
+                                                        addField={addField}
+                                                        readOnly={false}
+                                                    />
+                                                ))}
+                                                <Box paddingBlockStart="400">
+                                                    <Button variant="primary" onClick={addStep} icon={PlusIcon} disabled={formState.steps.length >= 5}>
+                                                        Add New Step
+                                                    </Button>
+                                                </Box>
+                                            </BlockStack>
+                                        </SortableContext>
+                                    </DndContext>
                                 </Layout.Section>
                                 <Layout.Section variant="oneThird">
                                     <FormSettings formState={formState} setFormState={setFormState} />

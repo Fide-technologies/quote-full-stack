@@ -71,12 +71,13 @@
                 const vDisp = (vTitle && vTitle !== 'Default Title') ? 'block' : 'none';
 
                 summary.innerHTML = `
-                     <img src="${imgSrc}" alt="${product.title}" width="60" height="60" style="display: ${imgDisp}">
-                     <div class="rq-product-info">
-                         <span class="rq-product-title">${product.title}</span>
-                         <span class="rq-product-variant" style="display: ${vDisp}">${vTitle}</span>
-                     </div>
-                 `;
+                      <img src="${imgSrc}" alt="${product.title}" style="display: ${imgDisp}; width: 64px; height: 64px; min-width: 64px; border-radius: 8px; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink: 0;">
+                      <div class="rq-product-info" style="margin-left: 16px;">
+                          <span class="rq-product-title" style="font-weight: 700; font-size: 16px;">${product.title}</span>
+                          <span class="rq-product-variant" style="display: ${vDisp}; font-size: 13px; color: #6d7175;">${vTitle}</span>
+                          <span class="rq-product-price" style="display: block; font-size: 15px; color: var(--rq-accent); font-weight: 700; margin-top: 4px;">${window.RqCart.formatPrice((product.variants && product.variants[0]) ? product.variants[0].price : 0)}</span>
+                      </div>
+                  `;
                 hero.prepend(summary);
             }
         },
@@ -89,9 +90,12 @@
                     if (inp) inp.value = val;
                 };
                 setVal('productId', product.id);
+                setVal('variantId', product.variants[0]?.id || '');
                 setVal('productTitle', product.title);
                 setVal('productUrl', window.location.origin + product.url);
                 setVal('variantTitle', product.variants[0]?.title || '');
+                setVal('price', (product.variants[0]?.price || 0) / 100.0);
+                setVal('productImage', product.featured_image || '');
             }
         },
 
@@ -109,18 +113,19 @@
 
             const count = cart.reduce((acc, i) => acc + i.quantity, 0);
             hero.innerHTML = `
-                <div class="rq-product-summary" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                    <div style="display: flex; align-items: center;">
-                       <div style="background: var(--rq-accent); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6zM3 6h18M16 10a4 4 0 01-8 0"/></svg>
+                <div class="rq-product-summary" style="display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 650px; margin: 0 auto 24px;">
+                    <div style="display: flex; align-items: center; flex: 1;">
+                       <div style="background: var(--rq-accent); color: white; width: 48px; height: 48px; min-width: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 16px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);">
+                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6zM3 6h18M16 10a4 4 0 01-8 0"/></svg>
                        </div>
                         <div class="rq-product-info">
-                            <span class="rq-product-title">Bulk Quote Request</span>
-                            <span class="rq-product-variant">${cart.length} products, ${count} total items</span>
+                            <span class="rq-product-title" style="font-size: 17px; font-weight: 800; color: #1a1a1b;">Bulk Quote Request</span>
+                            <span class="rq-product-variant" style="font-size: 14px; margin-top: 1px;">${cart.length} products, ${count} total items</span>
+                            <span class="rq-product-price" style="display: block; font-size: 15px; color: var(--rq-accent); font-weight: 700; margin-top: 4px;">Total Estimate: ${window.RqCart.formatPrice(cart.reduce((acc, i) => acc + (i.price * i.quantity), 0))}</span>
                         </div>
                     </div>
-                    <div>
-                        <button type="button" onclick="window.RqCart.openCart()" style="background: none; border: 1px solid #ccc; font-weight: bold; border-radius: 4px; padding: 6px 12px; font-size: 12px; cursor: pointer; color: var(--rq-accent);">View</button>
+                    <div style="margin-left: 20px;">
+                        <button type="button" onclick="window.RqCart.openCart()" style="background: #fff; border: 2px solid #e1e3e5; font-weight: 700; border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; color: #1a1a1b; transition: all 0.2s ease;">View Items</button>
                     </div>
                 </div>
             `;
@@ -129,6 +134,16 @@
         buildDynamicForm: function (blockId, formConfig) {
             const container = document.getElementById(`rq-dynamic-form-${blockId}`);
             if (!container || !formConfig || !formConfig.steps) return;
+
+            // Sort steps so that 'step-review' is always last
+            const reviewStep = formConfig.steps.find(s => s.id === 'step-review');
+            const otherSteps = formConfig.steps.filter(s => s.id !== 'step-review');
+            if (reviewStep) {
+                formConfig.steps = [...otherSteps, reviewStep];
+            } else {
+                // If it's missing for some reason, add a default review step
+                formConfig.steps.push({ id: 'step-review', title: 'Review', fields: [] });
+            }
 
             // Define icons used in the input fields
             const emailIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -171,9 +186,10 @@
                         if (field.type === 'email') {
                             html += `<div class="rq-input-icon">${emailIcon}<input type="email" name="${fieldName}" id="${fieldId}" ${attrs}></div>`;
                         } else if (field.type === 'phone') {
-                            html += `<div class="rq-input-icon">${phoneIcon}<input type="tel" name="${fieldName}" id="${fieldId}" placeholder="10 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '');" ${attrs}></div>`;
+                            const placeholderStr = field.maxLength ? `Max ${field.maxLength} digits` : '10 digits';
+                            html += `<div class="rq-input-icon">${phoneIcon}<input type="tel" name="${fieldName}" id="${fieldId}" placeholder="${placeholderStr}" oninput="this.value = this.value.replace(/[^0-9]/g, '');" ${attrs}></div>`;
                         } else if (field.type === 'number') {
-                            html += `<input type="number" name="${fieldName}" id="${fieldId}" onkeydown="return !['e','E','+','-'].includes(event.key)" oninput="this.value = this.value.replace(/[^0-9]/g, '');" ${attrs}>`;
+                            html += `<input type="text" inputmode="numeric" name="${fieldName}" id="${fieldId}" oninput="this.value = this.value.replace(/[^0-9]/g, '');" ${attrs}>`;
                         } else if (field.type === 'textarea') {
                             html += `<textarea name="${fieldName}" id="${fieldId}" rows="5" placeholder="Tell us more about your requirements..." ${attrs}></textarea>`;
                             if (field.maxLength) html += `<small class="rq-char-count">Max ${field.maxLength} characters</small>`;
@@ -197,6 +213,8 @@
                                     <div class="rq-file-previews" id="rq-previews-${fieldId}"></div>
                                 </div>
                             `;
+                        } else if (field.type === 'price') {
+                            html += `<div class="rq-input-currency"><span class="rq-currency-symbol">$</span><input type="number" name="${fieldName}" id="${fieldId}" step="0.01" min="0" placeholder="0.00" ${attrs}></div>`;
                         } else {
                             if (fieldName === 'pincode' || field.validationRegex === '^[0-9]+$') {
                                 html += `<input type="text" name="${fieldName}" id="${fieldId}" oninput="this.value = this.value.replace(/[^0-9]/g, '');" ${attrs}>`;
@@ -209,39 +227,12 @@
                         html += `</div>`;
                     });
                 } else {
-                    // It's the Review step, just generate the exact same review layout
+                    // It's the Review step, just generate the container for dynamic population
                     html += `
                         <div class="rq-review-container">
-                            <h3 class="rq-review-main-title">Review Your Details</h3>
-                            <div class="rq-review-grid">
-                                <div class="rq-review-card">
-                                    <div class="rq-card-header">
-                                        <div class="rq-card-icon">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                        </div>
-                                        <h4>Contact Info</h4>
-                                    </div>
-                                    <div class="rq-card-content"><p id="rq-review-contact-${blockId}" class="rq-review-text"></p></div>
-                                </div>
-                                <div class="rq-review-card">
-                                    <div class="rq-card-header">
-                                        <div class="rq-card-icon">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                        </div>
-                                        <h4>Shipping Address</h4>
-                                    </div>
-                                    <div class="rq-card-content"><p id="rq-review-address-${blockId}" class="rq-review-text"></p></div>
-                                </div>
-                                <div class="rq-review-card">
-                                    <div class="rq-card-header">
-                                        <div class="rq-card-icon">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                        </div>
-                                        <h4>Additional Message</h4>
-                                    </div>
-                                    <div class="rq-card-content"><p id="rq-review-message-${blockId}" class="rq-review-text"></p></div>
-                                </div>
-                            </div>
+                            <h3 class="rq-review-main-title">Review Your Request</h3>
+                            <div class="rq-items-review-list" id="rq-review-items-${blockId}"></div>
+                            <div id="rq-review-custom-fields-${blockId}" class="rq-custom-fields-review"></div>
                         </div>
                     `;
                 }
@@ -261,9 +252,9 @@
                 } else {
                     html += `<button type="button" onclick="rqNextStep('${blockId}', ${stepNum})" class="rq-submit-btn">Continue${nextIcon}</button>`;
                 }
-                html += `</div>`; // .rq-btn-group
+                html += `</div>`;
 
-                html += `</div>`; // .rq-step
+                html += `</div>`;
             });
 
             container.innerHTML = html;
@@ -292,7 +283,9 @@
                     </div>
                 `;
                 if (stepNum < steps.length) {
-                    html += `<div class="rq-progress-line"></div>`;
+                    const lineLeft = `calc(${((2 * index + 1) / (2 * steps.length)) * 100}% + 22px)`;
+                    const lineWidth = `calc(${(1 / steps.length) * 100}% - 44px)`;
+                    html += `<div class="rq-progress-line" style="left: ${lineLeft}; width: ${lineWidth};"></div>`;
                 }
             });
             wrapper.innerHTML = html;
@@ -306,7 +299,8 @@
             errorSpans.forEach(el => el.innerText = '');
 
             const modal = document.getElementById(`rqModal-${blockId}`);
-            if (modal) modal.dataset.isBulk = 'false';
+            // isBulk should be handled by the caller, not reset by general form reset
+            // if (modal) modal.dataset.isBulk = 'false';
 
             const steps = document.querySelectorAll(`#rq-step-input-${blockId} .rq-step`);
             steps.forEach(s => s.classList.remove('active'));

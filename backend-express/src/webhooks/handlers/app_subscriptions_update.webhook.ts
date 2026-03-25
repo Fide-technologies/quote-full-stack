@@ -1,8 +1,9 @@
 import { DeliveryMethod, type WebhookHandler } from "@shopify/shopify-api";
-import { shopify } from "@/config/shopify.config";
 import { logger } from "@/utils/logger";
-import { Merchant } from "@/models/merchant.model";
-import { Plan } from "@/models/plan.model";
+import { shopify } from "@/config/shopify.config";
+import { container } from "@/inversify.config";
+import { TYPES } from "@/types";
+import type { IPlanService } from "@/interfaces";
 
 /**
  * App Subscriptions Update Webhook
@@ -22,38 +23,15 @@ export const appSubscriptionsUpdateWebhookHandler: WebhookHandler = {
                 return;
             }
 
-            logger.info(`APP_SUBSCRIPTIONS_UPDATE for ${shop}. Status: ${subscription.status}`);
-
-            // Find the merchant
-            const merchant = await Merchant.findOne({ shop });
-            if (!merchant) {
-                logger.info(`Merchant not found for shop: ${shop}`);
+            const planService = container.get<IPlanService>(TYPES.IPlanService);
+            const subscriptionId = subscription.id || (subscription.admin_graphql_api_id ? subscription.admin_graphql_api_id.split('/').pop() : null);
+            
+            if (!subscriptionId) {
+                logger.error(`No subscription ID found in payload for ${shop}`, { payload });
                 return;
             }
 
-            // Status can be ACTIVE, CANCELLED, DECLINED, EXPIRED, FROZEN, PENDING
-            // If the subscription is no longer active, we should downgrade the merchant to FREE.
-            if (subscription.status !== "ACTIVE") {
-                logger.info(`Subscription ${subscription.status} for ${shop}. Downgrading to FREE plan in database.`);
-
-                const freePlan = await Plan.findOne({ name: "FREE" });
-                if (freePlan) {
-                    merchant.planId = freePlan._id;
-                    await merchant.save();
-                    logger.info(`Merchant ${shop} successfully downgraded to FREE plan.`);
-                } else {
-                    logger.error("Could not find FREE plan to downgrade merchant.");
-                }
-            } else {
-                // Subscription is active. Ensure the database matches the plan name from Shopify.
-                const planName = subscription.name; // e.g. "PRO"
-                const activePlan = await Plan.findOne({ name: planName });
-                if (activePlan) {
-                    merchant.planId = activePlan._id;
-                    await merchant.save();
-                    logger.info(`Merchant ${shop} plan verified as ${planName}.`);
-                }
-            }
+            await planService.handleSubscriptionUpdate(shop, subscriptionId);
 
         } catch (error) {
             logger.error("Error handling APP_SUBSCRIPTIONS_UPDATE webhook", {

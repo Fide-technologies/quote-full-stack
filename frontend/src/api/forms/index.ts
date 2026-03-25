@@ -40,7 +40,9 @@ export interface IForm {
 }
 
 export async function getForm(): Promise<IForm> {
-    const res = await fetch("/api/forms");
+    const res = await fetch("/api/forms", {
+        headers: { "ngrok-skip-browser-warning": "true" }
+    });
     if (!res.ok) throw new Error("Failed to load form configuration");
     const json = await res.json();
     return json.data;
@@ -49,7 +51,10 @@ export async function getForm(): Promise<IForm> {
 export async function updateForm(formData: Partial<IForm>): Promise<IForm> {
     const res = await fetch("/api/forms", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true"
+        },
         body: JSON.stringify(formData),
     });
     if (!res.ok) {

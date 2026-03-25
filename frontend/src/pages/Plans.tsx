@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Page, Layout, Card, BlockStack, Text, Button, InlineStack, Badge, Banner, Box, Icon, Divider, Link, InlineGrid } from '@shopify/polaris';
 import { CheckIcon, XIcon } from "@shopify/polaris-icons";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentPlan, upgradePlan } from "../api/plans";
 import { useAppBridge } from '@shopify/app-bridge-react';
 import planData from '../data/plans.json';
@@ -24,34 +24,58 @@ interface Plan {
     features: Feature[];
 }
 
-
-
 export const Plans: React.FC = () => {
-    const shopify = useAppBridge();
+    const appBridge = useAppBridge();
+    const queryClient = useQueryClient();
     const [upgradeError, setUpgradeError] = useState<string | null>(null);
+
+    // Read billing status from URL — set by backend after billing callback
+    const urlParams = new URLSearchParams(window.location.search);
+    const billingStatus = urlParams.get('billing'); // 'success' | 'error' | null
 
     const { data: currentPlanData, isLoading } = useQuery({
         queryKey: ["currentPlan"],
-        queryFn: getCurrentPlan
+        queryFn: getCurrentPlan,
     });
 
+    // Helper to clean the billing status param from URL without a full page reload
+    const cleanBillingParam = () => {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('billing');
+        window.history.replaceState({}, '', newUrl.toString());
+    };
+
+    // After billing approval, immediately refetch to get the updated plan from DB
+    useEffect(() => {
+        if (billingStatus === 'success') {
+            queryClient.invalidateQueries({ queryKey: ["currentPlan"] });
+            appBridge.toast.show("✓ Plan upgraded successfully!");
+        }
+    }, [billingStatus, queryClient, appBridge]);
+
     const upgradeMutation = useMutation({
-        mutationFn: (planName: string) => upgradePlan(planName),
+        mutationFn: async (planName: string) => {
+            // Get the host parameter — priority: current URL > sessionStorage
+            let host = urlParams.get("host");
+            if (!host) host = sessionStorage.getItem("shopify_host");
+            if (!host) host = sessionStorage.getItem("host");
+            return upgradePlan(planName, host || "");
+        },
         onSuccess: (data: any) => {
-            const url = data.data?.confirmationUrl || data.confirmationUrl;
-            if (url) {
+            // The backend returns Shopify's billing confirmationUrl.
+            // We must navigate the TOP-level window (break out of iframe) to it.
+            const confirmationUrl = data.data?.confirmationUrl || data.confirmationUrl;
+            if (confirmationUrl) {
                 if (window.top) {
-                    window.top.location.href = url;
+                    window.top.location.href = confirmationUrl;
                 } else {
-                    window.location.href = url;
+                    window.location.href = confirmationUrl;
                 }
             }
-
-
         },
         onError: (error: any) => {
-            setUpgradeError(error.message);
-            shopify.toast.show("Upgrade failed", { isError: true });
+            setUpgradeError(error.message || "An unknown error occurred during upgrade.");
+            appBridge.toast.show("Upgrade failed", { isError: true });
         }
     });
 
@@ -76,6 +100,22 @@ export const Plans: React.FC = () => {
         <Page>
             <Box paddingBlockEnd="800">
                 <Layout>
+                    {billingStatus === 'success' && (
+                        <Layout.Section>
+                            <Banner tone="success" onDismiss={cleanBillingParam}>
+                                <p>Your plan has been upgraded successfully! Thank you.</p>
+                            </Banner>
+                        </Layout.Section>
+                    )}
+
+                    {billingStatus === 'error' && (
+                        <Layout.Section>
+                            <Banner tone="warning" onDismiss={cleanBillingParam}>
+                                <p>There was an issue processing your billing. Please try again or contact support.</p>
+                            </Banner>
+                        </Layout.Section>
+                    )}
+
                     {upgradeError && (
                         <Layout.Section>
                             <Banner tone="critical" onDismiss={() => setUpgradeError(null)}>
@@ -161,7 +201,7 @@ export const Plans: React.FC = () => {
                                         </Card>
                                     </Box>
                                 );
-                            })}
+            })}
                         </InlineGrid>
                     </Layout.Section>
 

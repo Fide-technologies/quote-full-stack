@@ -197,4 +197,9 @@ export class QuoteService implements IQuoteService {
             throw error;
         }
     }
+
+    async redactCustomerData(email: string): Promise<void> {
+        await this.quoteRepository.redactByCustomerEmail(email);
+    }
 }
+
