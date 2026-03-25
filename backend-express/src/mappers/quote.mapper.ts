@@ -33,6 +33,7 @@ export const QuoteMapper = {
             draftOrderId: quote.draftOrderId,
             draftOrderUrl: quote.draftOrderUrl,
             customData: quote.customData,
+            customImages: quote.customImages || [],
             productDetails: quote.productDetails || (quote.productImage ? {
                 featuredImage: {
                     url: quote.productImage,

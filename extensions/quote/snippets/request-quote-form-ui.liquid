@@ -67,7 +67,7 @@
                 <input type="hidden" name="productTitle" value="{{ product.title }}">
                 <input type="hidden" name="variantTitle" value="{{ product.selected_or_first_available_variant.title }}">
                 <input type="hidden" name="productUrl" value="{{ shop.url }}{{ product.url }}">
-                <input type="hidden" name="productImage" value="{{ product.featured_image | image_url: width: 200 }}">
+                <input type="hidden" name="productImage" value="{% if product.featured_image %}{{ product.featured_image | image_url: width: 200 }}{% endif %}">
                 <input type="hidden" name="price" value="{{ product.selected_or_first_available_variant.price | divided_by: 100.0 }}">
 
                 <div id="rq-step-input-{{ block_id }}">

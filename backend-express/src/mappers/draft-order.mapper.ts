@@ -33,6 +33,7 @@ export class DraftOrderMapper {
                 { key: QUOTE_ATTRIBUTES.QUOTE_ID, value: quote._id.toString() },
                 { key: QUOTE_ATTRIBUTES.QUOTE_STATUS, value: quote.status },
             ],
+            marketRegionCountryCode: "IN"
         };
 
         if (this.hasAddress(quote)) {

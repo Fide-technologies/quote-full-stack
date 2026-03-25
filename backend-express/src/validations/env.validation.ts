@@ -38,7 +38,13 @@ const envSchema = z.object({
     AWS_SECRET_ACCESS_KEY: z.string().optional(),
     AWS_REGION: z.string().optional(),
     AWS_S3_BUCKET: z.string().optional(),
+
+    // Cloudinary Configuration
+    CLOUDINARY_CLOUD_NAME: z.string().optional(),
+    CLOUDINARY_API_KEY: z.string().optional(),
+    CLOUDINARY_API_SECRET: z.string().optional(),
 });
+
 
 const parsed = envSchema.safeParse(process.env);
 

@@ -17,7 +17,8 @@ const fieldTypes = [
     { label: 'Dropdown', value: 'select' },
     { label: 'Radio Buttons', value: 'radio' },
     { label: 'Checkboxes', value: 'checkbox' },
-    { label: 'File Upload', value: 'file' }
+    { label: 'File Upload', value: 'file' },
+    { label: 'Price (Propose)', value: 'price' }
 ];
 
 const regexOptions = [
@@ -163,16 +164,15 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                 </InlineStack>
 
                 {/* Advanced Validation & Layout Configuration Box */}
-                {!field.isSystem && (
-                    <Box paddingBlockStart="400">
-                        <Divider />
+                <Box paddingBlockStart="400">
+                    <Divider />
                         <Box paddingBlockStart="300">
                             <BlockStack gap="400">
                                 <Text variant="bodyMd" as="h4" tone="subdued">Advanced Settings</Text>
 
                                 <InlineStack gap="400">
 
-                                    {(field.type === 'text' || field.type === 'textarea') && (
+                                    {['text', 'textarea', 'number', 'phone', 'price', 'email'].includes(field.type) && (
                                         <>
                                             <div className="flex-1">
                                                 <TextField
@@ -197,7 +197,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                         </>
                                     )}
 
-                                    {field.type === 'text' && (
+                                    {['text', 'number', 'phone', 'price', 'email'].includes(field.type) && (
                                         <div className="flex-[2]">
                                             <Select
                                                 label="Validation Rule (Regex)"
@@ -281,7 +281,6 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                             </BlockStack>
                         </Box>
                     </Box>
-                )}
             </Box>
         </div>
     );

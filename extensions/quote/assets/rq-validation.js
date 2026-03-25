@@ -74,9 +74,13 @@
                         if (input.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim())) {
                             fieldValid = false;
                             errMsg = 'Invalid email address.';
-                        } else if (input.type === 'tel' && !/^\d{10}$/.test(input.value.trim())) {
-                            fieldValid = false;
-                            errMsg = 'Phone must be 10 digits.';
+                        } else if (input.type === 'tel') {
+                            // If they supplied a custom regex or length, let those validators handle it
+                            // Otherwise, enforce default 10-digit validation
+                            if (!patternAttr && !minLenAttr && !maxLenAttr && !/^\d{10}$/.test(input.value.trim())) {
+                                fieldValid = false;
+                                errMsg = 'Phone must be 10 digits.';
+                            }
                         }
                     }
                 }

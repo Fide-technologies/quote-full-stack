@@ -6,9 +6,15 @@ import { env } from "@/validations/env.validation";
 import { logger } from "@/utils/logger";
 import type { Express } from "express";
 import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 @injectable()
-export class UploadService implements IUploadService {
+export class S3UploadService implements IUploadService {
+
     private s3Client: S3Client | null = null;
     private bucket: string;
 
@@ -25,13 +31,28 @@ export class UploadService implements IUploadService {
             });
             logger.info("AWS S3 Client initialized.");
         } else {
-            logger.warn("AWS S3 configuration missing. Image uploads are DISABLED. Please provide S3 credentials in the .env file.");
+            logger.warn("AWS S3 configuration missing. Using LOCAL STORAGE for image uploads.");
+            // Ensure public/uploads exists
+            const uploadDir = path.join(__dirname, "..", "..", "public", "uploads");
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
         }
     }
 
     async uploadImages(files: Express.Multer.File[]): Promise<string[]> {
         if (!this.s3Client) {
-            throw new Error("S3 Client not initialized. Check AWS credentials.");
+            // Local Storage fallback
+            const uploadPromises = files.map(async (file) => {
+                const fileExtension = path.extname(file.originalname);
+                const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${fileExtension}`;
+                const uploadDir = path.join(__dirname, "..", "..", "public", "uploads");
+                const filePath = path.join(uploadDir, fileName);
+
+                await fs.promises.writeFile(filePath, file.buffer);
+                return fileName;
+            });
+            return Promise.all(uploadPromises);
         }
 
         const uploadPromises = files.map(async (file) => {
@@ -47,10 +68,6 @@ export class UploadService implements IUploadService {
 
             await this.s3Client!.send(new PutObjectCommand(params));
 
-            // For public buckets, we can return the direct URL
-            // return `https://${this.bucket}.s3.${env.AWS_REGION}.amazonaws.com/${fileName}`;
-
-            // Or return the key and use presigned URLs if the bucket is private
             return fileName;
         });
 
@@ -59,7 +76,9 @@ export class UploadService implements IUploadService {
 
     async getPresignedUrl(key: string): Promise<string> {
         if (!this.s3Client) {
-            throw new Error("S3 Client not initialized.");
+            // For local storage, return the direct URL
+            // Ensure the URL is accessible via proxy or directly
+            return `${env.HOST_SCHEMA}://${env.HOST_NAME}/public/uploads/${key}`;
         }
 
         const command = new GetObjectCommand({

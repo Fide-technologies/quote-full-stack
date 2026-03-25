@@ -58,7 +58,9 @@ export async function getQuotes(filters: QuoteFilters = {}): Promise<QuotesRespo
     if (filters.date) params.append("date", filters.date);
     if (filters.hasDraftOrder !== undefined) params.append("hasDraftOrder", filters.hasDraftOrder.toString());
 
-    const res = await fetch(`/api/quotes?${params.toString()}`);
+    const res = await fetch(`/api/quotes?${params.toString()}`, {
+        headers: { "ngrok-skip-browser-warning": "true" }
+    });
     if (!res.ok) throw new Error("Failed to fetch quotes");
 
     const json = await res.json();
@@ -70,6 +72,7 @@ export async function createDraftOrder(quoteId: string): Promise<{ draftOrderId:
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true",
         },
     });
 

@@ -124,9 +124,9 @@ export const FormPreview: React.FC<FormPreviewProps> = ({ formState, previewStep
                                                     </div>
                                                 ) : (
                                                     <input
-                                                        type={field.type === 'number' ? 'number' : 'text'}
+                                                        type={field.type === 'number' || field.type === 'price' ? 'number' : 'text'}
                                                         className="box-border w-full px-3.5 py-3 border border-[#d2d5d8] rounded-lg text-sm bg-white outline-none transition-colors duration-200 focus:border-[#0066FF]"
-                                                        placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}...`}
+                                                        placeholder={field.placeholder || (field.type === 'price' ? '0.00' : `Enter ${field.label.toLowerCase()}...`)}
                                                         disabled
                                                     />
                                                 )}

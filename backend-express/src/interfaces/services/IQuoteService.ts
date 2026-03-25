@@ -8,4 +8,6 @@ export interface IQuoteService {
     getEnrichedQuotesByMerchant(session: Session, page: number, limit: number, filters?: { q?: string; status?: string; date?: string; hasDraftOrder?: boolean }): Promise<PaginatedResult<QuoteDocument & { productDetails?: any }>>;
     updateQuoteStatus(id: string, status: IQuote["status"]): Promise<QuoteDocument | null>;
     createDraftOrder(session: Session, quoteId: string): Promise<{ draftOrderId: string; invoiceUrl: string }>;
+    redactCustomerData(email: string): Promise<void>;
 }
+

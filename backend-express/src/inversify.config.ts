@@ -25,8 +25,10 @@ import { FormController } from "./controllers/form.controller";
 import { DashboardService } from "./services/dashboard.service";
 import { DashboardController } from "./controllers/dashboard.controller";
 import { UploadController } from "./controllers/upload.controller";
-import { UploadService } from "./services/upload.service";
+import { CloudinaryUploadService } from "./services/cloudinary-upload.service";
+import { S3UploadService } from "./services/s3-upload.service";
 import type { IMerchantRepository, IQuoteRepository, IPlanRepository, IFormRepository } from "./interfaces";
+
 import type { IMerchantService, IQuoteService, IPlanService, IEmailService, ISettingsService, IDraftOrderService, IWebhookRegistry, IUsageService, IFormService, IDashboardService, IUploadService } from "./interfaces";
 
 const container = new Container();
@@ -59,7 +61,12 @@ container.bind<IFormService>(TYPES.IFormService).to(FormService).inSingletonScop
 container.bind<FormController>(TYPES.FormController).to(FormController).inSingletonScope();
 container.bind<IDashboardService>(TYPES.IDashboardService).to(DashboardService).inSingletonScope();
 container.bind<DashboardController>(TYPES.DashboardController).to(DashboardController).inSingletonScope();
-container.bind<IUploadService>(TYPES.IUploadService).to(UploadService).inSingletonScope();
+
+// Implementing OCP: Choice between Cloudinary and S3 can be handled here.
+// Currently binding CloudinaryUploadService as per user's immediate development need.
+container.bind<IUploadService>(TYPES.IUploadService).to(CloudinaryUploadService).inSingletonScope();
+
 container.bind<UploadController>(TYPES.UploadController).to(UploadController).inSingletonScope();
+
 
 export { container };
