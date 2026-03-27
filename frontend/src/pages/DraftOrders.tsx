@@ -12,9 +12,10 @@ import { ExportIcon } from '@shopify/polaris-icons';
 import { useQuotes } from '../hooks/quotes/useQuotes';
 import { QuoteFilters } from '../components/quotes/QuoteFilters';
 import { QuoteTable } from '../components/quotes/QuoteTable';
-import { QuoteDetailsModal } from '../components/quotes/QuoteDetailsModal';
+import { useNavigate } from 'react-router-dom';
 
 export const DraftOrders: React.FC = () => {
+    const navigate = useNavigate();
     const {
         quotes,
         totalCount,
@@ -24,8 +25,6 @@ export const DraftOrders: React.FC = () => {
         statusFilter,
         dateFilter,
         page,
-        selectedQuote,
-        isModalOpen,
         handleQueryChange,
         handleQueryClear,
         handleStatusChange,
@@ -34,8 +33,6 @@ export const DraftOrders: React.FC = () => {
         handleNextPage,
         handlePrevPage,
         handleSearchBlur,
-        openDetails,
-        closeModal
     } = useQuotes({ hasDraftOrder: true });
 
     const [isClient, setIsClient] = useState(false);
@@ -90,18 +87,12 @@ export const DraftOrders: React.FC = () => {
                                 totalCount={totalCount}
                                 onNextPage={handleNextPage}
                                 onPrevPage={handlePrevPage}
-                                onViewDetails={openDetails}
+                                onViewDetails={(quote) => navigate(`/quotes/${quote.id}`)}
                             />
                         </Card>
                     </BlockStack>
                 </Layout.Section>
             </Layout>
-
-            <QuoteDetailsModal
-                quote={selectedQuote}
-                isOpen={isModalOpen}
-                onClose={closeModal}
-            />
         </Page>
     );
 };

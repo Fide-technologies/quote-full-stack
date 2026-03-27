@@ -12,6 +12,22 @@ dev_store_url = "shopnest-10051.myshopify.com"
 [webhooks]
 api_version = "2026-01"
 
+[[webhooks.subscriptions]]
+topics = ["app/uninstalled"]
+uri = "/api/webhooks"
+
+[[webhooks.subscriptions]]
+topics = ["customers/data_request"]
+uri = "/api/webhooks"
+
+[[webhooks.subscriptions]]
+topics = ["customers/redact"]
+uri = "/api/webhooks"
+
+[[webhooks.subscriptions]]
+topics = ["shop/redact"]
+uri = "/api/webhooks"
+
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 optional_scopes = []
@@ -38,3 +54,6 @@ type = "boolean"
 [shop.metafields.app.show_on_all.access]
 admin = "merchant_read_write"
 storefront = "public_read"
+
+# Billing is managed via the Shopify Partner Dashboard for Managed Pricing. 
+# Refer to: Distribution > Shopify App Store listing > Manage listing > Pricing content.

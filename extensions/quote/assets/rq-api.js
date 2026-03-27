@@ -103,8 +103,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'ngrok-skip-browser-warning': 'true'
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify(dataObj)
                 });
@@ -134,8 +133,7 @@
                 // We use the proxy path + forms/proxy endpoint.
                 const response = await fetch(`${PROXY_PATH}/forms/proxy?shop=${encodeURIComponent(shop)}`, {
                     headers: {
-                        'Accept': 'application/json',
-                        'ngrok-skip-browser-warning': 'true'
+                        'Accept': 'application/json'
                     }
                 });
                 if (!response.ok) {

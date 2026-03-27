@@ -24,7 +24,8 @@ export const API_MESSAGES = {
         RETRIEVED: "Quotes retrieved successfully",
         CREATED: "Quote created successfully",
         FAILED_RETRIEVE: "Failed to retrieve quotes",
-        FAILED_CREATE: "Failed to create quote"
+        FAILED_CREATE: "Failed to create quote",
+        NOT_FOUND: "Quote not found"
     }
 };
 
@@ -34,6 +35,7 @@ export const HTTP_STATUS = {
     BAD_REQUEST: 400,
     UNAUTHORIZED: 401,
     FORBIDDEN: 403,
+    NOT_FOUND: 404,
     INTERNAL_SERVER_ERROR: 500
 };
 

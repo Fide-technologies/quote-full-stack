@@ -17,6 +17,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             case '/quotes': return 'Quotes';
             case '/draft-orders': return 'Draft Orders';
             case '/plans': return 'Plans & Billing';
+            case '/support': return 'Help & Support';
             default: return 'My B2B App';
         }
     };
@@ -31,6 +32,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                 <a href='/quotes'>Quotes</a>
                 <a href='/draft-orders'>Draft Orders</a>
                 <a href='/plans'>Plans & Billing</a>
+                <a href='/support'>Help & Support</a>
             </NavMenu>
 
             <TitleBar title={getTitle(location.pathname)} />

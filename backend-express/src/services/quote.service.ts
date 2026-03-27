@@ -198,6 +198,45 @@ export class QuoteService implements IQuoteService {
         }
     }
 
+    async getQuoteById(session: Session, id: string): Promise<QuoteDocument & { productDetails?: any } | null> {
+        const quote = await this.quoteRepository.findById(id);
+        if (!quote) return null;
+
+        // Verify shop
+        if (quote.shop !== session.shop) {
+            throw new Error(ERROR_MESSAGES.QUOTE.UNAUTHORIZED);
+        }
+
+        // Fetch product details for this single quote
+        let productDetails = null;
+        if (quote.productId) {
+            try {
+                const gid = quote.productId.startsWith('gid://') ? quote.productId : `${SHOPIFY_DEFAULTS.PRODUCT_GID_PREFIX}${quote.productId}`;
+                const client = new shopify.api.clients.Graphql({ session });
+                const response: any = await client.request(
+                    GET_PRODUCTS_BY_IDS_QUERY,
+                    { variables: { ids: [gid] } }
+                );
+
+                if (response.data?.nodes?.length > 0 && response.data.nodes[0]) {
+                    const node = response.data.nodes[0];
+                    if (node.featuredMedia?.preview?.image) {
+                        node.featuredImage = node.featuredMedia.preview.image;
+                    }
+                    productDetails = node;
+                }
+            } catch (error) {
+                logger.error(`[QuoteService] Failed to fetch product details for quote ${id}:`, error);
+            }
+        }
+
+        const quoteObj = quote.toObject() as any;
+        return {
+            ...quoteObj,
+            productDetails
+        };
+    }
+
     async redactCustomerData(email: string): Promise<void> {
         await this.quoteRepository.redactByCustomerEmail(email);
     }

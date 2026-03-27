@@ -17,5 +17,6 @@ planRouter.use(shopify.validateAuthenticatedSession());
 planRouter.get("/", (req, res) => planController.getAllPlans(req, res));
 planRouter.get("/current", (req, res) => planController.getCurrentPlan(req, res));
 planRouter.post("/upgrade", (req, res) => planController.upgradePlan(req, res));
+planRouter.get("/history", (req, res) => planController.getChargeHistory(req, res));
 
 export default planRouter;

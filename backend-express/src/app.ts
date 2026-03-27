@@ -33,23 +33,8 @@ export class App {
     }
 
     private config(): void {
-        // ---------------------------------------------------------------
-        // NGROK INTERSTITIAL BYPASS (development only)
-        // ---------------------------------------------------------------
-        // ngrok injects its own HTML interstitial page for any browser
-        // request to the tunnel unless the response includes this header.
-        // Without it, Shopify's iframe CSP blocks ngrok's assets → blank
-        // page + "h2 is not a function" errors from allerrors.js.
-        //
-        // Setting this header globally ensures EVERY response from this
-        // server — static files, API routes, redirects, and the SPA
-        // fallback — bypasses ngrok's interstitial automatically.
-        // In production this header is harmless (ignored by real hosts).
-
-        // shopify.cspHeaders() MUST stay — it sets the frame-ancestors CSP directive
+        // shopify.cspHeaders() sets the frame-ancestors CSP directive
         // that allows Shopify's admin to embed this app in an iframe.
-        // The ngrok interstitial issue is NOT caused by this — it was caused by the
-        // missing ngrok-skip-browser-warning param on the /plans redirect URL (now fixed).
         this.app.use(shopify.cspHeaders());
 
         // Serve Static files

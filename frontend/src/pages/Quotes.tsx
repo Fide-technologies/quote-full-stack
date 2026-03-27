@@ -4,18 +4,18 @@ import {
     Layout,
     Card,
     BlockStack,
+    Banner,
     Box,
     Text,
-    Banner,
+    Divider
 } from '@shopify/polaris';
 import { ExportIcon } from '@shopify/polaris-icons';
-
 import { useQuotes } from '../hooks/quotes/useQuotes';
 import { usePlanUsage } from '../hooks/usePlanUsage';
 import { useNavigate } from 'react-router-dom';
 import { QuoteFilters } from '../components/quotes/QuoteFilters';
 import { QuoteTable } from '../components/quotes/QuoteTable';
-import { QuoteDetailsModal } from '../components/quotes/QuoteDetailsModal';
+import { PageLoader } from '../components/loaders/PageLoader';
 
 export const Quotes: React.FC = () => {
     const {
@@ -27,8 +27,6 @@ export const Quotes: React.FC = () => {
         statusFilter,
         dateFilter,
         page,
-        selectedQuote,
-        isModalOpen,
         handleQueryChange,
         handleQueryClear,
         handleStatusChange,
@@ -37,8 +35,6 @@ export const Quotes: React.FC = () => {
         handleNextPage,
         handlePrevPage,
         handleSearchBlur,
-        openDetails,
-        closeModal
     } = useQuotes();
 
     const navigate = useNavigate();
@@ -49,7 +45,9 @@ export const Quotes: React.FC = () => {
         setIsClient(true);
     }, []);
 
-    if (!isClient) return null;
+    if (!isClient || isLoading) {
+        return <PageLoader title="Quote Requests" primaryAction />;
+    }
 
     return (
         <Page
@@ -73,67 +71,68 @@ export const Quotes: React.FC = () => {
                 }
             }}
         >
-            <Layout>
-                <Layout.Section>
-                    <BlockStack gap="400">
-                        {isUsageExceeded() && !isPlanLoading && (
-                            <Banner
-                                tone="critical"
-                                title="Quote limit reached"
-                                action={{
-                                    content: 'Upgrade Plan',
-                                    onAction: () => navigate('/plans')
-                                }}
-                            >
-                                <p>
-                                    You have reached your limit of {usage?.plan?.quoteLimit} quotes for the current plan.
-                                    New quotes will not be captured until you upgrade or your cycle resets.
-                                </p>
-                            </Banner>
-                        )}
+            <Box paddingBlockEnd="800">
+                <Layout>
+                    <Layout.Section>
+                        <BlockStack gap="400">
+                            {isUsageExceeded() && !isPlanLoading && (
+                                <Banner
+                                    title="Plan limit reached"
+                                    tone="warning"
+                                    action={{ content: 'Upgrade Plan', onAction: () => navigate('/plans') }}
+                                >
+                                    <p>You have reached your monthly quote limit ({usage?.plan?.quoteLimit || 0}). Please upgrade your plan to continue receiving new quotes.</p>
+                                </Banner>
+                            )}
 
-                        <Box paddingBlockEnd="400">
-                            <BlockStack gap="100">
-                                <Text variant="headingLg" as="h2">Manage your inquiries</Text>
-                                <Text variant="bodyMd" tone="subdued" as="p">
-                                    Track and respond to price requests from your customers in one place.
-                                </Text>
-                            </BlockStack>
-                        </Box>
+                            <Card padding="0">
+                                <QuoteFilters
+                                    queryValue={queryValue}
+                                    statusFilter={statusFilter}
+                                    dateFilter={dateFilter}
+                                    onQueryChange={handleQueryChange}
+                                    onQueryClear={handleQueryClear}
+                                    onStatusChange={handleStatusChange}
+                                    onDateChange={handleDateChange}
+                                    onClearAll={handleClearAll}
+                                    onSearch={handleSearchBlur}
+                                />
+                                <QuoteTable
+                                    quotes={quotes}
+                                    isLoading={isLoading}
+                                    totalCount={totalCount}
+                                    page={page}
+                                    totalPages={totalPages}
+                                    onNextPage={handleNextPage}
+                                    onPrevPage={handlePrevPage}
+                                    onViewDetails={(quote) => navigate(`/quotes/${quote.id}`)}
+                                />
+                            </Card>
+                        </BlockStack>
+                    </Layout.Section>
 
-                        <Card padding="0">
-                            <QuoteFilters
-                                queryValue={queryValue}
-                                statusFilter={statusFilter}
-                                dateFilter={dateFilter}
-                                onQueryChange={handleQueryChange}
-                                onQueryClear={handleQueryClear}
-                                onStatusChange={handleStatusChange}
-                                onDateChange={handleDateChange}
-                                onClearAll={handleClearAll}
-                                onSearch={handleSearchBlur}
-                            />
-
-                            <QuoteTable
-                                quotes={quotes}
-                                isLoading={isLoading}
-                                page={page}
-                                totalPages={totalPages}
-                                totalCount={totalCount}
-                                onNextPage={handleNextPage}
-                                onPrevPage={handlePrevPage}
-                                onViewDetails={openDetails}
-                            />
-                        </Card>
-                    </BlockStack>
-                </Layout.Section>
-            </Layout>
-
-            <QuoteDetailsModal
-                quote={selectedQuote}
-                isOpen={isModalOpen}
-                onClose={closeModal}
-            />
+                    <Layout.Section variant="oneThird">
+                        <BlockStack gap="400">
+                            <Card>
+                                <BlockStack gap="200">
+                                    <Text as="h2" variant="headingMd">Summary</Text>
+                                    <Divider />
+                                    <Box paddingBlockStart="200">
+                                        <BlockStack gap="200">
+                                            <Box>
+                                                <Text as="p" variant="bodyMd">Total Quotes: {totalCount}</Text>
+                                            </Box>
+                                            <Box>
+                                                <Text as="p" variant="bodyMd">Pending: {quotes.filter(q => q.status === 'NEW').length}</Text>
+                                            </Box>
+                                        </BlockStack>
+                                    </Box>
+                                </BlockStack>
+                            </Card>
+                        </BlockStack>
+                    </Layout.Section>
+                </Layout>
+            </Box>
         </Page>
     );
 };

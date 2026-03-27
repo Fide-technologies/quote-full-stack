@@ -12,7 +12,7 @@ const envSchema = z.object({
 
     SHOPIFY_API_KEY: z.string().min(1),
     SHOPIFY_API_SECRET: z.string().min(1),
-    NODE_ENV: z.enum(["development", "production"]),
+    NODE_ENV: z.enum(["development", "production", "test"]),
 
     SHOPIFY_SCOPES: z
         .string()

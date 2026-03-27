@@ -14,4 +14,5 @@ export interface IPlanService {
     handleCallback(shop: string, charge_id?: string, plan?: string, host?: string): Promise<string>;
     verifyReinstallationBilling(session: any): Promise<{ planId?: any; subscriptionStatus?: SubscriptionStatus }>;
     handleSubscriptionUpdate(shop: string, subscriptionId: string): Promise<void>;
+    getChargeHistory(session: any): Promise<any>;
 }

@@ -1,18 +1,12 @@
-
-import { Badge, BlockStack, InlineStack, LegacyCard, Text } from "@shopify/polaris";
-
+import { BlockStack, InlineStack, Text } from "@shopify/polaris";
 import { type QuoteSystemInfoProps } from "@/types/quote-details";
 
-export function QuoteSystemInfo({ status, createdAt }: QuoteSystemInfoProps) {
+export function QuoteSystemInfo({ createdAt }: QuoteSystemInfoProps) {
     return (
-        <BlockStack gap="200">
-            <Text as="h3" variant="headingMd">System Info</Text>
-            <LegacyCard sectioned>
-                <InlineStack gap="400">
-                    <Badge>{status}</Badge>
-                    <Text as="span" tone="subdued">Submitted: {new Date(createdAt).toLocaleString()}</Text>
-                </InlineStack>
-            </LegacyCard>
+        <BlockStack gap="100">
+            <InlineStack gap="400">
+                <Text as="span" tone="subdued">Submitted on: <Text as="span" fontWeight="medium" variant="bodyMd">{new Date(createdAt).toLocaleString()}</Text></Text>
+            </InlineStack>
         </BlockStack>
     );
 }

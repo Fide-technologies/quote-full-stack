@@ -8,8 +8,6 @@ import {
     Button,
     BlockStack,
     EmptySearchResult,
-    SkeletonBodyText,
-    Card,
 } from '@shopify/polaris';
 import { useState, useEffect } from 'react';
 import { ViewIcon, ImageIcon } from '@shopify/polaris-icons';
@@ -50,13 +48,7 @@ export function QuoteTable({
     const { selectedResources, allResourcesSelected, handleSelectionChange } =
         useIndexResourceState(quotes as any);
 
-    if (!isClient || isLoading) {
-        return (
-            <Card>
-                <SkeletonBodyText lines={10} />
-            </Card>
-        );
-    }
+    if (!isClient) return null;
 
     const rowMarkup = quotes.map(
         (quote, index) => (
@@ -147,6 +139,7 @@ export function QuoteTable({
                 onNext: onNextPage,
                 onPrevious: onPrevPage
             }}
+            loading={isLoading}
             emptyState={
                 <EmptySearchResult
                     title={'No quotes found'}

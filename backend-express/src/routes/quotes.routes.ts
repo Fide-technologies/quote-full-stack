@@ -23,6 +23,8 @@ router.post("/", validateAppProxy, validate(createQuoteSchema), planGuard(PlanAc
 
 router.get("/export", shopify.validateAuthenticatedSession(), planGuard(), quoteController.exportQuotesCsv);
 
+router.get("/:id", shopify.validateAuthenticatedSession(), planGuard(), quoteController.getQuoteById);
+
 router.get("/", shopify.validateAuthenticatedSession(), planGuard(), quoteController.getQuotes);
 
 export default router;

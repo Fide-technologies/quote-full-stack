@@ -41,67 +41,66 @@ export class PlanController extends BaseController {
     async upgradePlan(req: Request, res: Response) {
         try {
             const session = res.locals.shopify.session;
-            const { planName } = req.body;
+            const shop = session.shop;
+            const { planName, host } = req.body;
 
-            logger.info(`[PlanController] Managed upgrade request: shop=${session.shop}, plan=${planName}`);
+            logger.info(`[PlanController] Upgrade request: shop=${shop}, plan=${planName}`);
 
             if (!planName) {
                 return this.fail(res, "Plan name is required", 400);
             }
 
+            let confirmationUrl: string;
+
             if (planName === PlanType.FREE) {
-                // For FREE plan, redirect directly to our callback for DB update
-                return this.ok(res, { 
-                    confirmationUrl: `https://${env.HOST_NAME}/api/plans/callback?shop=${session.shop}&plan=${planName}` 
-                });
+                // For FREE plan, redirect to our callback for DB update and cancellation
+                confirmationUrl = `https://${env.HOST_NAME}/api/plans/callback?shop=${shop}&plan=${planName}&host=${host || ""}`;
+            } else {
+                // For Managed Pricing (Pro/Ultimate), redirect to Shopify's managed selection page
+                const shopName = shop.replace(".myshopify.com", "");
+                confirmationUrl = `https://admin.shopify.com/store/${shopName}/apps/merchant-quote/plans`;
             }
 
-            const confirmationUrl = await this.planService.createSubscription(session, planName, req.query.host as string);
-
-            if (confirmationUrl) {
-                return this.ok(res, { confirmationUrl });
-            }
+            return this.ok(res, { confirmationUrl });
         } catch (error) {
             return this.handleError(res, error);
         }
     }
 
     async handleCallback(req: Request, res: Response) {
-        // Extract all params safely as strings (Shopify can sometimes pass arrays)
-        const rawShop = req.query.shop;
-        const rawHost = req.query.host;
-        const rawChargeId = req.query.charge_id;
-        const rawPlan = req.query.plan;
+        // Normalize query params (handles both strings and arrays automatically)
+        const { shop, host, charge_id, plan } = Object.fromEntries(
+            Object.entries(req.query).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v])
+        ) as Record<string, string>;
 
-        const shop = Array.isArray(rawShop) ? rawShop[0] : rawShop as string;
-        const host = Array.isArray(rawHost) ? rawHost[0] : rawHost as string | undefined;
-        const charge_id = Array.isArray(rawChargeId) ? rawChargeId[0] : rawChargeId as string | undefined;
-        const plan = Array.isArray(rawPlan) ? rawPlan[0] : rawPlan as string | undefined;
-
-        logger.info(`[PlanController] Billing callback: shop=${shop}, plan=${plan}, charge_id=${charge_id}`);
-
-        res.setHeader('ngrok-skip-browser-warning', 'true');
+        logger.info(`[PlanController] Billing callback for shop: ${shop}`);
 
         try {
             if (!shop) {
-                logger.error(`[PlanController] Missing shop param in callback`);
-                // Redirect to our own app root - avoid blank page
-                return res.redirect(`https://${env.HOST_NAME}/plans`);
+                throw new Error("Missing shop parameter");
             }
 
-            const appUrl = await this.planService.handleCallback(shop as string, charge_id as string, plan as string, host as string);
-            logger.info(`[PlanController] Redirecting to: ${appUrl}`);
+            const appUrl = await this.planService.handleCallback(shop, charge_id, plan, host);
             return res.redirect(appUrl);
         } catch (error: any) {
-            logger.error(`[PlanController] Callback error: ${error.message}`);
+            logger.error(`[PlanController] Callback failed: ${error.message}`);
 
-            // ALWAYS redirect back to OUR OWN app on error \u2014 never to admin.shopify.com directly
-            // as that causes the blank page + App Bridge failure
-            const fallback = shop
-                ? `https://${env.HOST_NAME}/plans?shop=${shop}${host ? `&host=${host}` : ""}&billing=error`
-                : `https://${env.HOST_NAME}/plans`;
+            // Build safe fallback URL
+            const params = new URLSearchParams({ shop: shop || '' });
+            if (host) params.set('host', host);
+            params.set('billing', 'error');
 
-            return res.redirect(fallback);
+            return res.redirect(`https://${env.HOST_NAME}/plans?${params.toString()}`);
+        }
+    }
+
+    async getChargeHistory(req: Request, res: Response) {
+        try {
+            const session = res.locals.shopify.session;
+            const history = await this.planService.getChargeHistory(session);
+            return this.ok(res, history);
+        } catch (error) {
+            return this.handleError(res, error);
         }
     }
 }

@@ -41,7 +41,6 @@ export interface IForm {
 
 export async function getForm(): Promise<IForm> {
     const res = await fetch("/api/forms", {
-        headers: { "ngrok-skip-browser-warning": "true" }
     });
     if (!res.ok) throw new Error("Failed to load form configuration");
     const json = await res.json();
@@ -53,7 +52,6 @@ export async function updateForm(formData: Partial<IForm>): Promise<IForm> {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "true"
         },
         body: JSON.stringify(formData),
     });

@@ -1,6 +1,5 @@
 export async function getSettings() {
     const res = await fetch("/api/settings", {
-        headers: { "ngrok-skip-browser-warning": "true" }
     });
     if (!res.ok) throw new Error("Failed to load settings");
     const json = await res.json();
@@ -14,7 +13,6 @@ export async function updateSettings(showOnAll: boolean) {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "true"
         },
         body: JSON.stringify({ showOnAll }),
     });

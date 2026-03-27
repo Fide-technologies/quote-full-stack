@@ -1,45 +1,72 @@
-import { Page, Layout, BlockStack, Text, Box, Card, Banner, SkeletonPage, SkeletonBodyText, InlineStack, Badge } from "@shopify/polaris";
+import { 
+    Page, 
+    Layout, 
+    BlockStack, 
+    Text, 
+    Box, 
+    Card, 
+    Banner, 
+    SkeletonPage, 
+    SkeletonBodyText, 
+    InlineStack, 
+    Badge, 
+    Link,
+    Divider
+} from "@shopify/polaris";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSettings, updateSettings } from "../api/settings"
+import { getSettings, updateSettings } from "../api/settings";
 import { GlobalSettingsCard } from "../components/settings/GlobalSettingsCard";
-import { useAppBridge } from "@shopify/app-bridge-react";
-import { useEffect } from "react";
+import { useAppBridge, SaveBar } from "@shopify/app-bridge-react";
+import { useState, useEffect } from "react";
 import { Link as RouterLink } from "react-router-dom";
-import { Link } from "@shopify/polaris";
-
 
 export const Settings: React.FC = () => {
     const queryClient = useQueryClient();
     const shopify = useAppBridge();
+    
+    // Local state to track unsaved changes
+    const [localShowOnAll, setLocalShowOnAll] = useState<boolean | null>(null);
 
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ["settings"],
         queryFn: getSettings,
     });
 
+    // Sync local state when data is loaded
+    useEffect(() => {
+        if (data && localShowOnAll === null) {
+            setLocalShowOnAll(data.showOnAll);
+        }
+    }, [data]);
+
     const mutation = useMutation({
         mutationFn: updateSettings,
-        onSuccess: (_data, variables) => {
-            queryClient.setQueryData(["settings"], (old: any) => ({
-                ...old,
-                showOnAll: variables,
-            }));
-
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["settings"] });
             shopify.toast.show("Settings saved successfully");
+            setLocalShowOnAll(null); // Reset local state to sync with fresh data
         },
         onError: () => {
             shopify.toast.show("Failed to save settings", { isError: true });
         }
     });
 
-    useEffect(() => {
-        shopify.loading(isLoading || mutation.isPending);
-    }, [isLoading, mutation.isPending, shopify]);
+    // Check if form is dirty
+    const isDirty = localShowOnAll !== null && localShowOnAll !== data?.showOnAll;
+
+    const handleSave = () => {
+        if (localShowOnAll !== null) {
+            mutation.mutate(localShowOnAll);
+        }
+    };
+
+    const handleDiscard = () => {
+        setLocalShowOnAll(data?.showOnAll ?? true);
+    };
 
     if (isLoading) {
         return (
-            <SkeletonPage title="Quote App Settings">
+            <SkeletonPage title="Settings">
                 <Layout>
                     <Layout.Section>
                         <Card>
@@ -57,8 +84,14 @@ export const Settings: React.FC = () => {
         <Page
             title="Settings"
             subtitle="Manage your quote request configuration and appearance."
-            compactTitle
         >
+            {isDirty && (
+                <SaveBar id="settings-save-bar">
+                    <button variant="primary" onClick={handleSave}>Save</button>
+                    <button onClick={handleDiscard}>Discard</button>
+                </SaveBar>
+            )}
+
             <Layout>
                 {isError && (
                     <Layout.Section>
@@ -75,10 +108,8 @@ export const Settings: React.FC = () => {
                     <Card>
                         <BlockStack gap="400">
                             <GlobalSettingsCard
-                                showOnAll={data?.showOnAll ?? true}
-                                onShowOnAllChange={(value: boolean) =>
-                                    mutation.mutate(value)
-                                }
+                                showOnAll={localShowOnAll ?? data?.showOnAll ?? true}
+                                onShowOnAllChange={setLocalShowOnAll}
                                 disabled={mutation.isPending}
                             />
                         </BlockStack>
@@ -96,7 +127,7 @@ export const Settings: React.FC = () => {
                                     <BlockStack gap="100">
                                         <Text variant="bodyMd" fontWeight="semibold" as="span">Hide Prices</Text>
                                         <Text variant="bodySm" tone="subdued" as="p">
-                                            Prices will be hidden for all products when the quote button is shown.
+                                            Prices are automatically hidden for all products when the quote button is enabled.
                                         </Text>
                                     </BlockStack>
                                     <Badge tone="info">Always Active</Badge>
@@ -107,25 +138,41 @@ export const Settings: React.FC = () => {
                 </Layout.AnnotatedSection>
 
                 <Layout.AnnotatedSection
-                    title="Legal & Compliance"
-                    description="View our privacy policy and terms of service."
+                    title="Support & Legal"
+                    description="Get help or view our policies."
                 >
                     <Card>
-                        <BlockStack gap="200">
-                            <Text as="p" variant="bodyMd">
-                                To comply with Shopify App Store requirements, you can find our full data protection and privacy details on our legal page.
-                            </Text>
-                            <Box>
-                                <RouterLink to="/legal" style={{ textDecoration: 'none' }}>
-                                    <Link monochrome removeUnderline url="/legal">
-                                        View Privacy Policy & Terms
+                        <BlockStack gap="400">
+                            <BlockStack gap="200">
+                                <Text as="h3" variant="headingSm">Need help?</Text>
+                                <Text as="p" variant="bodyMd" tone="subdued">
+                                    If you have any questions or need assistance with the app, please contact our support team.
+                                </Text>
+                                <Box>
+                                    <Link url="mailto:krishnauday320@gmail.com" external>
+                                        Contact Support
                                     </Link>
-                                </RouterLink>
-                            </Box>
+                                </Box>
+                            </BlockStack>
+                            
+                            <Divider />
+
+                            <BlockStack gap="200">
+                                <Text as="h3" variant="headingSm">Legal</Text>
+                                <Text as="p" variant="bodyMd" tone="subdued">
+                                    View our data protection details and terms of service to understand how we handle your data.
+                                </Text>
+                                <Box>
+                                    <RouterLink to="/legal" style={{ textDecoration: 'none' }}>
+                                        <Link monochrome removeUnderline url="/legal">
+                                            View Privacy Policy & Terms
+                                        </Link>
+                                    </RouterLink>
+                                </Box>
+                            </BlockStack>
                         </BlockStack>
                     </Card>
                 </Layout.AnnotatedSection>
-
             </Layout>
         </Page>
     );

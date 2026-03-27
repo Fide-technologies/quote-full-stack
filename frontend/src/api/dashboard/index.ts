@@ -7,7 +7,6 @@ export interface DashboardStats {
 
 export const getDashboardStats = async (): Promise<DashboardStats> => {
     const response = await fetch('/api/dashboard/stats', {
-        headers: { "ngrok-skip-browser-warning": "true" }
     });
     if (!response.ok) {
         throw new Error('Failed to fetch dashboard stats');
