@@ -106,13 +106,17 @@ export const Support: React.FC = () => {
                         <Card>
                             <BlockStack gap="300">
                                 <Text as="h2" variant="headingMd">Support</Text>
-                                <InlineStack gap="200" blockAlign="center">
-                                    <Icon source={EmailIcon} tone="subdued" />
-                                    <Text as="span" tone="subdued">Email us at:</Text>
-                                </InlineStack>
-                                <Link url="mailto:krishnauday320@gmail.com" external>
-                                    krishnauday320@gmail.com
-                                </Link>
+                                <BlockStack gap="050">
+                                    <InlineStack gap="200" blockAlign="center" align="start">
+                                        <Icon source={EmailIcon} tone="subdued" />
+                                        <Text as="span" tone="subdued">Email us at:</Text>
+                                    </InlineStack>
+                                    <InlineStack align="start">
+                                        <Link url="mailto:krishnauday320@gmail.com" external>
+                                            krishnauday320@gmail.com
+                                        </Link>
+                                    </InlineStack>
+                                </BlockStack>
                                 <Divider />
                                 <Box>
                                     <Text as="p" variant="bodySm" tone="subdued">
@@ -128,9 +132,11 @@ export const Support: React.FC = () => {
                                 <Text as="p" variant="bodyMd" tone="subdued">
                                     Check our knowledge base for detailed guides and troubleshooting.
                                 </Text>
-                                <Button icon={ExternalIcon} variant="plain">
-                                    View Full Documentation
-                                </Button>
+                                <InlineStack align="start">
+                                    <Button icon={ExternalIcon} variant="plain">
+                                        View Full Documentation
+                                    </Button>
+                                </InlineStack>
                             </BlockStack>
                         </Card>
                     </BlockStack>

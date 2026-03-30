@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, IndexTable, Text, BlockStack, Badge, Box, EmptyState, Pagination, InlineStack, Button } from '@shopify/polaris';
 import { useQuery } from '@tanstack/react-query';
 import { getChargeHistory } from '../../api/plans';
+import { formatPricingDetails, formatChargeDate, getChargeStatusTone } from '../../utils/billingFormatters';
 
 export const TransactionHistory: React.FC = () => {
     const [page, setPage] = useState(1);
@@ -61,56 +62,10 @@ export const TransactionHistory: React.FC = () => {
     };
 
     const rowMarkup = paginatedItems.map((item: any, index: number) => {
-        // Safe data extraction for both Subscriptions and OneTimePurchases
-        let price = '0.00';
-        let currency = 'USD';
-        let detail = 'One-time';
-
-        if (item.lineItems?.[0]?.plan?.pricingDetails) {
-            const pricing = item.lineItems[0].plan.pricingDetails;
-            if (pricing.__typename === 'AppRecurringPricing') {
-                price = pricing.price.amount;
-                currency = pricing.price.currencyCode;
-                detail = `Every ${pricing.interval?.replace(/_/g, ' ').toLowerCase() || '30 days'}`;
-            } else if (pricing.__typename === 'AppUsagePricing') {
-                price = pricing.cappedAmount.amount;
-                currency = pricing.cappedAmount.currencyCode;
-                detail = 'Usage-based';
-            }
-        } else if (item.price) {
-            price = item.price.amount;
-            currency = item.price.currencyCode;
-            detail = 'One-time purchase';
-        }
-
-        const formattedDate = new Intl.DateTimeFormat('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        }).format(new Date(item.createdAt));
-
+        const { price, currency, detail } = formatPricingDetails(item);
+        const formattedDate = formatChargeDate(item.createdAt);
         const status = item.status.toUpperCase();
-        let statusTone: any = "info";
-        
-        switch (status) {
-            case "ACTIVE":
-            case "ACTIVATED":
-                statusTone = "success";
-                break;
-            case "CANCELLED":
-            case "DECLINED":
-                statusTone = "neutral";
-                break;
-            case "EXPIRED":
-                statusTone = "warning";
-                break;
-            case "FAILING":
-            case "FROZEN":
-                statusTone = "critical";
-                break;
-            default:
-                statusTone = "info";
-        }
+        const statusTone = getChargeStatusTone(status);
 
         return (
             <IndexTable.Row id={item.id} key={item.id} position={index}>
