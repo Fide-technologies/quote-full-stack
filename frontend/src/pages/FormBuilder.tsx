@@ -10,8 +10,7 @@ import {
     Box,
     Badge,
     Banner,
-    FooterHelp,
-    Link
+    Tabs,
 } from '@shopify/polaris';
 import { PlusIcon, SaveIcon } from '@shopify/polaris-icons';
 import {
@@ -41,7 +40,8 @@ export const FormBuilder: React.FC = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [expandedStep, setExpandedStep] = useState<string | null>(null);
     const [previewStepIndex, setPreviewStepIndex] = useState(0);
-    
+    const [selectedTab, setSelectedTab] = useState(0);
+
     const { hasPermission, isLoading: isPlanLoading } = usePlanUsage();
     const [canEdit, setCanEdit] = useState(true);
 
@@ -151,6 +151,21 @@ export const FormBuilder: React.FC = () => {
 
     const stepsCount = formState?.steps?.length || 0;
 
+    const tabs = [
+        {
+            id: 'builder-tab',
+            content: 'Builder',
+            accessibilityLabel: 'Edit form fields',
+            panelID: 'builder-panel',
+        },
+        {
+            id: 'preview-tab',
+            content: 'Preview',
+            accessibilityLabel: 'View form preview',
+            panelID: 'preview-panel',
+        },
+    ];
+
     return (
         <Page
             title="Form Builder"
@@ -173,76 +188,77 @@ export const FormBuilder: React.FC = () => {
             <Box paddingBlockEnd="800">
                 <Layout>
                     <Layout.Section>
-                        <BlockStack gap="400">
-                            {formState && (
-                                <DndContext
-                                    sensors={sensors}
-                                    collisionDetection={closestCenter}
-                                    onDragEnd={handleDragEnd}
-                                >
+                        <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
+                            <Box paddingBlockStart="400">
+                                {selectedTab === 0 ? (
                                     <BlockStack gap="400">
-                                        <SortableContext
-                                            items={formState.steps.map(s => s.id)}
-                                            strategy={verticalListSortingStrategy}
-                                        >
-                                            {formState.steps.map((step, idx) => (
-                                                <FormStep
-                                                    key={step.id}
-                                                    step={step}
-                                                    stepIdx={idx}
-                                                    formState={formState}
-                                                    setFormState={setFormState as any}
-                                                    expandedStep={expandedStep}
-                                                    setExpandedStep={setExpandedStep}
-                                                    addField={addField}
-                                                />
-                                            ))}
-                                        </SortableContext>
-                                    </BlockStack>
-                                </DndContext>
-                            )}
-
-                            {formState && (
-                                <Card>
-                                    <FormSettings formState={formState} setFormState={setFormState as any} />
-                                </Card>
-                            )}
-                        </BlockStack>
-                    </Layout.Section>
-                    <Layout.Section variant="oneThird">
-                        <BlockStack gap="400">
-                            <Card>
-                                <BlockStack gap="300">
-                                    <InlineStack align="space-between" blockAlign="center">
-                                        <Text variant="headingMd" as="h2">Preview</Text>
-                                        <Badge tone="info">{`${stepsCount} Steps`}</Badge>
-                                    </InlineStack>
-                                    <Divider />
-                                    <Box paddingBlockStart="200">
                                         {formState && (
-                                            <FormPreview 
-                                                formState={formState} 
-                                                previewStepIndex={previewStepIndex}
-                                                setPreviewStepIndex={setPreviewStepIndex}
-                                            />
+                                            <DndContext
+                                                sensors={sensors}
+                                                collisionDetection={closestCenter}
+                                                onDragEnd={handleDragEnd}
+                                            >
+                                                <BlockStack gap="400">
+                                                    <SortableContext
+                                                        items={formState.steps.map(s => s.id)}
+                                                        strategy={verticalListSortingStrategy}
+                                                    >
+                                                        {formState.steps.map((step, idx) => (
+                                                            <FormStep
+                                                                key={step.id}
+                                                                step={step}
+                                                                stepIdx={idx}
+                                                                formState={formState}
+                                                                setFormState={setFormState as any}
+                                                                expandedStep={expandedStep}
+                                                                setExpandedStep={setExpandedStep}
+                                                                addField={addField}
+                                                            />
+                                                        ))}
+                                                    </SortableContext>
+                                                </BlockStack>
+                                            </DndContext>
                                         )}
-                                    </Box>
-                                </BlockStack>
-                            </Card>
 
-                            <Banner tone="info">
-                                <p>Combine up to 6 steps and 6 fields per step in your professional form configuration.</p>
-                            </Banner>
-                        </BlockStack>
+                                        {formState && (
+                                            <Card>
+                                                <FormSettings formState={formState} setFormState={setFormState as any} />
+                                            </Card>
+                                        )}
+                                        
+                                        <Banner tone="info">
+                                            <p>Combine up to 6 steps and 6 fields per step in your custom form configuration.</p>
+                                        </Banner>
+                                    </BlockStack>
+                                ) : (
+                                    <BlockStack gap="400">
+                                        <Card>
+                                            <BlockStack gap="300">
+                                                <InlineStack align="space-between" blockAlign="center">
+                                                    <Text variant="headingMd" as="h2">Live Preview</Text>
+                                                    <Badge tone="info">{`${stepsCount} Steps`}</Badge>
+                                                </InlineStack>
+                                                <Divider />
+                                                <Box paddingBlockStart="200">
+                                                    <div style={{ maxWidth: '400px', margin: '0 auto' }}>
+                                                        {formState && (
+                                                            <FormPreview
+                                                                formState={formState}
+                                                                previewStepIndex={previewStepIndex}
+                                                                setPreviewStepIndex={setPreviewStepIndex}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </Box>
+                                            </BlockStack>
+                                        </Card>
+                                    </BlockStack>
+                                )}
+                            </Box>
+                        </Tabs>
                     </Layout.Section>
                 </Layout>
             </Box>
-            <FooterHelp>
-                Need help building your form?{' '}
-                <Link url="https://dev.request-quote.online/support" external>
-                    View Documentation
-                </Link>
-            </FooterHelp>
         </Page>
     );
 };

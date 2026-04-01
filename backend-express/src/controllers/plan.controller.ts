@@ -23,7 +23,8 @@ export class PlanController extends BaseController {
             const session = res.locals.shopify.session;
             const merchant = await this.merchantService.getMerchantByShop(session.shop);
             const plan = await this.planService.getMerchantPlan(session.shop);
-            return this.ok(res, { merchant, plan });
+            const isPaidApp = env.IS_PAID_APP === "true";
+            return this.ok(res, { merchant, plan, isPaidApp });
         } catch (error) {
             return this.handleError(res, error);
         }

@@ -18,6 +18,7 @@ export interface PlanUsage {
         permissions: string[];
         price: number;
     };
+    isPaidApp?: boolean;
 }
 
 export const usePlanUsage = () => {
@@ -28,16 +29,19 @@ export const usePlanUsage = () => {
     });
 
     const hasPermission = (action: PlanAction | string) => {
+        if (usage?.isPaidApp === false) return true; // Free mode grants all access
         if (!usage?.plan?.permissions) return false;
         return usage.plan.permissions.includes(action as string);
     };
 
     const isUsageExceeded = () => {
+        if (usage?.isPaidApp === false) return false; // Never exceed in completely free mode natively
         if (!usage?.plan || !usage?.merchant) return false;
         return usage.merchant.usage.quotesUsed >= usage.plan.quoteLimit;
     };
 
     const getRemainingQuotes = () => {
+        if (usage?.isPaidApp === false) return 10000; // Return static generous limit
         if (!usage?.plan || !usage?.merchant) return 0;
         return Math.max(0, usage.plan.quoteLimit - usage.merchant.usage.quotesUsed);
     };

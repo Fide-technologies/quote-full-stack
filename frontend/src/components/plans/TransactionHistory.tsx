@@ -108,8 +108,8 @@ export const TransactionHistory: React.FC = () => {
                         <Text as="h2" variant="headingMd">Billing History</Text>
                         <Text as="p" tone="subdued">Detailed view of your app subscriptions and one-time charges.</Text>
                     </BlockStack>
-                    <Button 
-                        variant="tertiary" 
+                    <Button
+                        variant="tertiary"
                         url={`https://${new URLSearchParams(window.location.search).get('shop')}/admin/settings/billing/charges`}
                         external
                     >
@@ -117,7 +117,7 @@ export const TransactionHistory: React.FC = () => {
                     </Button>
                 </InlineStack>
             </Box>
-            
+
             <IndexTable
                 resourceName={resourceName}
                 itemCount={allItems.length}

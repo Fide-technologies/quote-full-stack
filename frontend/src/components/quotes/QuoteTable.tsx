@@ -8,6 +8,7 @@ import {
     Button,
     BlockStack,
     EmptySearchResult,
+    useBreakpoints,
 } from '@shopify/polaris';
 import { useState, useEffect } from 'react';
 import { ViewIcon, ImageIcon } from '@shopify/polaris-icons';
@@ -35,6 +36,7 @@ export function QuoteTable({
     onViewDetails,
 }: QuoteTableProps) {
     const [isClient, setIsClient] = useState(false);
+    const { smUp } = useBreakpoints();
 
     useEffect(() => {
         setIsClient(true);
@@ -65,7 +67,7 @@ export function QuoteTable({
                 </IndexTable.Cell>
                 <IndexTable.Cell>{quote.email}</IndexTable.Cell>
                 <IndexTable.Cell>
-                    <InlineStack gap="300" align="start" blockAlign="center">
+                    <InlineStack gap="300" align="start" blockAlign="center" wrap>
                         <Thumbnail
                             source={quote.productDetails?.featuredImage?.url || ImageIcon}
                             alt={quote.productDetails?.featuredImage?.altText || quote.productTitle}
@@ -117,6 +119,7 @@ export function QuoteTable({
 
     return (
         <IndexTable
+            condensed={!smUp}
             resourceName={resourceName}
             itemCount={totalCount}
             selectedItemsCount={

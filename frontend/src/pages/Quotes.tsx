@@ -7,7 +7,7 @@ import {
     Banner,
     Box,
     Text,
-    Divider
+    InlineGrid
 } from '@shopify/polaris';
 import { ExportIcon } from '@shopify/polaris-icons';
 import { useQuotes } from '../hooks/quotes/useQuotes';
@@ -85,6 +85,21 @@ export const Quotes: React.FC = () => {
                                 </Banner>
                             )}
 
+                            <InlineGrid columns={{ xs: 1, sm: 2 }} gap="400">
+                                <Card>
+                                    <BlockStack gap="200">
+                                        <Text as="h2" variant="headingSm" tone="subdued">Total Quotes</Text>
+                                        <Text as="p" variant="headingLg">{totalCount}</Text>
+                                    </BlockStack>
+                                </Card>
+                                <Card>
+                                    <BlockStack gap="200">
+                                        <Text as="h2" variant="headingSm" tone="subdued">Pending Quotes</Text>
+                                        <Text as="p" variant="headingLg">{quotes.filter(q => q.status === 'NEW' || q.status === 'PENDING').length}</Text>
+                                    </BlockStack>
+                                </Card>
+                            </InlineGrid>
+
                             <Card padding="0">
                                 <QuoteFilters
                                     queryValue={queryValue}
@@ -107,27 +122,6 @@ export const Quotes: React.FC = () => {
                                     onPrevPage={handlePrevPage}
                                     onViewDetails={(quote) => navigate(`/quotes/${quote.id}`)}
                                 />
-                            </Card>
-                        </BlockStack>
-                    </Layout.Section>
-
-                    <Layout.Section variant="oneThird">
-                        <BlockStack gap="400">
-                            <Card>
-                                <BlockStack gap="200">
-                                    <Text as="h2" variant="headingMd">Summary</Text>
-                                    <Divider />
-                                    <Box paddingBlockStart="200">
-                                        <BlockStack gap="200">
-                                            <Box>
-                                                <Text as="p" variant="bodyMd">Total Quotes: {totalCount}</Text>
-                                            </Box>
-                                            <Box>
-                                                <Text as="p" variant="bodyMd">Pending: {quotes.filter(q => q.status === 'NEW').length}</Text>
-                                            </Box>
-                                        </BlockStack>
-                                    </Box>
-                                </BlockStack>
                             </Card>
                         </BlockStack>
                     </Layout.Section>

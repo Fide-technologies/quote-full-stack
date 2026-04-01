@@ -10,6 +10,7 @@ import { validateAppProxy } from "@/middlewares/proxy.middleware";
 import { upload } from "@/middlewares/upload.middleware";
 import { planGuard } from "@/middlewares/plan-guard.middleware";
 import { PlanAction } from "@/constants/plan.constants";
+import { quoteSubmissionLimiter } from "@/middlewares/rate-limit.middleware";
 
 const router = Router();
 const quoteController = container.get<QuoteController>(TYPES.QuoteController);
@@ -19,7 +20,7 @@ router.post("/upload", validateAppProxy, upload.array('images', 5), uploadContro
 
 router.use(json());
 
-router.post("/", validateAppProxy, validate(createQuoteSchema), planGuard(PlanAction.QUOTE_CREATE), quoteController.createQuote);
+router.post("/", validateAppProxy, validate(createQuoteSchema), quoteSubmissionLimiter, planGuard(PlanAction.QUOTE_CREATE), quoteController.createQuote);
 
 router.get("/export", shopify.validateAuthenticatedSession(), planGuard(), quoteController.exportQuotesCsv);
 
