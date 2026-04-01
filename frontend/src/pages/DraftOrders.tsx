@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
     Page,
     Layout,
@@ -35,13 +35,7 @@ export const DraftOrders: React.FC = () => {
         handleSearchBlur,
     } = useQuotes({ hasDraftOrder: true });
 
-    const [isClient, setIsClient] = useState(false);
 
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
-
-    if (!isClient) return null;
 
     return (
         <Page

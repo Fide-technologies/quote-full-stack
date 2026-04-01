@@ -20,6 +20,7 @@ import {
     PointerSensor,
     useSensor,
     useSensors,
+    type DragEndEvent,
 } from '@dnd-kit/core';
 import {
     arrayMove,
@@ -75,7 +76,7 @@ export const FormBuilder: React.FC = () => {
         })
     );
 
-    const handleDragEnd = (event: any) => {
+    const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         if (over && active.id !== over.id && formState) {
             const oldIndex = formState.steps.findIndex(s => s.id === active.id);
@@ -209,7 +210,7 @@ export const FormBuilder: React.FC = () => {
                                                                 step={step}
                                                                 stepIdx={idx}
                                                                 formState={formState}
-                                                                setFormState={setFormState as any}
+                                                                setFormState={setFormState}
                                                                 expandedStep={expandedStep}
                                                                 setExpandedStep={setExpandedStep}
                                                                 addField={addField}
@@ -222,7 +223,7 @@ export const FormBuilder: React.FC = () => {
 
                                         {formState && (
                                             <Card>
-                                                <FormSettings formState={formState} setFormState={setFormState as any} />
+                                                <FormSettings formState={formState} setFormState={setFormState} />
                                             </Card>
                                         )}
                                         

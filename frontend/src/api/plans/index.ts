@@ -1,11 +1,3 @@
-export async function getAllPlans() {
-    const res = await fetch("/api/plans", {
-    });
-    if (!res.ok) throw new Error("Failed to load plans");
-    const json = await res.json();
-    return json.data;
-}
-
 export async function getCurrentPlan() {
     console.log("working this get current plan in frotnend")
     const res = await fetch("/api/plans/current", {

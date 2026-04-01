@@ -1,7 +1,7 @@
 import { Card, Text, BlockStack, InlineStack } from "@shopify/polaris";
 
 interface QuoteCustomDataDetailsProps {
-    customData?: Record<string, any>;
+    customData?: Record<string, unknown>;
 }
 
 export function QuoteCustomDataDetails({ customData }: QuoteCustomDataDetailsProps) {

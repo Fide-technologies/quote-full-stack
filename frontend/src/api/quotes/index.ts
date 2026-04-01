@@ -29,7 +29,7 @@ export interface Quote {
     customImages?: string[];
 }
 
-export interface QuotesResponse {
+interface QuotesResponse {
     success: boolean;
     data: {
         quotes: Quote[];
@@ -40,7 +40,7 @@ export interface QuotesResponse {
     }
 }
 
-export interface QuoteFilters {
+interface QuoteFilters {
     page?: number;
     limit?: number;
     q?: string;

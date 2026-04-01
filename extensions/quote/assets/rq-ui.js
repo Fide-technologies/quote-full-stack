@@ -489,6 +489,9 @@
                 const errSpan = document.getElementById(`rq-error-${fieldName}-${blockId}`);
                 if (errSpan) errSpan.innerText = '';
             }
+
+            // Clear input value to allow re-selecting the same file after removal
+            input.value = '';
         },
 
         renderPreviews: function (fieldId, files) {
@@ -533,6 +536,10 @@
             if (!input || !input._rq_files) return;
 
             input._rq_files.splice(index, 1);
+            
+            // CRITICAL: Clear input.value so re-selecting the SAME image file triggers onchange again
+            input.value = '';
+            
             this.renderPreviews(fieldId, input._rq_files);
         }
     };
