@@ -44,7 +44,7 @@ export interface IFormStep {
 }
 
 export interface IFormSettings {
-    submitButtonText?: string;
+    successTitle?: string;
     successMessage?: string;
 }
 
