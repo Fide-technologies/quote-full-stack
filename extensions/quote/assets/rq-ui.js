@@ -194,7 +194,7 @@
                             html += `<textarea name="${fieldName}" id="${fieldId}" rows="5" placeholder="Tell us more about your requirements..." ${attrs}></textarea>`;
                             if (field.maxLength) html += `<small class="rq-char-count">Max ${field.maxLength} characters</small>`;
                         } else if (field.type === 'file') {
-                            const isMultiple = field.isMultiple || field.id.includes('multiple') || (field.label && field.label.toLowerCase().includes('multiple'));
+                            const isMultiple = field.allowMultiple || field.isMultiple || field.id.includes('multiple') || (field.label && field.label.toLowerCase().includes('multiple'));
                             const maxFiles = isMultiple ? 3 : 1;
                             const acceptAttr = field.allowedFileTypes ? `accept="${field.allowedFileTypes}"` : 'accept="image/*"';
                             const maxMbAttr = field.maxFileSizeMB ? `data-max-mb="${field.maxFileSizeMB}"` : 'data-max-mb="5"';
@@ -465,14 +465,14 @@
 
                 // 3. Logic for Single vs Multiple
                 if (maxFiles === 1) {
-                    existingFiles = [file]; // Overwrite for single
+                    existingFiles = [file]; // Overwrite for single mode
                 } else {
-                    // Strictly cap at 3 for multiple
+                    // Strictly cap at 3 for multiple mode (matching backend)
                     if (existingFiles.length < 3) {
-                        // Prevent duplicates by name if possible (basic check)
+                        // Prevent duplicates by name and size
                         const isDup = existingFiles.some(f => f.name === file.name && f.size === file.size);
                         if (!isDup) existingFiles.push(file);
-                    } else if (fileList.length > 0) {
+                    } else {
                         alert('Maximum 3 images allowed.');
                         break;
                     }
