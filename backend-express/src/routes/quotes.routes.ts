@@ -16,7 +16,7 @@ const router = Router();
 const quoteController = container.get<QuoteController>(TYPES.QuoteController);
 const uploadController = container.get<UploadController>(TYPES.UploadController);
 
-router.post("/upload", validateAppProxy, upload.array('images', 5), uploadController.uploadImages);
+router.post("/upload", validateAppProxy, upload.array('images', 3), uploadController.uploadImages);
 
 router.use(json());
 
