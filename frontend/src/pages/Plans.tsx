@@ -45,11 +45,13 @@ interface Plan {
 export const Plans: React.FC = () => {
     const queryClient = useQueryClient();
     const [upgradeError, setUpgradeError] = useState<string | null>(null);
-    const [showSuccessBanner, setShowSuccessBanner] = useState(false);
-    const [showErrorBanner, setShowErrorBanner] = useState(false);
-
-    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Initialize banners directly from URL to avoid set-state-in-effect issues
+    const urlParams = new URL(window.location.href).searchParams;
     const billingStatus = urlParams.get('billing');
+    
+    const [showSuccessBanner, setShowSuccessBanner] = useState(billingStatus === 'success');
+    const [showErrorBanner, setShowErrorBanner] = useState(billingStatus === 'error');
 
     const { data: currentPlanData, isLoading } = useQuery({
         queryKey: ["currentPlan"],
@@ -64,25 +66,26 @@ export const Plans: React.FC = () => {
 
     useEffect(() => {
         if (billingStatus === 'success') {
-            setShowSuccessBanner(true);
             queryClient.invalidateQueries({ queryKey: ["currentPlan"] });
+            // App Bridge toast might be handled here since it's a pure side effect
+            // We only show it once per billingStatus change
             if (typeof shopify !== 'undefined') shopify.toast.show("✓ Plan upgraded successfully!");
-        } else if (billingStatus === 'error') {
-            setShowErrorBanner(true);
         }
         
         if (billingStatus) {
             cleanBillingParam();
         }
-    }, [billingStatus, queryClient]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [billingStatus]);
 
     const upgradeMutation = useMutation({
         mutationFn: async (planName: string) => {
-            let host = urlParams.get("host");
+            const params = new URLSearchParams(window.location.search);
+            let host = params.get("host");
             if (!host) host = sessionStorage.getItem("shopify_host") || sessionStorage.getItem("host");
             return upgradePlan(planName, host || "");
         },
-        onSuccess: (data: any) => {
+        onSuccess: (data: { data?: { confirmationUrl?: string }; confirmationUrl?: string }) => {
             const confirmationUrl = data.data?.confirmationUrl || data.confirmationUrl;
             if (confirmationUrl) {
                 if (window.top) {
@@ -92,7 +95,7 @@ export const Plans: React.FC = () => {
                 }
             }
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             setUpgradeError(error.message || "An unknown error occurred during upgrade.");
             if (typeof shopify !== 'undefined') shopify.toast.show("Upgrade failed", { isError: true });
         }

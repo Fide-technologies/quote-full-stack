@@ -29,7 +29,7 @@ export class FormController extends BaseController {
                     shop,
                     title: "Request a Quote",
                     settings: {
-                        submitButtonText: "Submit Quote",
+                        successTitle: "Quote Requested Successfully!",
                         successMessage: "Thank you for your request. Our team will review your quote and get back to you shortly."
                     },
                     steps: [
@@ -50,11 +50,12 @@ export class FormController extends BaseController {
                             isSystem: true,
                             fields: [
                                 { id: "field-address1", type: "text", label: "Address Line 1", required: true, isSystem: true, layoutWidth: "full" },
-                                { id: "field-address2", type: "text", label: "Address Line 2", required: false, isSystem: true, layoutWidth: "full" },
+                                { id: "field-address2", type: "text", label: "Address Line 2", required: true, isSystem: false, layoutWidth: "full" },
                                 { id: "field-city", type: "text", label: "City", required: true, isSystem: true, layoutWidth: "half" },
                                 { id: "field-district", type: "text", label: "District", required: true, isSystem: true, layoutWidth: "half" },
                                 { id: "field-state", type: "text", label: "State", required: true, isSystem: true, layoutWidth: "half" },
-                                { id: "field-pincode", type: "text", label: "Pincode", required: true, isSystem: true, layoutWidth: "half" }
+                                { id: "field-pincode", type: "text", label: "Pincode", required: true, isSystem: true, layoutWidth: "half" },
+                                { id: "field-country", type: "text", label: "Country", required: true, isSystem: true, layoutWidth: "half" }
                             ]
                         },
                         {

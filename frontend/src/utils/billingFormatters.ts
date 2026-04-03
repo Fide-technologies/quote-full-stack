@@ -1,4 +1,18 @@
-export function formatPricingDetails(item: any) {
+interface BillingItem {
+    lineItems?: Array<{
+        plan?: {
+            pricingDetails?: {
+                __typename: string;
+                price: { amount: string; currencyCode: string };
+                interval?: string;
+                cappedAmount: { amount: string; currencyCode: string };
+            };
+        };
+    }>;
+    price?: { amount: string; currencyCode: string };
+}
+
+export function formatPricingDetails(item: BillingItem) {
     let price = '0.00';
     let currency = 'USD';
     let detail = 'One-time';

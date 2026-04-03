@@ -28,8 +28,37 @@ import { usePlanUsage } from '../hooks/usePlanUsage';
 import { useNavigate } from 'react-router-dom';
 import { StatsLoader } from '../components/loaders/StatsLoader';
 
+interface StatCardProps {
+    title: string;
+    value: string | number;
+    icon: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+    color?: "base" | "subdued" | "critical" | "warning" | "success" | "info" | "magic";
+}
+
+const StatCard = ({ title, value, icon, color }: StatCardProps) => (
+    <Card>
+        <BlockStack gap="200">
+            <InlineStack align="space-between">
+                <Text as="h2" variant="headingSm" tone="subdued">
+                    {title}
+                </Text>
+                <Box padding="100" borderRadius="200">
+                    <Icon source={icon} tone={color || "base"} />
+                </Box>
+            </InlineStack>
+            <Text as="p" variant="headingLg">
+                {value}
+            </Text>
+        </BlockStack>
+    </Card>
+);
+
 export const Dashboard: React.FC = () => {
-    const { data: stats, isLoading: statsLoading, error } = useDashboardStats();
+    const { data: stats, isLoading: statsLoading, error } = useDashboardStats() as { 
+        data: import("../api/dashboard").DashboardStats | undefined; 
+        isLoading: boolean; 
+        error: Error | null 
+    };
     const { usage, isLoading: planLoading } = usePlanUsage();
     const navigate = useNavigate();
     const [showPromo, setShowPromo] = useState(true);
@@ -67,24 +96,6 @@ export const Dashboard: React.FC = () => {
             </Page>
         );
     }
-
-    const StatCard = ({ title, value, icon, color }: { title: string; value: string | number; icon: any; color?: any }) => (
-        <Card>
-            <BlockStack gap="200">
-                <InlineStack align="space-between">
-                    <Text as="h2" variant="headingSm" tone="subdued">
-                        {title}
-                    </Text>
-                    <Box padding="100" borderRadius="200">
-                        <Icon source={icon} tone={color || "base"} />
-                    </Box>
-                </InlineStack>
-                <Text as="p" variant="headingLg">
-                    {value}
-                </Text>
-            </BlockStack>
-        </Card>
-    );
 
     return (
         <Page title="Dashboard">

@@ -82,15 +82,20 @@ export class QuoteService implements IQuoteService {
 
             const quote = await this.quoteRepository.create(fullQuoteData);
 
-            await this.usageService.incrementUsage(merchant._id.toString());
+            // Increment usage asynchronously but with error handling to avoid breaking quote creation
+            // We don't await this because the quote is already saved, and we want to respond fast
+            this.usageService.incrementUsage(merchant._id.toString()).catch(err => {
+                logger.error(`[QuoteService] Failed to increment usage for merchant ${merchant._id}:`, err);
+            });
 
+            // Send notification asynchronously
             this.emailService.sendQuoteNotification(shop, quote).catch(err => {
                 logger.error(`[QuoteService] Asynchronous email notification failed:`, err);
             });
 
             return quote;
         } catch (error) {
-            logger.error("Failed to create quote:", error);
+            logger.error(`[QuoteService] Failed to create quote for shop ${shop}:`, error);
             throw error;
         }
     }
@@ -200,18 +205,41 @@ export class QuoteService implements IQuoteService {
 
     async getQuoteById(session: Session, id: string): Promise<QuoteDocument & { productDetails?: any } | null> {
         const quote = await this.quoteRepository.findById(id);
-        if (!quote) return null;
+        
+        if (!quote) {
+            return null;
+        }
 
-        // Verify shop
+        // Verify quote belongs to this merchant (Security check)
         if (quote.shop !== session.shop) {
             throw new Error(ERROR_MESSAGES.QUOTE.UNAUTHORIZED);
         }
 
+        // 2. Self-Healing logic: Verify if Draft Order still exists on Shopify if we have one
+        if (quote.draftOrderId) {
+            try {
+                const exists = await this.draftOrderService.checkDraftOrderExists(session, quote.draftOrderId);
+                if (!exists) {
+                    logger.warn(`[QuoteService] Draft Order ${quote.draftOrderId} not found on Shopify for quote ${id}. Resetting quote details.`);
+                    quote.draftOrderId = undefined;
+                    quote.draftOrderUrl = undefined;
+                    // Only revert to PENDING if it was previously APPROVED/SENT and now draft order is gone
+                    if (quote.status === QuoteStatus.APPROVED || (quote as any).status === 'SENT') {
+                        quote.status = QuoteStatus.PENDING;
+                    }
+                    await quote.save();
+                }
+            } catch (err) {
+                logger.error(`[QuoteService] Failed to verify draft order existence for quote ${id}:`, err);
+            }
+        }
+
         // Fetch product details for this single quote
         let productDetails = null;
-        if (quote.productId) {
+        const productId = quote.productId;
+        if (productId) {
             try {
-                const gid = quote.productId.startsWith('gid://') ? quote.productId : `${SHOPIFY_DEFAULTS.PRODUCT_GID_PREFIX}${quote.productId}`;
+                const gid = productId.startsWith('gid://') ? productId : `${SHOPIFY_DEFAULTS.PRODUCT_GID_PREFIX}${productId}`;
                 const client = new shopify.api.clients.Graphql({ session });
                 const response: any = await client.request(
                     GET_PRODUCTS_BY_IDS_QUERY,
@@ -230,11 +258,11 @@ export class QuoteService implements IQuoteService {
             }
         }
 
-        const quoteObj = quote.toObject() as any;
+        const quoteObj = quote.toObject();
         return {
             ...quoteObj,
             productDetails
-        };
+        } as any;
     }
 
     async redactCustomerData(email: string): Promise<void> {

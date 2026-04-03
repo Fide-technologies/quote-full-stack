@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getCurrentPlan } from "../api/plans";
 import { PlanAction } from "../constants/plan.constants";
 
-export interface PlanUsage {
+interface PlanUsage {
     merchant: {
         _id: string;
         shop: string;

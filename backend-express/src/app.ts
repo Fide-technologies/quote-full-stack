@@ -17,6 +17,8 @@ import planRouter from "./routes/plan.routes";
 import formRouter from "./routes/form.routes";
 import dashboardRouter from "./routes/dashboard.routes";
 import uploadRouter from "./routes/upload.routes";
+import rateLimit from "express-rate-limit";
+import mongoose from "mongoose";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,9 +29,26 @@ export class App {
 
     constructor() {
         this.app = express();
+        this.securityConfig();
         this.config();
         this.routes();
         this.errorHandling();
+    }
+
+    private securityConfig(): void {
+        // Global Rate Limiter to prevent brute force and DoS
+        const globalLimiter = rateLimit({
+            windowMs: 15 * 60 * 1000, // 15 minutes
+            max: 1000, // limit each IP to 1000 requests per windowMs
+            message: {
+                success: false,
+                message: "Too many requests from this IP, please try again later."
+            },
+            standardHeaders: true,
+            legacyHeaders: false,
+        });
+
+        this.app.use(globalLimiter);
     }
 
     private config(): void {
@@ -43,9 +62,17 @@ export class App {
     }
 
     private routes(): void {
-        // Health Check
-        this.app.get("/health", (req, res) => {
-            res.status(HTTP_STATUS.OK).json({ message: "OK", timestamp: new Date().toISOString() });
+        // Health Check with DB connectivity test
+        this.app.get("/health", async (req, res) => {
+            const dbStatus = mongoose.connection.readyState === 1 ? "Connected" : "Disconnected";
+            const status = dbStatus === "Connected" ? HTTP_STATUS.OK : HTTP_STATUS.INTERNAL_SERVER_ERROR;
+
+            res.status(status).json({
+                message: dbStatus === "Connected" ? "OK" : "Service Unavailable",
+                database: dbStatus,
+                timestamp: new Date().toISOString(),
+                uptime: process.uptime()
+            });
         });
 
         // 1. Webhooks MUST be registered before any body-parsing middleware

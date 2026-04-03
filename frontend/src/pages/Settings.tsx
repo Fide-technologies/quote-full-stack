@@ -17,27 +17,21 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getSettings, updateSettings } from "../api/settings";
 import { GlobalSettingsCard } from "../components/settings/GlobalSettingsCard";
 import { useAppBridge, SaveBar } from "@shopify/app-bridge-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 
 export const Settings: React.FC = () => {
     const queryClient = useQueryClient();
     const shopify = useAppBridge();
-    
-    // Local state to track unsaved changes
     const [localShowOnAll, setLocalShowOnAll] = useState<boolean | null>(null);
-
+    
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ["settings"],
         queryFn: getSettings,
     });
 
-    // Sync local state when data is loaded
-    useEffect(() => {
-        if (data && localShowOnAll === null) {
-            setLocalShowOnAll(data.showOnAll);
-        }
-    }, [data]);
+    // Local state to track unsaved changes
+    const showOnAll = localShowOnAll ?? data?.showOnAll ?? true;
 
     const mutation = useMutation({
         mutationFn: updateSettings,
@@ -108,7 +102,7 @@ export const Settings: React.FC = () => {
                     <Card>
                         <BlockStack gap="400">
                             <GlobalSettingsCard
-                                showOnAll={localShowOnAll ?? data?.showOnAll ?? true}
+                                showOnAll={showOnAll}
                                 onShowOnAllChange={setLocalShowOnAll}
                                 disabled={mutation.isPending}
                             />
