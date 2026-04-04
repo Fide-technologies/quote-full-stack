@@ -1,6 +1,6 @@
 
-import { Button, InlineStack, Text, BlockStack } from "@shopify/polaris";
-import { ChatIcon } from "@shopify/polaris-icons";
+import { Button, InlineStack, Text, BlockStack, Icon } from "@shopify/polaris";
+import { ChatIcon, PersonIcon, EmailIcon, PhoneIcon } from "@shopify/polaris-icons";
 
 import { type QuoteCustomerDetailsProps } from "@/types/quote-details";
 
@@ -18,17 +18,17 @@ export function QuoteCustomerDetails({ firstName, lastName, email, phone, whatsa
                 </Button>
             </InlineStack>
             <BlockStack gap="100">
-                <InlineStack gap="200">
-                    <Text as="span" tone="subdued">Name:</Text>
+                <InlineStack gap="200" blockAlign="center">
+                    <Icon source={PersonIcon} tone="subdued" />
                     <Text as="span" fontWeight="bold">{firstName} {lastName}</Text>
                 </InlineStack>
-                <InlineStack gap="200">
-                    <Text as="span" tone="subdued">Email:</Text>
+                <InlineStack gap="200" blockAlign="center">
+                    <Icon source={EmailIcon} tone="subdued" />
                     <Text as="span">{email}</Text>
                 </InlineStack>
                 {phone && (
-                   <InlineStack gap="200">
-                        <Text as="span" tone="subdued">Phone:</Text>
+                   <InlineStack gap="200" blockAlign="center">
+                        <Icon source={PhoneIcon} tone="subdued" />
                         <Text as="span">{phone}</Text>
                     </InlineStack>
                 )}
