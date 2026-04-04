@@ -1,10 +1,12 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "@/types";
+import type { Session } from "@shopify/shopify-api";
 import type {
     IDashboardService,
     IMerchantService,
     IQuoteRepository,
     IPlanService,
+    ISettingsService,
     IDashboardStats
 } from "@/interfaces";
 import { PlanType } from "@/constants";
@@ -14,24 +16,26 @@ export class DashboardService implements IDashboardService {
     constructor(
         @inject(TYPES.IMerchantService) private merchantService: IMerchantService,
         @inject(TYPES.IQuoteRepository) private quoteRepository: IQuoteRepository,
-        @inject(TYPES.IPlanService) private planService: IPlanService
+        @inject(TYPES.IPlanService) private planService: IPlanService,
+        @inject(TYPES.ISettingsService) private settingsService: ISettingsService
     ) { }
 
-    async getStats(shop: string): Promise<IDashboardStats> {
+    async getStats(session: Session): Promise<IDashboardStats> {
+        const { shop } = session;
         const merchant = await this.merchantService.getMerchantByShop(shop);
         if (!merchant) {
             throw new Error("Merchant not found");
         }
 
-        const [totalQuotes, convertedQuotes, plan] = await Promise.all([
+        const [totalQuotes, convertedQuotes, plan, themeAudit] = await Promise.all([
             this.quoteRepository.countByMerchant(shop),
             this.quoteRepository.countConvertedByMerchant(shop),
-            this.planService.getMerchantPlan(shop)
+            this.planService.getMerchantPlan(shop),
+            this.settingsService.checkAppEmbedStatus(session)
         ]);
 
         const currentPlan = plan?.name || PlanType.FREE;
 
-        // Calculate days remaining (current month cycle) - matching UsageService logic
         let daysRemaining = 0;
         const quotaStart = merchant.usage?.quotaPeriodStart || merchant.createdAt;
         if (quotaStart) {
@@ -43,11 +47,19 @@ export class DashboardService implements IDashboardService {
             daysRemaining = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
         }
 
+        const shopHandle = shop.split(".")[0];
+        const deepLinkUrl = themeAudit.themeId 
+            ? `https://admin.shopify.com/store/${shopHandle}/themes/${themeAudit.themeId}/editor?context=apps`
+            : `shopify:admin/themes/current/editor?context=apps`;
+
         return {
             totalQuotes,
             convertedQuotes,
-            currentPlan,
-            daysRemaining
+            currentPlan: String(currentPlan),
+            daysRemaining,
+            isAppEmbedded: themeAudit.isEmbedded,
+            activeThemeId: themeAudit.themeId,
+            deepLinkUrl
         };
     }
 }
