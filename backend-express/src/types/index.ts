@@ -15,7 +15,9 @@ export type {
     DraftOrderShippingAddress,
     DraftOrderInput,
     DraftOrderCreateResponse,
-    ShopResponse,
+    ShopifyShopResponse,
+    ShopifyShopCurrencyResponse,
+    ShopifyBillingQueryResult,
 } from "./shopify.types";
 export type { IForm, IFormStep, IFormField, FormDocument } from "./form.types";
 export { FormFieldType } from "./form.types";

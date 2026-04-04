@@ -1,7 +1,6 @@
 import { shopify } from "@/config/shopify.config";
-import { SubscriptionStatus } from "@/constants";
 import type { IMerchantService, IPlanService } from "@/interfaces";
-import { TYPES } from "@/types";
+import { TYPES, type ShopifyShopResponse } from "@/types";
 import { logger } from "@/utils/logger";
 import type { NextFunction, Request, Response } from "express";
 import { inject, injectable } from "inversify";
@@ -11,7 +10,7 @@ export class AuthController {
     constructor(
         @inject(TYPES.IMerchantService) private merchantService: IMerchantService,
         @inject(TYPES.IPlanService) private planService: IPlanService,
-    ) {}
+    ) { }
 
     callbackStore = async (req: Request, res: Response, next: NextFunction) => {
         try {
@@ -26,14 +25,7 @@ export class AuthController {
             }
 
             const client = new shopify.api.clients.Rest({ session });
-            interface ShopResponse {
-                shop: {
-                    email: string;
-                    shop_owner: string;
-                    currency: string;
-                };
-            }
-            const shopData = (await client.get({ path: "shop" })) as unknown as { body: ShopResponse };
+            const shopData = (await client.get({ path: "shop" })) as unknown as { body: ShopifyShopResponse };
 
             if (!shopData?.body?.shop) {
                 return res.status(500).send("Failed to fetch shop details from Shopify");

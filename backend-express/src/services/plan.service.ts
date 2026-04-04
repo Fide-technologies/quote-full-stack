@@ -6,10 +6,10 @@ import {
     GET_CHARGE_HISTORY_QUERY,
     GET_SUBSCRIPTION_QUERY,
 } from "@/graphql/billing-queries";
-import type { IMerchantRepository, IMerchantService, IPlanRepository } from "@/interfaces";
+import type { IMerchantService, IPlanRepository } from "@/interfaces";
 import type { IPlanService } from "@/interfaces";
 import { TYPES } from "@/types";
-import type { IPlan, IPlanFeatures, MerchantDocument, PlanDocument } from "@/types";
+import type { IPlan, IPlanFeatures, PlanDocument, ShopifyBillingQueryResult } from "@/types";
 import { logger } from "@/utils/logger";
 import { env } from "@/validations/env.validation";
 import type { Session } from "@shopify/shopify-api";
@@ -33,7 +33,7 @@ export class PlanService implements IPlanService {
     constructor(
         @inject(TYPES.IPlanRepository) private planRepository: IPlanRepository,
         @inject(TYPES.IMerchantService) private merchantService: IMerchantService,
-    ) {}
+    ) { }
 
     async getPlanByName(name: string): Promise<PlanDocument | null> {
         return await this.planRepository.findByName(name);
@@ -129,20 +129,7 @@ export class PlanService implements IPlanService {
     ): Promise<{ planId?: mongoose.Types.ObjectId; subscriptionStatus?: SubscriptionStatus }> {
         try {
             const client = new shopify.api.clients.Graphql({ session });
-            interface BillingQueryResult {
-                currentAppInstallation?: {
-                    allSubscriptions?: {
-                        edges?: Array<{
-                            node: {
-                                status: string;
-                                currentPeriodEnd: string;
-                                name: string;
-                            };
-                        }>;
-                    };
-                };
-            }
-            const billingResponse = await client.request<BillingQueryResult>(GET_ALL_SUBSCRIPTIONS_QUERY);
+            const billingResponse = await client.request<ShopifyBillingQueryResult>(GET_ALL_SUBSCRIPTIONS_QUERY);
             const data = billingResponse.data;
             const edges = data?.currentAppInstallation?.allSubscriptions?.edges || [];
             const lastSub = edges[0]?.node;

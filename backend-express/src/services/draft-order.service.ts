@@ -4,8 +4,7 @@ import { CREATE_DRAFT_ORDER_MUTATION_MINIMAL } from "@/graphql/quotes";
 import { GET_SHOP_CURRENCY_QUERY } from "@/graphql/shopify-queries";
 import type { IDraftOrderService, IMerchantService } from "@/interfaces";
 import type { DraftOrderMapper } from "@/mappers/draft-order.mapper";
-import { TYPES } from "@/types";
-import type { DraftOrderCreateResponse, QuoteDocument, ShopResponse } from "@/types";
+import { TYPES, type DraftOrderCreateResponse, type QuoteDocument, type ShopifyShopCurrencyResponse } from "@/types";
 import { logger } from "@/utils/logger";
 import { validateQuoteForDraftOrder } from "@/validations/draft-order.validation";
 import type { Session } from "@shopify/shopify-api";
@@ -36,7 +35,7 @@ export class DraftOrderService implements IDraftOrderService {
             if (merchant?.currency) {
                 currencyCode = merchant.currency;
             } else {
-                const shopResponse = await client.request<ShopResponse>(GET_SHOP_CURRENCY_QUERY);
+                const shopResponse = await client.request<ShopifyShopCurrencyResponse>(GET_SHOP_CURRENCY_QUERY);
                 currencyCode = shopResponse.data?.shop?.currencyCode || APP_DEFAULTS.CURRENCY_CODE;
 
                 if (merchant) {

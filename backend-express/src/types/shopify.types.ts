@@ -83,8 +83,35 @@ export interface DraftOrderCreateResponse {
     };
 }
 
-export interface ShopResponse {
+// REST Shop Data
+export interface ShopifyShopData {
+    email: string;
+    shop_owner: string;
+    currency: string;
+}
+
+export interface ShopifyShopResponse {
+    shop: ShopifyShopData;
+}
+
+// GraphQL Shop Currency
+export interface ShopifyShopCurrencyResponse {
     shop: {
         currencyCode: string;
+    };
+}
+
+// GraphQL Billing Query Result
+export interface ShopifyBillingQueryResult {
+    currentAppInstallation?: {
+        allSubscriptions?: {
+            edges?: Array<{
+                node: {
+                    status: string;
+                    currentPeriodEnd: string;
+                    name: string;
+                };
+            }>;
+        };
     };
 }
