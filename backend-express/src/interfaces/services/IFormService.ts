@@ -1,4 +1,4 @@
-import type { IForm, FormDocument } from "@/types/form.types";
+import type { FormDocument, IForm } from "@/types/form.types";
 
 export interface IFormService {
     getFormByShop(shop: string): Promise<FormDocument | null>;
