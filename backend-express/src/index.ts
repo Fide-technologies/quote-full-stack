@@ -1,10 +1,10 @@
 import "reflect-metadata";
 import "dotenv/config";
-import http from "http";
-import ngrok from "@ngrok/ngrok";
+import http from "node:http";
 import { connectDB, disconnectDB } from "@/config/mongo-db.config";
 import { logger } from "@/utils/logger";
 import { env } from "@/validations/env.validation";
+import ngrok from "@ngrok/ngrok";
 import { App } from "./app";
 
 import "./inversify.config";
@@ -26,7 +26,7 @@ async function bootstrap() {
             logger.warn(`Worker ${worker.process.pid} died. Signal: ${signal}, Code: ${code}. Restarting...`);
             cluster.fork();
         });
-        
+
         return;
     }
 
@@ -42,16 +42,17 @@ async function bootstrap() {
         // 3. Create HTTP Server
         const server = http.createServer(app);
 
-
-        logger.info("port is: ", env.PORT)
+        logger.info("port is: ", env.PORT);
 
         // 4. Start Server
         server.listen(env.PORT, async () => {
-            const actualPort = env.PORT
+            const actualPort = env.PORT;
 
             console.log(`🚀 SERVER IS LIVE ON PORT: ${actualPort}`);
             console.log(`👉 Health check: http://${env.HOST_NAME}/health`);
-            console.log(`🔧 Configuration: HOST_NAME=${env.HOST_NAME}, API_KEY=${env.SHOPIFY_API_KEY?.substring(0, 5)}...`);
+            console.log(
+                `🔧 Configuration: HOST_NAME=${env.HOST_NAME}, API_KEY=${env.SHOPIFY_API_KEY?.substring(0, 5)}...`,
+            );
 
             // 5. Setup Ngrok (Development Only)
             // Removed Ngrok setup since we are using Cloudflare Tunnels
@@ -104,7 +105,6 @@ async function bootstrap() {
                 shutdown("UNCAUGHT_EXCEPTION");
             }
         });
-
     } catch (error) {
         logger.error("Fatal Error during bootstrap:", error);
         // Ensure the process exits on fatal error so orchestration tools can restart it
