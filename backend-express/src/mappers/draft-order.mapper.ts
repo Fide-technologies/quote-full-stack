@@ -1,6 +1,6 @@
-import type { QuoteDocument, DraftOrderInput } from "@/types";
-import { injectable } from "inversify";
 import { APP_DEFAULTS, QUOTE_ATTRIBUTES } from "@/constants";
+import type { DraftOrderInput, QuoteDocument } from "@/types";
+import { injectable } from "inversify";
 
 @injectable()
 export class DraftOrderMapper {
@@ -21,7 +21,7 @@ export class DraftOrderMapper {
                     quantity: quote.quantity,
                     priceOverride: {
                         amount: amount,
-                        currencyCode: currencyCode
+                        currencyCode: currencyCode,
                     },
                     title: quote.productTitle || APP_DEFAULTS.QUOTE_ITEM_TITLE,
                 },
@@ -33,7 +33,7 @@ export class DraftOrderMapper {
                 { key: QUOTE_ATTRIBUTES.QUOTE_ID, value: quote._id.toString() },
                 { key: QUOTE_ATTRIBUTES.QUOTE_STATUS, value: quote.status },
             ],
-            marketRegionCountryCode: "IN"
+            marketRegionCountryCode: "IN",
         };
 
         if (this.hasAddress(quote)) {
@@ -47,13 +47,12 @@ export class DraftOrderMapper {
 
     private formatVariantId(variantId?: string): string | undefined {
         if (!variantId) return undefined;
-        return !variantId.startsWith('gid://')
-            ? `gid://shopify/ProductVariant/${variantId}`
-            : variantId;
+        return !variantId.startsWith("gid://") ? `gid://shopify/ProductVariant/${variantId}` : variantId;
     }
 
     private buildNote(quote: QuoteDocument): string {
-        const message = quote.customerMessage || quote.message || `Quote request from ${quote.firstName} ${quote.lastName}`;
+        const message =
+            quote.customerMessage || quote.message || `Quote request from ${quote.firstName} ${quote.lastName}`;
         return this.sanitize(message);
     }
 
@@ -77,20 +76,20 @@ export class DraftOrderMapper {
 
     private formatPhone(phone: string | undefined): string | undefined {
         if (!phone) return undefined;
-        let cleaned = phone.trim().replace(/\s+/g, '');
+        const cleaned = phone.trim().replace(/\s+/g, "");
 
         // Shopify requires E.164 (e.g., +919988776655)
         // If it's a 10 digit number without +, prepend +91 (Default for India)
-        if (cleaned.length === 10 && !cleaned.startsWith('+')) {
+        if (cleaned.length === 10 && !cleaned.startsWith("+")) {
             return `+91${cleaned}`;
         }
 
         // If it starts with a country code but missing +, prepend +
-        if (cleaned.length > 5 && !cleaned.startsWith('+')) {
+        if (cleaned.length > 5 && !cleaned.startsWith("+")) {
             return `+${cleaned}`;
         }
 
-        if (cleaned.length < 5 || ['n/a', 'none'].includes(cleaned.toLowerCase())) {
+        if (cleaned.length < 5 || ["n/a", "none"].includes(cleaned.toLowerCase())) {
             return undefined;
         }
         return cleaned;
