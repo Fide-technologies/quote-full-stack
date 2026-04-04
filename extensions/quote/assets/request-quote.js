@@ -1,7 +1,11 @@
 (function () {
     const SETTINGS = window.rqGlobalSettings || {
         buttonText: 'Add to Quote',
-        buttonColor: '#000000'
+        buttonColor: '#008060',
+        buttonTextColor: '#FFFFFF',
+        hideAddToCart: true,
+        hideBuyNow: false,
+        placementLocation: 'above'
     };
 
 
@@ -438,6 +442,7 @@
         btn.innerText = SETTINGS.buttonText;
         btn.style.setProperty('--rq-primary', SETTINGS.buttonColor);
         btn.style.setProperty('--rq-primary-hover', SETTINGS.buttonColor);
+        btn.style.color = SETTINGS.buttonTextColor;
 
         btn.onclick = (e) => {
             e.preventDefault();
@@ -447,9 +452,9 @@
         return btn;
     }
 
-
-
     function scanAndInject() {
+        if (!SETTINGS.appEnabled || SETTINGS.shouldShow === false) return;
+        
         const productBlockExists = !!document.querySelector('.rq-product-page-form');
         const isProductPage = window.location.pathname.includes('/products/') || productBlockExists;
 
@@ -480,21 +485,42 @@
             }
 
             if (handle) {
-                hideElement(form);
+                // 1. Hide Standard Buttons and Quantity based on settings
+                if (SETTINGS.hideAddToCart) {
+                    const selectors = [
+                        '[name="add"]', '.product-form__submit', '.add-to-cart', '.btn--add-to-cart', '[data-add-to-cart]',
+                        '.quantity', '.product-form__input--quantity', '.product-form__item--quantity', '[name="quantity"]', '.qty-wrapper', '.product-form__quantity',
+                        '.quantity-selector-wrapper', 'quantity-selector-component', '.quantity-selector', '.quantity__input'
+                    ];
+                    selectors.forEach(selector => {
+                        form.querySelectorAll(selector).forEach(hideElement);
+                    });
 
-                // Identify the best container to search for prices
-                // On product pages, we search a broader area (the section) because prices are often not near the form
-                const container = isProductPage
-                    ? (form.closest('.shopify-section, section, .product-grid, main') || form.parentNode)
-                    : (card || form.parentNode);
+                    // Identify the best container to search for prices
+                    const container = isProductPage
+                        ? (form.closest('.shopify-section, section, .product-grid, main') || form.parentNode)
+                        : (card || form.parentNode);
 
-                if (container) {
-                    const priceSelectors = '.price, .money, .product-price, .product__price, .price__regular, .price__sale, .regular-price, .product-item__price, .product-single__price, .price-item';
-                    container.querySelectorAll(priceSelectors).forEach(hideElement);
+                    if (container) {
+                        const priceSelectors = '.price, .money, .product-price, .product__price, .price__regular, .price__sale, .regular-price, .product-item__price, .product-single__price, .price-item';
+                        container.querySelectorAll(priceSelectors).forEach(hideElement);
+                    }
                 }
 
-                // Only inject the Quote button on actual Product detail pages
-                // AND ensure it's not in a "recommendations" or "suggested" section
+        // 2. Hide Buy It Now / Dynamic Checkout
+        if (SETTINGS.hideBuyNow) {
+            const buyNowSelectors = [
+                '.shopify-payment-button',
+                '.shopify-payment-button__button--unbranded',
+                '.payment-buttons',
+                '.product-form__payment-container'
+            ];
+            buyNowSelectors.forEach(selector => {
+                document.querySelectorAll(selector).forEach(hideElement);
+            });
+        }
+
+                // 3. Inject Quote Button with specific placement
                 const isRecommendation = form.closest('.product-recommendations, .related-products, .recommendations, .up-sell, .cross-sell, .complementary-products, .suggested-products, [class*="recommendation"], [class*="related-"]');
 
                 if (isProductPage && !isRecommendation) {
@@ -502,7 +528,14 @@
                     if (card && hasQuoteBtn(card)) return;
 
                     const btn = createQuoteButton(handle);
-                    form.parentNode.insertBefore(btn, form);
+                    
+                    if (SETTINGS.placementLocation === 'below') {
+                        // After the form
+                        form.parentNode.insertBefore(btn, form.nextSibling);
+                    } else {
+                        // Before the form (default)
+                        form.parentNode.insertBefore(btn, form);
+                    }
                 }
 
                 form.dataset.rqProcessed = 'true';
@@ -511,8 +544,23 @@
     }
 
     window.rqScanAndInject = scanAndInject;
-    window.addEventListener('load', scanAndInject);
-    const observer = new MutationObserver((mutations) => scanAndInject());
+    window.addEventListener('load', () => {
+        scanAndInject();
+        // Dynamic Checkout Catch-up Polling
+        if (SETTINGS.appEnabled && SETTINGS.shouldShow !== false && SETTINGS.hideBuyNow) {
+            let count = 0;
+            const interval = setInterval(() => {
+                scanAndInject();
+                if (++count >= 10) clearInterval(interval);
+            }, 300);
+        }
+    });
+
+    const observer = new MutationObserver((mutations) => {
+        // Only run scan if children changed or dynamically injected buttons might be present
+        scanAndInject();
+    });
+
     observer.observe(document.body, { childList: true, subtree: true });
     scanAndInject();
     window.rqInitialized = true;
