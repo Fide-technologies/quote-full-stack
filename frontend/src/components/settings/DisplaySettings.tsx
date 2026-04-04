@@ -4,7 +4,7 @@ import type { ISettings } from '../../types/settings';
 
 interface Props {
   settings: ISettings;
-  onChange: (key: keyof ISettings, value: any) => void;
+  onChange: (key: keyof ISettings, value: unknown) => void;
 }
 
 export const DisplaySettings: React.FC<Props> = ({ settings, onChange }) => {
