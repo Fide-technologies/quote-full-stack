@@ -14,7 +14,7 @@ export enum PlanAction {
     SETTINGS_UPDATE = "settings:update",
     CUSTOM_FORM_BUILDER = "form:builder",
     REMOVE_BRANDING = "app:branding",
-    MERCHANT_EMAIL_NOTIFICATIONS = "email:notifications"
+    MERCHANT_EMAIL_NOTIFICATIONS = "email:notifications",
 }
 
 export const PLAN_ACTION_VALUES = Object.values(PlanAction);
