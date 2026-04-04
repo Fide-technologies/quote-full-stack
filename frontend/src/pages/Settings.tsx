@@ -1,27 +1,25 @@
 import {
-    Page,
-    Layout,
-    Tabs,
-    Box,
-    SkeletonPage,
-    Card,
-    BlockStack,
-    SkeletonBodyText,
     Banner,
-    Text,
+    BlockStack,
+    Box,
+    Card,
     Checkbox,
-    Grid
+    Grid,
+    Layout,
+    Page,
+    SkeletonBodyText,
+    SkeletonPage,
+    Tabs,
+    Text,
 } from "@shopify/polaris";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { SaveBar, useAppBridge } from "@shopify/app-bridge-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { getSettings, updateSettings } from "../api/settings";
-import { useAppBridge, SaveBar } from "@shopify/app-bridge-react";
-import { useState, useCallback, useMemo, useEffect } from "react";
-import type { ISettings } from "../types/settings";
-import { DEFAULT_SETTINGS } from "../types/settings";
-
-import { QuoteButtonSettings } from "../components/settings/QuoteButtonSettings";
 import { PricingSettings } from "../components/settings/PricingSettings";
 import { PreviewCard } from "../components/settings/PreviewCard";
+import { QuoteButtonSettings } from "../components/settings/QuoteButtonSettings";
+import { DEFAULT_SETTINGS, type ISettings } from "../types/settings";
 
 export const Settings: React.FC = () => {
     const queryClient = useQueryClient();
@@ -30,7 +28,12 @@ export const Settings: React.FC = () => {
     const [localSettings, setLocalSettings] = useState<ISettings | null>(null);
     const [hasChanged, setHasChanged] = useState(false);
 
-    const { data: serverSettings, isLoading, isError, error } = useQuery<ISettings>({
+    const {
+        data: serverSettings,
+        isLoading,
+        isError,
+        error,
+    } = useQuery<ISettings>({
         queryKey: ["settings"],
         queryFn: getSettings,
     });
@@ -42,7 +45,7 @@ export const Settings: React.FC = () => {
     const currentSettings = useMemo((): ISettings => {
         return {
             ...normalizedServerSettings,
-            ...localSettings
+            ...localSettings,
         };
     }, [localSettings, normalizedServerSettings]);
 
@@ -56,7 +59,7 @@ export const Settings: React.FC = () => {
         },
         onError: () => {
             shopify.toast.show("Failed to save settings", { isError: true });
-        }
+        },
     });
 
     useEffect(() => {
@@ -67,17 +70,21 @@ export const Settings: React.FC = () => {
         }
     }, [hasChanged, shopify]);
 
-    const handleFieldChange = useCallback((key: keyof ISettings, value: any) => {
-        setLocalSettings((prev: ISettings | null) => ({
-            ...(prev || normalizedServerSettings),
-            [key]: value
-        }));
-        setHasChanged(true);
-    }, [normalizedServerSettings]);
+    const handleFieldChange = useCallback(
+        (key: keyof ISettings, value: unknown) => {
+            setLocalSettings((prev: ISettings | null) => ({
+                ...(prev || normalizedServerSettings),
+                [key]: value,
+            }));
+            setHasChanged(true);
+        },
+        [normalizedServerSettings],
+    );
 
     const handleSave = useCallback(() => {
         if (localSettings) {
-            const { plan, isAppEmbedded, deepLinkUrl, ...settingsToSave } = currentSettings;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { plan: _plan, isAppEmbedded: _isAppEmbedded, deepLinkUrl: _deepLinkUrl, ...settingsToSave } = currentSettings;
             mutation.mutate(settingsToSave as ISettings);
         }
     }, [localSettings, currentSettings, mutation]);
@@ -88,39 +95,61 @@ export const Settings: React.FC = () => {
     }, []);
 
     const tabs = [
-        { id: 'button', content: 'Quote button', accessibilityLabel: 'Quote button', panelID: 'button-panel' },
-        { id: 'pricing', content: 'Hide price', accessibilityLabel: 'Hide price', panelID: 'pricing-panel' },
-        { id: 'hide-buttons', content: 'Hide checkout buttons', accessibilityLabel: 'Hide checkout buttons', panelID: 'hide-buttons-panel' },
-        { id: 'cart-widget', content: 'Quote cart widget', accessibilityLabel: 'Quote cart widget', panelID: 'cart-widget-panel' },
-        { id: 'history-widget', content: 'Quote history widget', accessibilityLabel: 'Quote history widget', panelID: 'history-widget-panel' },
+        { id: "button", content: "Quote button", accessibilityLabel: "Quote button", panelID: "button-panel" },
+        { id: "pricing", content: "Hide price", accessibilityLabel: "Hide price", panelID: "pricing-panel" },
+        {
+            id: "hide-buttons",
+            content: "Hide checkout buttons",
+            accessibilityLabel: "Hide checkout buttons",
+            panelID: "hide-buttons-panel",
+        },
+        {
+            id: "cart-widget",
+            content: "Quote cart widget",
+            accessibilityLabel: "Quote cart widget",
+            panelID: "cart-widget-panel",
+        },
+        {
+            id: "history-widget",
+            content: "Quote history widget",
+            accessibilityLabel: "Quote history widget",
+            panelID: "history-widget-panel",
+        },
     ];
 
     const showPreview = selectedTab < 3;
 
     const renderTabContent = () => {
         switch (tabs[selectedTab].id) {
-            case 'button': return <QuoteButtonSettings settings={currentSettings} onChange={handleFieldChange} />;
-            case 'pricing': return <PricingSettings settings={currentSettings} onChange={handleFieldChange} />;
-            case 'hide-buttons':
+            case "button":
+                return <QuoteButtonSettings settings={currentSettings} onChange={handleFieldChange} />;
+            case "pricing":
+                return <PricingSettings settings={currentSettings} onChange={handleFieldChange} />;
+            case "hide-buttons":
                 return (
                     <BlockStack gap="400">
-                        <Text as="h2" variant="headingMd">Storefront Button Visibility</Text>
+                        <Text as="h2" variant="headingMd">
+                            Storefront Button Visibility
+                        </Text>
                         <Checkbox
                             label="Hide 'Add to cart' button when quote is enabled"
                             checked={currentSettings.hideAddToCart}
-                            onChange={(v) => handleFieldChange('hideAddToCart', v)}
+                            onChange={(v) => handleFieldChange("hideAddToCart", v)}
                         />
                         <Checkbox
                             label="Hide 'Buy It Now' button when quote is enabled"
                             checked={currentSettings.hideBuyNow}
-                            onChange={(v) => handleFieldChange('hideBuyNow', v)}
+                            onChange={(v) => handleFieldChange("hideBuyNow", v)}
                             helpText="Disable dynamic checkout buttons like PayPal or Apple Pay."
                         />
                     </BlockStack>
                 );
-            case 'cart-widget': return <Text as="p">Quote cart widget settings coming soon.</Text>;
-            case 'history-widget': return <Text as="p">Quote history widget settings coming soon.</Text>;
-            default: return null;
+            case "cart-widget":
+                return <Text as="p">Quote cart widget settings coming soon.</Text>;
+            case "history-widget":
+                return <Text as="p">Quote history widget settings coming soon.</Text>;
+            default:
+                return null;
         }
     };
 
@@ -129,7 +158,9 @@ export const Settings: React.FC = () => {
             <SkeletonPage title="Settings">
                 <Layout>
                     <Layout.Section>
-                        <Card><SkeletonBodyText lines={5} /></Card>
+                        <Card>
+                            <SkeletonBodyText lines={5} />
+                        </Card>
                     </Layout.Section>
                 </Layout>
             </SkeletonPage>
@@ -139,13 +170,14 @@ export const Settings: React.FC = () => {
     const showEmbedBanner = currentSettings.isAppEmbedded === false;
 
     return (
-        <Page
-            title="O:Request a Quote"
-            subtitle="Manage your quote request configuration and appearance."
-        >
+        <Page title="Request a Quote" subtitle="Manage your quote request configuration and appearance.">
             <SaveBar id="settings-save-bar">
-                <button variant="primary" onClick={handleSave} disabled={mutation.isPending}>Save</button>
-                <button onClick={handleDiscard} disabled={mutation.isPending}>Discard</button>
+                <button variant="primary" onClick={handleSave} disabled={mutation.isPending}>
+                    Save
+                </button>
+                <button onClick={handleDiscard} disabled={mutation.isPending}>
+                    Discard
+                </button>
             </SaveBar>
 
             <Layout>
@@ -165,10 +197,13 @@ export const Settings: React.FC = () => {
                             action={{
                                 content: "Activate now",
                                 url: currentSettings.deepLinkUrl,
-                                external: true
+                                external: true,
                             }}
                         >
-                            <p>In order for <b>Merchant Quote</b> to work on your storefront, go to your online store editor and activate the <b>Merchant Quote</b> app embed.</p>
+                            <p>
+                                In order for <b>Merchant Quote</b> to work on your storefront, go to your online store
+                                editor and activate the <b>Merchant Quote</b> app embed.
+                            </p>
                         </Banner>
                     </Layout.Section>
                 )}
@@ -181,12 +216,20 @@ export const Settings: React.FC = () => {
                                     <Grid>
                                         <Grid.Cell columnSpan={{ xs: 6, lg: 7 }}>
                                             <BlockStack gap="400">
-                                                <Text variant="headingMd" as="h2">Logic</Text>
+                                                <Text variant="headingMd" as="h2">
+                                                    Logic
+                                                </Text>
                                                 {renderTabContent()}
                                             </BlockStack>
                                         </Grid.Cell>
                                         <Grid.Cell columnSpan={{ xs: 6, lg: 5 }}>
-                                            <div style={{ position: 'sticky', top: 'var(--p-space-400)', alignSelf: 'start' }}>
+                                            <div
+                                                style={{
+                                                    position: "sticky",
+                                                    top: "var(--p-space-400)",
+                                                    alignSelf: "start",
+                                                }}
+                                            >
                                                 <PreviewCard settings={currentSettings} />
                                             </div>
                                         </Grid.Cell>
@@ -198,7 +241,6 @@ export const Settings: React.FC = () => {
                         </Tabs>
                     </Card>
                 </Layout.Section>
-
             </Layout>
         </Page>
     );

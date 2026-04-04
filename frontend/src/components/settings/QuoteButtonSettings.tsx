@@ -5,7 +5,7 @@ import type { ISettings } from '../../types/settings';
 
 interface Props {
   settings: ISettings;
-  onChange: (key: keyof ISettings, value: any) => void;
+  onChange: (key: keyof ISettings, value: unknown) => void;
 }
 
 export const QuoteButtonSettings: React.FC<Props> = ({ settings, onChange }) => {
@@ -20,7 +20,7 @@ export const QuoteButtonSettings: React.FC<Props> = ({ settings, onChange }) => 
         selectionIds: selectedProducts.map((id: string) => ({ id }))
     });
     if (selected) {
-        onChange('selectedProducts', selected.map((p: any) => p.id));
+        onChange('selectedProducts', selected.map((p: { id: string }) => p.id));
     }
   };
 
@@ -33,7 +33,7 @@ export const QuoteButtonSettings: React.FC<Props> = ({ settings, onChange }) => 
         selectionIds: selectedCollections.map((id: string) => ({ id }))
     });
     if (selected) {
-        onChange('selectedCollections', selected.map((c: any) => c.id));
+        onChange('selectedCollections', selected.map((c: { id: string }) => c.id));
     }
   };
 

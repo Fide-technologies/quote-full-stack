@@ -1,6 +1,6 @@
-import mongoose, { Schema } from "mongoose";
+import { DEFAULT_QUOTE_STATUS, QUOTE_STATUS_VALUES } from "@/constants";
 import type { IQuote, QuoteDocument } from "@/types/quote.types";
-import { QUOTE_STATUS_VALUES, DEFAULT_QUOTE_STATUS } from "@/constants";
+import mongoose, { Schema } from "mongoose";
 
 const quoteSchema = new Schema<IQuote>(
     {
@@ -31,7 +31,6 @@ const quoteSchema = new Schema<IQuote>(
             required: true,
             index: true,
         },
-
 
         // --------------------
         // Customer
@@ -123,14 +122,14 @@ const quoteSchema = new Schema<IQuote>(
         // --------------------
         customData: {
             type: Schema.Types.Mixed,
-            default: {}
+            default: {},
         },
         customImages: {
             type: [String],
-            default: []
+            default: [],
         },
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 // totalPrice sync

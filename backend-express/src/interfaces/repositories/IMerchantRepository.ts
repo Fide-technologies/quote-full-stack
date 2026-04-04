@@ -1,5 +1,5 @@
 import type { IMerchant, MerchantDocument } from "@/types";
-import type { UpdateWriteOpResult, DeleteResult } from "mongoose";
+import type { DeleteResult, UpdateWriteOpResult } from "mongoose";
 
 export interface IMerchantRepository {
     createMerchant(merchant: Partial<IMerchant>): Promise<MerchantDocument>;
@@ -9,7 +9,7 @@ export interface IMerchantRepository {
     findAllMerchants(): Promise<MerchantDocument[]>;
     incrementQuoteUsage(shop: string, limit: number): Promise<MerchantDocument | null>;
     findById(id: string): Promise<MerchantDocument | null>;
-    updateUsage(id: string, usage: any): Promise<void>;
-    findOne(filter: any): Promise<MerchantDocument | null>;
-    update(filter: any, update: any): Promise<any>;
+    updateUsage(id: string, usage: Record<string, unknown>): Promise<void>;
+    findOne(filter: Record<string, unknown>): Promise<MerchantDocument | null>;
+    update(filter: Record<string, unknown>, update: Record<string, unknown>): Promise<unknown>;
 }

@@ -1,8 +1,8 @@
-import { Router } from "express";
-import { container } from "@/inversify.config";
-import type { PlanController } from "@/controllers/plan.controller";
-import { TYPES } from "@/types";
 import { shopify } from "@/config/shopify.config";
+import type { PlanController } from "@/controllers/plan.controller";
+import { container } from "@/inversify.config";
+import { TYPES } from "@/types";
+import { Router } from "express";
 
 const planRouter = Router();
 const planController = container.get<PlanController>(TYPES.PlanController);

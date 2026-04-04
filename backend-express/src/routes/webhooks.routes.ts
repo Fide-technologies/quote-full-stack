@@ -1,7 +1,7 @@
-import { Router } from "express";
+import type { WebhooksController } from "@/controllers/webhoook.controller";
 import { container } from "@/inversify.config";
 import { TYPES } from "@/types/types";
-import { WebhooksController } from "@/controllers/webhoook.controller";
+import { Router } from "express";
 
 const router = Router();
 const webhooksController = container.get<WebhooksController>(TYPES.WebhooksController);

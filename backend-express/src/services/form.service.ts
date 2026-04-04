@@ -1,13 +1,11 @@
-import { injectable, inject } from "inversify";
-import { TYPES } from "@/types";
 import type { IFormRepository, IFormService } from "@/interfaces";
-import type { IForm, FormDocument } from "@/types";
+import { TYPES } from "@/types";
+import type { FormDocument, IForm } from "@/types";
+import { inject, injectable } from "inversify";
 
 @injectable()
 export class FormService implements IFormService {
-    constructor(
-        @inject(TYPES.IFormRepository) private formRepository: IFormRepository
-    ) { }
+    constructor(@inject(TYPES.IFormRepository) private formRepository: IFormRepository) {}
 
     async getFormByShop(shop: string): Promise<FormDocument | null> {
         return await this.formRepository.findByShop(shop);

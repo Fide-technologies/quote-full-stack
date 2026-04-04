@@ -1,4 +1,4 @@
-interface BillingItem {
+export interface BillingItem {
     lineItems?: Array<{
         plan?: {
             pricingDetails?: {

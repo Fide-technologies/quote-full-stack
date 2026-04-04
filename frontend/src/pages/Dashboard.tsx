@@ -1,94 +1,123 @@
-import React, { useState, useEffect } from 'react';
+import React from "react";
 import {
-    Page,
-    Layout,
-    Card,
-    BlockStack,
-    Text,
-    Badge,
-    Icon,
-    Box,
-    InlineStack,
-    Button,
-    SkeletonBodyText,
-    SkeletonPage,
-    ProgressBar,
-    SkeletonDisplayText
-} from '@shopify/polaris';
-import {
+    AlertCircleIcon,
     CalendarIcon,
     CheckIcon,
-    QuestionCircleIcon,
     PersonIcon,
-    AlertCircleIcon
-} from '@shopify/polaris-icons';
-import { useDashboardStats } from '../hooks/useDashboardStats';
-import { useNavigate } from 'react-router-dom';
-import { StatsLoader } from '../components/loaders/StatsLoader';
+    QuestionCircleIcon,
+} from "@shopify/polaris-icons";
+import {
+    Badge,
+    BlockStack,
+    Box,
+    Button,
+    Card,
+    Icon,
+    InlineStack,
+    Layout,
+    Page,
+    ProgressBar,
+    SkeletonBodyText,
+    SkeletonDisplayText,
+    SkeletonPage,
+} from "@shopify/polaris";
+import { useNavigate } from "react-router-dom";
+import { StatsLoader } from "../components/loaders/StatsLoader";
+import { useDashboardStats } from "../hooks/useDashboardStats";
+
+// Helper component for the Direct Session Link Button
+const ThemeEditorLink = ({
+    children,
+    primary = false,
+    deepLinkUrl,
+    isAppEnabled,
+}: {
+    children: string;
+    primary?: boolean;
+    deepLinkUrl: string;
+    isAppEnabled: boolean;
+}) => (
+    <a
+        href={deepLinkUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ textDecoration: "none", width: "100%" }}
+    >
+        <Button
+            variant={primary ? "primary" : undefined}
+            tone={primary && !isAppEnabled ? "success" : undefined}
+            fullWidth
+        >
+            {children}
+        </Button>
+    </a>
+);
 
 export const Dashboard: React.FC = () => {
     // Correctly define the DashboardStats type to include theme auditing properties
-    const { data: stats, isLoading: statsLoading, error } = useDashboardStats() as {
-        data: (import("../api/dashboard").DashboardStats & { 
-            isAppEmbedded: boolean;
-            deepLinkUrl: string;
-            activeThemeId: string;
-        }) | undefined;
+    const {
+        data: stats,
+        isLoading: statsLoading,
+        error,
+    } = useDashboardStats() as {
+        data:
+            | (import("../api/dashboard").DashboardStats & {
+                  isAppEmbedded: boolean;
+                  deepLinkUrl: string;
+                  activeThemeId: string;
+              })
+            | undefined;
         isLoading: boolean;
-        error: Error | null
+        error: Error | null;
     };
-    
+
     const navigate = useNavigate();
-    const [isClient, setIsClient] = useState(false);
-
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
-
     const loading = statsLoading;
-    
+
     // Core Status: Physical check from theme assets
     const isAppEnabled = stats?.isAppEmbedded ?? false;
-    const deepLinkUrl = stats?.deepLinkUrl || 'shopify:admin/themes/current/editor?context=apps';
-    
+    const deepLinkUrl = stats?.deepLinkUrl || "shopify:admin/themes/current/editor?context=apps";
+
     // Calculate progress based on dynamic stats and real-time status
     const steps = [
-        { label: 'Install and activate the app', completed: true, description: "Successfully installed in your store" },
-        { label: 'Customize your Quote Form', completed: stats?.totalQuotes ? stats.totalQuotes > 0 : false, description: "Adjust fields to gather the right info." },
-        { label: 'Configure button visibility', completed: isAppEnabled === true, description: "Decide which products show the quote button." },
-        { label: 'Receive your first quote', completed: stats?.totalQuotes ? stats.totalQuotes > 0 : false, description: "Wait for customers to start receiving quotes." }
+        {
+            label: "Install and activate the app",
+            completed: true,
+            description: "Successfully installed in your store",
+        },
+        {
+            label: "Customize your Quote Form",
+            completed: stats?.totalQuotes ? stats.totalQuotes > 0 : false,
+            description: "Adjust fields to gather the right info.",
+        },
+        {
+            label: "Configure button visibility",
+            completed: isAppEnabled === true,
+            description: "Decide which products show the quote button.",
+        },
+        {
+            label: "Receive your first quote",
+            completed: stats?.totalQuotes ? stats.totalQuotes > 0 : false,
+            description: "Wait for customers to start receiving quotes.",
+        },
     ];
-    const completedSteps = steps.filter(s => s.completed).length;
+    const completedSteps = steps.filter((s) => s.completed).length;
     const progress = (completedSteps / steps.length) * 100;
 
-    // Helper component for the Direct Session Link Button
-    const ThemeEditorLink = ({ children, primary = false }: { children: string, primary?: boolean }) => (
-        <a 
-          href={deepLinkUrl} 
-          target="_blank" 
-          rel="opener noreferrer" 
-          style={{ textDecoration: 'none', width: '100%' }}
-        >
-          <Button 
-            variant={primary ? "primary" : undefined} 
-            tone={primary && !isAppEnabled ? "success" : undefined}
-            fullWidth
-          >
-            {children}
-          </Button>
-        </a>
-    );
-
-    if (!isClient || loading) {
+    if (loading) {
         return (
             <SkeletonPage title="Dashboard">
                 <Layout>
                     <Layout.Section>
-                        <Card><SkeletonBodyText lines={3} /></Card>
+                        <Card>
+                            <SkeletonBodyText lines={3} />
+                        </Card>
                         <StatsLoader columns={4} />
                     </Layout.Section>
                     <Layout.Section variant="oneThird">
-                        <Card padding="400"><SkeletonBodyText lines={5} /></Card>
+                        <Card padding="400">
+                            <SkeletonBodyText lines={5} />
+                        </Card>
                     </Layout.Section>
                 </Layout>
             </SkeletonPage>
@@ -103,7 +132,9 @@ export const Dashboard: React.FC = () => {
                         <Card padding="400">
                             <BlockStack gap="400" align="center" inlineAlign="center">
                                 <Icon source={AlertCircleIcon} tone="critical" />
-                                <Text as="p" tone="critical">Failed to load dashboard statistics. Please try again later.</Text>
+                                <Text as="p" tone="critical">
+                                    Failed to load dashboard statistics. Please try again later.
+                                </Text>
                                 <Button onClick={() => window.location.reload()}>Retry</Button>
                             </BlockStack>
                         </Card>
@@ -114,10 +145,10 @@ export const Dashboard: React.FC = () => {
     }
 
     return (
-        <Page 
+        <Page
             title="Welcome to Merchant Quote"
             subtitle="Merchant Quote - Solution for all your quote demand."
-            secondaryActions={[{ content: 'English', icon: QuestionCircleIcon }]}
+            secondaryActions={[{ content: "English", icon: QuestionCircleIcon }]}
         >
             <Layout>
                 <Layout.Section>
@@ -125,20 +156,34 @@ export const Dashboard: React.FC = () => {
                         <Card padding="500">
                             <InlineStack gap="400" align="space-around">
                                 <BlockStack gap="100">
-                                    <Text as="p" variant="bodySm" tone="subdued">Last 7 days</Text>
+                                    <Text as="p" variant="bodySm" tone="subdued">
+                                        Last 7 days
+                                    </Text>
                                     <Icon source={CalendarIcon} tone="subdued" />
                                 </BlockStack>
                                 <BlockStack gap="100">
-                                    <Text as="p" variant="bodySm" tone="subdued">Total quote value</Text>
-                                    <Text variant="headingMd" as="p">$0.00</Text>
+                                    <Text as="p" variant="bodySm" tone="subdued">
+                                        Total quote value
+                                    </Text>
+                                    <Text variant="headingMd" as="p">
+                                        $0.00
+                                    </Text>
                                 </BlockStack>
                                 <BlockStack gap="100">
-                                    <Text as="p" variant="bodySm" tone="subdued">Total draft orders</Text>
-                                    <Text variant="headingMd" as="p">{stats?.convertedQuotes || 0}</Text>
+                                    <Text as="p" variant="bodySm" tone="subdued">
+                                        Total draft orders
+                                    </Text>
+                                    <Text variant="headingMd" as="p">
+                                        {stats?.convertedQuotes || 0}
+                                    </Text>
                                 </BlockStack>
                                 <BlockStack gap="100">
-                                    <Text as="p" variant="bodySm" tone="subdued">Total quotes</Text>
-                                    <Text variant="headingMd" as="p">{stats?.totalQuotes || 0}</Text>
+                                    <Text as="p" variant="bodySm" tone="subdued">
+                                        Total quotes
+                                    </Text>
+                                    <Text variant="headingMd" as="p">
+                                        {stats?.totalQuotes || 0}
+                                    </Text>
                                 </BlockStack>
                             </InlineStack>
                         </Card>
@@ -147,8 +192,12 @@ export const Dashboard: React.FC = () => {
                             <BlockStack gap="400">
                                 <InlineStack align="space-between" blockAlign="center">
                                     <BlockStack gap="100">
-                                      <Text variant="headingMd" as="h2">Getting started</Text>
-                                      <Text as="p" variant="bodySm" tone="subdued">Complete these steps to start receiving quotes.</Text>
+                                        <Text variant="headingMd" as="h2">
+                                            Getting started
+                                        </Text>
+                                        <Text as="p" variant="bodySm" tone="subdued">
+                                            Complete these steps to start receiving quotes.
+                                        </Text>
                                     </BlockStack>
                                     <Badge tone={progress === 100 ? "success" : "info"}>
                                         {`${completedSteps} of ${steps.length} tasks completed`}
@@ -161,30 +210,43 @@ export const Dashboard: React.FC = () => {
                                             <InlineStack gap="300" blockAlign="center">
                                                 <Box padding="100">
                                                     {step.completed ? (
-                                                        <div style={{ color: 'var(--p-color-bg-fill-success)' }}>
+                                                        <div style={{ color: "var(--p-color-bg-fill-success)" }}>
                                                             <Icon source={CheckIcon} tone="success" />
                                                         </div>
                                                     ) : (
-                                                        <div style={{ 
-                                                            width: '20px', 
-                                                            height: '20px', 
-                                                            borderRadius: '50%', 
-                                                            border: '2px solid var(--p-color-border-subdued)' 
-                                                        }} />
+                                                        <div
+                                                            style={{
+                                                                width: "20px",
+                                                                height: "20px",
+                                                                borderRadius: "50%",
+                                                                border: "2px solid var(--p-color-border-subdued)",
+                                                            }}
+                                                        />
                                                     )}
                                                 </Box>
                                                 <BlockStack gap="0">
-                                                    <Text as="span" variant="bodyMd" fontWeight={step.completed ? "semibold" : "regular"}>{step.label}</Text>
-                                                    <Text as="span" variant="bodySm" tone="subdued">{step.description}</Text>
+                                                    <Text
+                                                        as="span"
+                                                        variant="bodyMd"
+                                                        fontWeight={step.completed ? "semibold" : "regular"}
+                                                    >
+                                                        {step.label}
+                                                    </Text>
+                                                    <Text as="span" variant="bodySm" tone="subdued">
+                                                        {step.description}
+                                                    </Text>
                                                 </BlockStack>
                                             </InlineStack>
-                                            {!step.completed && (
-                                                idx === 2 ? (
-                                                    <ThemeEditorLink>Set up</ThemeEditorLink>
+                                            {!step.completed &&
+                                                (idx === 2 ? (
+                                                    <ThemeEditorLink deepLinkUrl={deepLinkUrl} isAppEnabled={isAppEnabled}>
+                                                        Set up
+                                                    </ThemeEditorLink>
                                                 ) : (
-                                                    <Button variant="plain" onClick={() => navigate('/form-builder')}>Set up</Button>
-                                                )
-                                            )}
+                                                    <Button variant="plain" onClick={() => navigate("/form-builder")}>
+                                                        Set up
+                                                    </Button>
+                                                ))}
                                         </InlineStack>
                                     ))}
                                 </BlockStack>
@@ -198,11 +260,17 @@ export const Dashboard: React.FC = () => {
                                         <Icon source={CheckIcon} tone="info" />
                                     </Box>
                                     <BlockStack gap="100">
-                                        <Text variant="headingMd" as="h3">Advanced Notifications</Text>
-                                        <Text variant="bodyMd" tone="subdued" as="p">Stay updated with email alerts for every new quote request.</Text>
+                                        <Text variant="headingMd" as="h3">
+                                            Advanced Notifications
+                                        </Text>
+                                        <Text variant="bodyMd" tone="subdued" as="p">
+                                            Stay updated with email alerts for every new quote request.
+                                        </Text>
                                     </BlockStack>
                                 </InlineStack>
-                                <Button variant="primary" onClick={() => navigate('/settings')}>Configure</Button>
+                                <Button variant="primary" onClick={() => navigate("/settings")}>
+                                    Configure
+                                </Button>
                             </InlineStack>
                         </Card>
                     </BlockStack>
@@ -210,7 +278,11 @@ export const Dashboard: React.FC = () => {
 
                 <Layout.Section variant="oneThird">
                     <BlockStack gap="400">
-                        <Card background={(!loading && isAppEnabled === false) ? "bg-surface-secondary-active" : "bg-surface"}>
+                        <Card
+                            background={
+                                !loading && isAppEnabled === false ? "bg-surface-secondary-active" : "bg-surface"
+                            }
+                        >
                             <BlockStack gap="300">
                                 {loading ? (
                                     <BlockStack gap="200">
@@ -221,18 +293,24 @@ export const Dashboard: React.FC = () => {
                                     <>
                                         <BlockStack gap="100">
                                             <InlineStack align="space-between" blockAlign="center">
-                                                <Text variant="headingSm" as="h3">App Connectivity</Text>
+                                                <Text variant="headingSm" as="h3">
+                                                    App Connectivity
+                                                </Text>
                                                 <Badge tone={isAppEnabled ? "success" : "critical"}>
                                                     {isAppEnabled ? "Active" : "Disabled"}
                                                 </Badge>
                                             </InlineStack>
                                             <Text as="p" variant="bodySm" tone="subdued">
-                                                {isAppEnabled 
-                                                    ? "Your app is currently live and visible on your storefront." 
+                                                {isAppEnabled
+                                                    ? "Your app is currently live and visible on your storefront."
                                                     : "The app is not visible to customers. Enable it to start receiving quotes."}
                                             </Text>
                                         </BlockStack>
-                                        <ThemeEditorLink primary={true}>
+                                        <ThemeEditorLink
+                                            primary={true}
+                                            deepLinkUrl={deepLinkUrl}
+                                            isAppEnabled={isAppEnabled}
+                                        >
                                             {isAppEnabled ? "Manage in Theme" : "Enable App Embed"}
                                         </ThemeEditorLink>
                                     </>
@@ -242,7 +320,9 @@ export const Dashboard: React.FC = () => {
 
                         <Card>
                             <BlockStack gap="300">
-                                <Text variant="headingMd" as="h3">Quick Analytics</Text>
+                                <Text variant="headingMd" as="h3">
+                                    Quick Analytics
+                                </Text>
                                 <BlockStack gap="200">
                                     <InlineStack gap="200" blockAlign="center">
                                         <Box width="20px">
@@ -265,3 +345,6 @@ export const Dashboard: React.FC = () => {
         </Page>
     );
 };
+
+// Added missing import for Text component which was implicitly used in my target replacements
+import { Text } from "@shopify/polaris";

@@ -1,6 +1,6 @@
-import { DeliveryMethod, type WebhookHandler } from "@shopify/shopify-api";
 import { shopify } from "@/config/shopify.config";
 import { logger } from "@/utils/logger";
+import { DeliveryMethod, type WebhookHandler } from "@shopify/shopify-api";
 
 export const customersDataRequestWebhookHandler: WebhookHandler = {
     deliveryMethod: DeliveryMethod.Http,
@@ -12,9 +12,8 @@ export const customersDataRequestWebhookHandler: WebhookHandler = {
                 shop,
                 webhookId,
                 apiVersion,
-                payload
+                payload,
             });
-
         } catch (error) {
             logger.error("Error handling CUSTOMERS_DATA_REQUEST webhook", {
                 shop,

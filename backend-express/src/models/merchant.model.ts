@@ -1,6 +1,6 @@
-import mongoose, { Schema } from "mongoose";
+import { DEFAULT_SUBSCRIPTION_STATUS, SUBSCRIPTION_STATUS_VALUES } from "@/constants";
 import type { IMerchant, MerchantDocument } from "@/types";
-import { SUBSCRIPTION_STATUS_VALUES, DEFAULT_SUBSCRIPTION_STATUS } from "@/constants";
+import mongoose, { Schema } from "mongoose";
 
 const merchantSchema = new Schema<IMerchant>(
     {
@@ -27,7 +27,7 @@ const merchantSchema = new Schema<IMerchant>(
         },
         installedAt: { type: Date, default: Date.now },
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 export const Merchant = mongoose.model<IMerchant>("Merchant", merchantSchema);

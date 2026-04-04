@@ -3,7 +3,7 @@ export enum QuoteStatus {
     PROCESSED = "PROCESSED",
     CLOSED = "CLOSED",
     APPROVED = "APPROVED",
-    REJECTED = "REJECTED"
+    REJECTED = "REJECTED",
 }
 
 export const QUOTE_STATUS_VALUES = Object.values(QuoteStatus);

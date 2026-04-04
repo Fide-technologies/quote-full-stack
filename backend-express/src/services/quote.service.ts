@@ -1,16 +1,27 @@
-import { injectable, inject } from "inversify";
-import { TYPES, type IQuote, type QuoteDocument } from "@/types";
-import type { IQuoteRepository } from "@/interfaces";
-import { logger } from "@/utils/logger";
-import type { IQuoteService, IMerchantService, IEmailService, IDraftOrderService, IUsageService } from "@/interfaces";
-import type { Session } from "@shopify/shopify-api";
-import mongoose from "mongoose";
 import { shopify } from "@/config/shopify.config";
+import type { IQuoteRepository } from "@/interfaces";
+import type { IDraftOrderService, IEmailService, IMerchantService, IQuoteService, IUsageService } from "@/interfaces";
+import { type IQuote, type QuoteDocument, TYPES } from "@/types";
+import { logger } from "@/utils/logger";
+import type { Session } from "@shopify/shopify-api";
+import { inject, injectable } from "inversify";
+import mongoose from "mongoose";
 
 import type { PaginatedResult } from "@/interfaces";
 
-import { QuoteStatus, ERROR_MESSAGES, SHOPIFY_DEFAULTS } from "@/constants";
+import { ERROR_MESSAGES, QuoteStatus, SHOPIFY_DEFAULTS } from "@/constants";
 import { GET_PRODUCTS_BY_IDS_QUERY } from "@/graphql/shopify-queries";
+
+interface ShopifyGraphqlResponse {
+    data?: {
+        nodes?: Array<{
+            id: string;
+            featuredMedia?: { preview?: { image?: unknown } };
+            featuredImage?: unknown;
+            [key: string]: unknown;
+        }>;
+    };
+}
 
 @injectable()
 export class QuoteService implements IQuoteService {
@@ -19,78 +30,78 @@ export class QuoteService implements IQuoteService {
         @inject(TYPES.IMerchantService) private readonly merchantService: IMerchantService,
         @inject(TYPES.IEmailService) private readonly emailService: IEmailService,
         @inject(TYPES.IDraftOrderService) private readonly draftOrderService: IDraftOrderService,
-        @inject(TYPES.IUsageService) private readonly usageService: IUsageService
-    ) { }
+        @inject(TYPES.IUsageService) private readonly usageService: IUsageService,
+    ) {}
 
-    async createQuote(shop: string, quoteData: any): Promise<QuoteDocument> {
+    async createQuote(shop: string, quoteDataInput: Record<string, unknown>): Promise<QuoteDocument> {
         const merchant = await this.merchantService.getMerchantByShop(shop);
         if (!merchant) {
             throw new Error(ERROR_MESSAGES.MERCHANT.NOT_FOUND);
         }
 
-
         try {
-            const price = Number(quoteData.price) || Number(quoteData.originalPrice) || 0;
-            const quantity = Number(quoteData.quantity) || 1;
+            // Extract with defaults for optional values
+            const price = Number(quoteDataInput.price || quoteDataInput.originalPrice) || 0;
+            const quantity = Number(quoteDataInput.quantity) || 1;
 
             const fullQuoteData: Partial<IQuote> = {
                 shop,
                 merchantId: merchant._id,
 
                 // Customer Details
-                firstName: quoteData.firstName,
-                lastName: quoteData.lastName,
-                customerName: `${quoteData.firstName || ""} ${quoteData.lastName || ""}`.trim(),
-                customerEmail: quoteData.email,
-                email: quoteData.email,
-                phone: quoteData.phone,
+                firstName: String(quoteDataInput.firstName || ""),
+                lastName: String(quoteDataInput.lastName || ""),
+                customerName: `${quoteDataInput.firstName || ""} ${quoteDataInput.lastName || ""}`.trim(),
+                customerEmail: String(quoteDataInput.email || ""),
+                email: String(quoteDataInput.email || ""),
+                phone: String(quoteDataInput.phone || ""),
 
                 // Address Details
-                address1: quoteData.address1,
-                address2: quoteData.address2,
-                city: quoteData.city,
-                district: quoteData.district,
-                state: quoteData.state,
-                country: quoteData.country || quoteData.country_name || quoteData.country_code,
-                pincode: quoteData.pincode,
+                address1: String(quoteDataInput.address1 || ""),
+                address2: String(quoteDataInput.address2 || ""),
+                city: String(quoteDataInput.city || ""),
+                district: String(quoteDataInput.district || ""),
+                state: String(quoteDataInput.state || ""),
+                country: String(
+                    quoteDataInput.country || quoteDataInput.country_name || quoteDataInput.country_code || "",
+                ),
+                pincode: String(quoteDataInput.pincode || ""),
 
                 // Message
-                customerMessage: quoteData.message,
-                message: quoteData.message,
+                customerMessage: String(quoteDataInput.message || ""),
+                message: String(quoteDataInput.message || ""),
 
                 // Product & Pricing
-                productId: quoteData.productId,
-                productTitle: quoteData.productTitle,
-                variantId: quoteData.variantId ? String(quoteData.variantId) : undefined,
-                originalPrice: mongoose.Types.Decimal128.fromString(price.toString()) as any,
+                productId: String(quoteDataInput.productId || ""),
+                productTitle: String(quoteDataInput.productTitle || ""),
+                variantId: quoteDataInput.variantId ? String(quoteDataInput.variantId) : undefined,
+                originalPrice: mongoose.Types.Decimal128.fromString(price.toString()),
                 quantity: quantity,
                 totalPrice: price * quantity,
 
                 // Line Items
-                items: quoteData.items || [
+                items: (quoteDataInput.items as IQuote["items"]) || [
                     {
-                        variantId: quoteData.variantId,
-                        title: quoteData.productTitle,
+                        variantId: quoteDataInput.variantId ? String(quoteDataInput.variantId) : undefined,
+                        title: String(quoteDataInput.productTitle || ""),
                         quantity: quantity,
-                        price: price
-                    }
+                        price: price,
+                    },
                 ],
-                customData: quoteData.customData || {},
-                customImages: quoteData.customImages || []
+                customData: (quoteDataInput.customData as Record<string, unknown>) || {},
+                customImages: (quoteDataInput.customImages as string[]) || [],
             };
-
 
             const quote = await this.quoteRepository.create(fullQuoteData);
 
-            // Increment usage asynchronously but with error handling to avoid breaking quote creation
-            // We don't await this because the quote is already saved, and we want to respond fast
-            this.usageService.incrementUsage(merchant._id.toString()).catch(err => {
+            // Increment usage asynchronously
+            this.usageService.incrementUsage(merchant._id.toString()).catch((err) => {
                 logger.error(`[QuoteService] Failed to increment usage for merchant ${merchant._id}:`, err);
             });
 
             // Send notification asynchronously
-            this.emailService.sendQuoteNotification(shop, quote).catch(err => {
-                logger.error(`[QuoteService] Asynchronous email notification failed:`, err);
+            this.emailService.sendQuoteNotification(shop, quote).catch((err) => {
+                logger.error("[QuoteService] Asynchronous email notification failed:", err);
             });
 
             return quote;
@@ -100,44 +111,56 @@ export class QuoteService implements IQuoteService {
         }
     }
 
-    async getQuotesByMerchant(shop: string, page: number = 1, limit: number = 10, filters?: { q?: string; status?: string; date?: string; hasDraftOrder?: boolean }): Promise<PaginatedResult<QuoteDocument>> {
+    async getQuotesByMerchant(
+        shop: string,
+        page = 1,
+        limit = 10,
+        filters?: { q?: string; status?: string; date?: string; hasDraftOrder?: boolean },
+    ): Promise<PaginatedResult<QuoteDocument>> {
         return await this.quoteRepository.findByMerchant(shop, { page, limit }, filters);
     }
 
-    async getEnrichedQuotesByMerchant(session: Session, page: number = 1, limit: number = 10, filters?: { q?: string; status?: string; date?: string; hasDraftOrder?: boolean }): Promise<PaginatedResult<QuoteDocument & { productDetails?: any }>> {
+    async getEnrichedQuotesByMerchant(
+        session: Session,
+        page = 1,
+        limit = 10,
+        filters?: { q?: string; status?: string; date?: string; hasDraftOrder?: boolean },
+    ): Promise<PaginatedResult<QuoteDocument & { productDetails?: unknown }>> {
         const result = await this.quoteRepository.findByMerchant(session.shop, { page, limit }, filters);
         const quotes = result.data;
 
-        const productIds = Array.from(new Set(quotes.map(q => q.productId).filter(Boolean)));
-        let productMap: Record<string, any> = {};
+        const productIds = Array.from(new Set(quotes.map((q) => q.productId).filter(Boolean)));
+        const productMap: Record<string, unknown> = {};
 
         if (productIds.length > 0) {
-            const validIds = productIds.map(id =>
-                id && !id.startsWith('gid://') ? `${SHOPIFY_DEFAULTS.PRODUCT_GID_PREFIX}${id}` : id
-            ).filter(Boolean);
+            const validIds = productIds
+                .map((id) => (id && !id.startsWith("gid://") ? `${SHOPIFY_DEFAULTS.PRODUCT_GID_PREFIX}${id}` : id))
+                .filter(Boolean);
 
             if (validIds.length > 0) {
                 try {
                     const client = new shopify.api.clients.Graphql({ session });
-                    const response = await client.request(
-                        GET_PRODUCTS_BY_IDS_QUERY,
-                        { variables: { ids: validIds } }
-                    );
+                    const response = (await client.request(GET_PRODUCTS_BY_IDS_QUERY, {
+                        variables: { ids: validIds },
+                    })) as ShopifyGraphqlResponse;
 
-                    if (response.data && (response.data as any).nodes) {
-                        (response.data as any).nodes.forEach((node: any) => {
+                    if (response.data?.nodes) {
+                        for (const node of response.data.nodes) {
                             if (node) {
-                                // Map featuredMedia to featuredImage for backward compatibility
-                                if (node.featuredMedia?.preview?.image) {
-                                    node.featuredImage = node.featuredMedia.preview.image;
-                                    delete node.featuredMedia; // Cleanup
-                                }
+                                const featuredImage = node.featuredMedia?.preview?.image || node.featuredImage;
+                                const updatedNode = {
+                                    ...node,
+                                    featuredImage,
+                                    featuredMedia: undefined,
+                                };
 
-                                const numericId = node.id.split('/').pop();
-                                productMap[numericId] = node;
-                                productMap[node.id] = node;
+                                const numericId = node.id.split("/").pop();
+                                if (numericId) {
+                                    productMap[numericId] = updatedNode;
+                                }
+                                productMap[node.id] = updatedNode;
                             }
-                        });
+                        }
                     }
                 } catch (error) {
                     logger.error("[QuoteService] Failed to fetch product details:", error);
@@ -145,17 +168,17 @@ export class QuoteService implements IQuoteService {
             }
         }
 
-        const enrichedQuotes = quotes.map(quote => {
-            const quoteObj = quote.toObject() as any;
+        const enrichedQuotes = quotes.map((quote) => {
+            const quoteObj = quote.toObject() as unknown as IQuote;
             return {
                 ...quoteObj,
-                productDetails: productMap[quote.productId || ''] || null
-            };
+                productDetails: productMap[quote.productId || ""] || null,
+            } as QuoteDocument & { productDetails?: unknown };
         });
 
         return {
             ...result,
-            data: enrichedQuotes
+            data: enrichedQuotes,
         };
     }
 
@@ -165,18 +188,15 @@ export class QuoteService implements IQuoteService {
 
     async createDraftOrder(session: Session, quoteId: string): Promise<{ draftOrderId: string; invoiceUrl: string }> {
         try {
-            // Fetch the quote
             const quote = await this.quoteRepository.findById(quoteId);
             if (!quote) {
                 throw new Error(ERROR_MESSAGES.QUOTE.NOT_FOUND);
             }
 
-            // Verify quote belongs to this shop
             if (quote.shop !== session.shop) {
                 throw new Error(ERROR_MESSAGES.QUOTE.UNAUTHORIZED);
             }
 
-            // Check if draft order already exists
             if (quote.draftOrderId) {
                 logger.warn(`[QuoteService] ${ERROR_MESSAGES.QUOTE.DRAFT_ORDER_EXISTS(quoteId)}${quote.draftOrderId}`);
                 return {
@@ -185,10 +205,8 @@ export class QuoteService implements IQuoteService {
                 };
             }
 
-            // Create draft order via Shopify API
             const result = await this.draftOrderService.createDraftOrderFromQuote(session, quote);
 
-            // Update quote with draft order details
             quote.draftOrderId = result.draftOrderId;
             quote.draftOrderUrl = result.invoiceUrl;
             quote.status = QuoteStatus.APPROVED;
@@ -203,28 +221,27 @@ export class QuoteService implements IQuoteService {
         }
     }
 
-    async getQuoteById(session: Session, id: string): Promise<QuoteDocument & { productDetails?: any } | null> {
+    async getQuoteById(session: Session, id: string): Promise<(QuoteDocument & { productDetails?: unknown }) | null> {
         const quote = await this.quoteRepository.findById(id);
-        
+
         if (!quote) {
             return null;
         }
 
-        // Verify quote belongs to this merchant (Security check)
         if (quote.shop !== session.shop) {
             throw new Error(ERROR_MESSAGES.QUOTE.UNAUTHORIZED);
         }
 
-        // 2. Self-Healing logic: Verify if Draft Order still exists on Shopify if we have one
         if (quote.draftOrderId) {
             try {
                 const exists = await this.draftOrderService.checkDraftOrderExists(session, quote.draftOrderId);
                 if (!exists) {
-                    logger.warn(`[QuoteService] Draft Order ${quote.draftOrderId} not found on Shopify for quote ${id}. Resetting quote details.`);
+                    logger.warn(
+                        `[QuoteService] Draft Order ${quote.draftOrderId} not found on Shopify for quote ${id}. Resetting quote details.`,
+                    );
                     quote.draftOrderId = undefined;
                     quote.draftOrderUrl = undefined;
-                    // Only revert to PENDING if it was previously APPROVED/SENT and now draft order is gone
-                    if (quote.status === QuoteStatus.APPROVED || (quote as any).status === 'SENT') {
+                    if (quote.status === QuoteStatus.APPROVED) {
                         quote.status = QuoteStatus.PENDING;
                     }
                     await quote.save();
@@ -234,39 +251,42 @@ export class QuoteService implements IQuoteService {
             }
         }
 
-        // Fetch product details for this single quote
-        let productDetails = null;
+        let productDetails: unknown = null;
         const productId = quote.productId;
         if (productId) {
             try {
-                const gid = productId.startsWith('gid://') ? productId : `${SHOPIFY_DEFAULTS.PRODUCT_GID_PREFIX}${productId}`;
+                const gid = productId.startsWith("gid://")
+                    ? productId
+                    : `${SHOPIFY_DEFAULTS.PRODUCT_GID_PREFIX}${productId}`;
                 const client = new shopify.api.clients.Graphql({ session });
-                const response: any = await client.request(
-                    GET_PRODUCTS_BY_IDS_QUERY,
-                    { variables: { ids: [gid] } }
-                );
+                const response = (await client.request(GET_PRODUCTS_BY_IDS_QUERY, {
+                    variables: { ids: [gid] },
+                })) as ShopifyGraphqlResponse;
 
-                if (response.data?.nodes?.length > 0 && response.data.nodes[0]) {
+                if (response.data?.nodes && response.data.nodes.length > 0) {
                     const node = response.data.nodes[0];
-                    if (node.featuredMedia?.preview?.image) {
-                        node.featuredImage = node.featuredMedia.preview.image;
+                    if (node) {
+                        const featuredImage = node.featuredMedia?.preview?.image || node.featuredImage;
+                        productDetails = {
+                            ...node,
+                            featuredImage,
+                            featuredMedia: undefined,
+                        };
                     }
-                    productDetails = node;
                 }
             } catch (error) {
                 logger.error(`[QuoteService] Failed to fetch product details for quote ${id}:`, error);
             }
         }
 
-        const quoteObj = quote.toObject();
+        const quoteObj = quote.toObject() as unknown as IQuote;
         return {
             ...quoteObj,
-            productDetails
-        } as any;
+            productDetails,
+        } as QuoteDocument & { productDetails?: unknown };
     }
 
     async redactCustomerData(email: string): Promise<void> {
         await this.quoteRepository.redactByCustomerEmail(email);
     }
 }
-

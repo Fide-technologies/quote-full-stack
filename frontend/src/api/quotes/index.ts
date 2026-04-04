@@ -25,7 +25,7 @@ export interface Quote {
     }
     draftOrderId?: string;
     draftOrderUrl?: string;
-    customData?: Record<string, any>;
+    customData?: Record<string, unknown>;
     customImages?: string[];
 }
 

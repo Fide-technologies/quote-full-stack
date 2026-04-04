@@ -1,13 +1,13 @@
-import { DeliveryMethod, type WebhookHandler } from "@shopify/shopify-api";
 import { shopify } from "@/config/shopify.config";
-import { logger } from "@/utils/logger";
+import type { IMerchantService } from "@/interfaces";
 import { container } from "@/inversify.config";
 import { TYPES } from "@/types";
-import type { IMerchantService } from "@/interfaces";
+import { logger } from "@/utils/logger";
+import { DeliveryMethod, type WebhookHandler } from "@shopify/shopify-api";
 
 /**
  * Shop Redact Webhook
- * 
+ *
  * Triggered when a merchant requests that you delete all data related to their shop.
  */
 export const shopRedactWebhookHandler: WebhookHandler = {
@@ -21,7 +21,6 @@ export const shopRedactWebhookHandler: WebhookHandler = {
             await merchantService.redactMerchantData(shop);
 
             logger.info(`Successfully deleted all data for merchant account belonging to shop: ${shop}`);
-
         } catch (error) {
             logger.error("Error handling SHOP_REDACT webhook", {
                 shop,
@@ -32,4 +31,3 @@ export const shopRedactWebhookHandler: WebhookHandler = {
         }
     },
 };
-

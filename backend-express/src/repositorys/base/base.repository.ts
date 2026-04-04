@@ -1,10 +1,10 @@
-import { injectable, unmanaged } from "inversify";
-import type { Model, HydratedDocument, UpdateQuery, QueryFilter, UpdateWriteOpResult, DeleteResult } from "mongoose";
 import type { IBaseRepository } from "@/interfaces";
+import { injectable, unmanaged } from "inversify";
+import type { DeleteResult, HydratedDocument, Model, QueryFilter, UpdateQuery, UpdateWriteOpResult } from "mongoose";
 
 @injectable()
 export abstract class MongooseBaseRepository<T> implements IBaseRepository<T> {
-    constructor(@unmanaged() protected readonly model: Model<T>) { }
+    constructor(@unmanaged() protected readonly model: Model<T>) {}
 
     async create(item: Partial<T>): Promise<HydratedDocument<T>> {
         return await this.model.create(item);

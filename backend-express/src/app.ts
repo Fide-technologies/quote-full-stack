@@ -1,24 +1,24 @@
-import express from "express";
-import path from "path";
-import { fileURLToPath } from "url";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { shopify } from "@/config/shopify.config";
+import { API_MESSAGES, HTTP_STATUS } from "@/constants/app.constants";
 import { logger } from "@/utils/logger";
 import { env } from "@/validations/env.validation";
-import { API_MESSAGES, HTTP_STATUS } from "@/constants/app.constants";
+import express from "express";
 
-// Routes
-import authRouter from "./routes/auth.routes";
-import quotesRouter from "./routes/quotes.routes";
-import webhooksRouter from "./routes/webhooks.routes";
-import merchantsRouter from "./routes/merchants.routes";
-import settingsRouter from "./routes/settings.routes";
-import draftOrderRouter from "./routes/draft-order.routes";
-import planRouter from "./routes/plan.routes";
-import formRouter from "./routes/form.routes";
-import dashboardRouter from "./routes/dashboard.routes";
-import uploadRouter from "./routes/upload.routes";
 import rateLimit from "express-rate-limit";
 import mongoose from "mongoose";
+// Routes
+import authRouter from "./routes/auth.routes";
+import dashboardRouter from "./routes/dashboard.routes";
+import draftOrderRouter from "./routes/draft-order.routes";
+import formRouter from "./routes/form.routes";
+import merchantsRouter from "./routes/merchants.routes";
+import planRouter from "./routes/plan.routes";
+import quotesRouter from "./routes/quotes.routes";
+import settingsRouter from "./routes/settings.routes";
+import uploadRouter from "./routes/upload.routes";
+import webhooksRouter from "./routes/webhooks.routes";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,7 +43,7 @@ export class App {
             max: 1000,
             message: {
                 success: false,
-                message: "Too many requests from this IP, please try again later."
+                message: "Too many requests from this IP, please try again later.",
             },
             standardHeaders: true,
             legacyHeaders: false,
@@ -56,7 +56,7 @@ export class App {
         this.app.use(shopify.cspHeaders());
 
         this.app.use(express.static(STATIC_PATH));
-        this.app.use('/public', express.static(path.join(__dirname, '..', 'public')));
+        this.app.use("/public", express.static(path.join(__dirname, "..", "public")));
     }
 
     private routes(): void {
@@ -68,7 +68,7 @@ export class App {
                 message: dbStatus === "Connected" ? "OK" : "Service Unavailable",
                 database: dbStatus,
                 timestamp: new Date().toISOString(),
-                uptime: process.uptime()
+                uptime: process.uptime(),
             });
         });
 
@@ -87,7 +87,6 @@ export class App {
         this.app.use("/api/dashboard", dashboardRouter);
         this.app.use("/api/upload", uploadRouter);
 
-
         // Frontend Fallback (SPA)
         // Must be last
         this.app.use((req, res, next) => {
@@ -97,19 +96,24 @@ export class App {
     }
 
     private errorHandling(): void {
-        this.app.use((err: Error | unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
-            const errorMessage = err instanceof Error ? (err.stack || err.message) : String(err);
-            logger.error(`[GlobalErrorHandler] ${errorMessage}`);
+        this.app.use(
+            (err: Error | unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
+                const errorMessage = err instanceof Error ? err.stack || err.message : String(err);
+                logger.error(`[GlobalErrorHandler] ${errorMessage}`);
 
-            // Don't leak stack traces in production
-            const responseMessage = process.env.NODE_ENV === 'production'
-                ? API_MESSAGES.ERROR_DEFAULT
-                : (err instanceof Error ? err.message : String(err));
+                // Don't leak stack traces in production
+                const responseMessage =
+                    process.env.NODE_ENV === "production"
+                        ? API_MESSAGES.ERROR_DEFAULT
+                        : err instanceof Error
+                          ? err.message
+                          : String(err);
 
-            res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                message: responseMessage
-            });
-        });
+                res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+                    success: false,
+                    message: responseMessage,
+                });
+            },
+        );
     }
 }

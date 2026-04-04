@@ -1,8 +1,8 @@
-import { Router } from "express";
+import { shopify } from "@/config/shopify.config";
+import type { DashboardController } from "@/controllers/dashboard.controller";
 import { container } from "@/inversify.config";
 import { TYPES } from "@/types";
-import { DashboardController } from "@/controllers/dashboard.controller";
-import { shopify } from "@/config/shopify.config";
+import { Router } from "express";
 
 const dashboardRouter = Router();
 const dashboardController = container.get<DashboardController>(TYPES.DashboardController);

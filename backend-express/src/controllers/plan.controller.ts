@@ -1,19 +1,18 @@
-import type { Request, Response } from "express";
-import { injectable, inject } from "inversify";
-import { BaseController } from "./base.controller";
-import { TYPES } from "@/types";
-import { PlanType } from "@/constants/plan.constants";
-import type { IPlanService, IMerchantService } from "@/interfaces";
 import { shopify } from "@/config/shopify.config";
+import { PlanType } from "@/constants/plan.constants";
+import type { IMerchantService, IPlanService } from "@/interfaces";
+import { TYPES } from "@/types";
 import { logger } from "@/utils/logger";
 import { env } from "@/validations/env.validation";
-
+import type { Request, Response } from "express";
+import { inject, injectable } from "inversify";
+import { BaseController } from "./base.controller";
 
 @injectable()
 export class PlanController extends BaseController {
     constructor(
         @inject(TYPES.IPlanService) private planService: IPlanService,
-        @inject(TYPES.IMerchantService) private merchantService: IMerchantService
+        @inject(TYPES.IMerchantService) private merchantService: IMerchantService,
     ) {
         super();
     }
@@ -71,7 +70,7 @@ export class PlanController extends BaseController {
     async handleCallback(req: Request, res: Response) {
         // Normalize query params (handles both strings and arrays automatically)
         const { shop, host, charge_id, plan } = Object.fromEntries(
-            Object.entries(req.query).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v])
+            Object.entries(req.query).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v]),
         ) as Record<string, string>;
 
         logger.info(`[PlanController] Billing callback for shop: ${shop}`);
@@ -83,13 +82,14 @@ export class PlanController extends BaseController {
 
             const appUrl = await this.planService.handleCallback(shop, charge_id, plan, host);
             return res.redirect(appUrl);
-        } catch (error: any) {
-            logger.error(`[PlanController] Callback failed: ${error.message}`);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            logger.error(`[PlanController] Callback failed: ${message}`);
 
             // Build safe fallback URL
-            const params = new URLSearchParams({ shop: shop || '' });
-            if (host) params.set('host', host);
-            params.set('billing', 'error');
+            const params = new URLSearchParams({ shop: shop || "" });
+            if (host) params.set("host", host);
+            params.set("billing", "error");
 
             return res.redirect(`https://${env.HOST_NAME}/plans?${params.toString()}`);
         }

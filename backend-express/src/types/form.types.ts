@@ -9,7 +9,7 @@ export enum FormFieldType {
     SELECT = "select",
     RADIO = "radio",
     CHECKBOX = "checkbox",
-    FILE = "file"
+    FILE = "file",
 }
 
 export interface IFormField {
@@ -30,7 +30,7 @@ export interface IFormField {
     maxFileSizeMB?: number;
     allowMultiple?: boolean;
     // UI layout Grid
-    layoutWidth?: 'full' | 'half';
+    layoutWidth?: "full" | "half";
     // Access control
     isSystem?: boolean; // True for default locked fields
 }

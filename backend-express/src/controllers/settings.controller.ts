@@ -1,15 +1,15 @@
-import { inject, injectable } from "inversify";
-import { TYPES } from "@/types";
-import type { ISettingsService, IPlanService } from "@/interfaces";
-import type { Request, Response } from "express";
-import { BaseController } from "./base.controller";
 import { API_MESSAGES } from "@/constants/app.constants";
+import type { IPlanService, ISettingsService } from "@/interfaces";
+import { TYPES } from "@/types";
+import type { Request, Response } from "express";
+import { inject, injectable } from "inversify";
+import { BaseController } from "./base.controller";
 
 @injectable()
 export class SettingsController extends BaseController {
     constructor(
         @inject(TYPES.ISettingsService) private settingsService: ISettingsService,
-        @inject(TYPES.IPlanService) private planService: IPlanService
+        @inject(TYPES.IPlanService) private planService: IPlanService,
     ) {
         super();
     }
@@ -29,9 +29,9 @@ export class SettingsController extends BaseController {
                 ...settings,
                 plan: plan?.name,
                 isAppEmbedded: themeAudit.isEmbedded,
-                deepLinkUrl: themeAudit.themeId 
+                deepLinkUrl: themeAudit.themeId
                     ? `https://admin.shopify.com/store/${session.shop.split(".")[0]}/themes/${themeAudit.themeId}/editor?context=apps`
-                    : `shopify:admin/themes/current/editor?context=apps`
+                    : "shopify:admin/themes/current/editor?context=apps",
             };
 
             return this.ok(res, settingsExtended, API_MESSAGES.SETTINGS.RETRIEVED);

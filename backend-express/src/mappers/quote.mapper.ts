@@ -2,7 +2,7 @@ import type { QuoteResponseDto } from "@/dtos/quote.dto";
 import type { QuoteDocument } from "@/types";
 
 export const QuoteMapper = {
-    toResponseDto: (quote: any): QuoteResponseDto => {
+    toResponseDto: (quote: QuoteDocument): QuoteResponseDto => {
         const id = quote._id || quote.id;
         const merchantId = quote.merchantId;
 
@@ -34,18 +34,22 @@ export const QuoteMapper = {
             draftOrderUrl: quote.draftOrderUrl,
             customData: quote.customData,
             customImages: quote.customImages || [],
-            productDetails: quote.productDetails || (quote.productImage ? {
-                featuredImage: {
-                    url: quote.productImage,
-                    altText: quote.productTitle || 'Product Image'
-                }
-            } : undefined),
+            productDetails:
+                quote.productDetails ||
+                (quote.productImage
+                    ? {
+                        featuredImage: {
+                            url: quote.productImage,
+                            altText: quote.productTitle || "Product Image",
+                        },
+                    }
+                    : undefined),
             createdAt: quote.createdAt,
             updatedAt: quote.updatedAt,
         };
     },
 
-    toResponseDtoList: (quotes: any[]): QuoteResponseDto[] => {
+    toResponseDtoList: (quotes: QuoteDocument[]): QuoteResponseDto[] => {
         return quotes.map((q) => QuoteMapper.toResponseDto(q));
-    }
+    },
 };

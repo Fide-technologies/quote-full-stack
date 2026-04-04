@@ -1,13 +1,11 @@
-import { Merchant, type IMerchant, type MerchantDocument } from "@/models/merchant.model";
-import { injectable } from "inversify";
 import type { IMerchantRepository } from "@/interfaces";
+import { type IMerchant, Merchant, type MerchantDocument } from "@/models/merchant.model";
+import { injectable } from "inversify";
+import type { DeleteResult, QueryFilter, UpdateQuery, UpdateWriteOpResult } from "mongoose";
 import { MongooseBaseRepository } from "../base/base.repository";
-import type { UpdateWriteOpResult, DeleteResult } from "mongoose";
 
 @injectable()
-export class MerchantRepository
-    extends MongooseBaseRepository<IMerchant>
-    implements IMerchantRepository {
+export class MerchantRepository extends MongooseBaseRepository<IMerchant> implements IMerchantRepository {
     constructor() {
         super(Merchant);
     }
@@ -33,18 +31,20 @@ export class MerchantRepository
     }
 
     async incrementQuoteUsage(shop: string, limit: number): Promise<MerchantDocument | null> {
-        return await this.model.findOneAndUpdate(
-            { shop, "usage.quotesUsed": { $lt: limit } },
-            { $inc: { "usage.quotesUsed": 1 } },
-            { new: true }
-        ).exec();
+        return await this.model
+            .findOneAndUpdate(
+                { shop, "usage.quotesUsed": { $lt: limit } },
+                { $inc: { "usage.quotesUsed": 1 } },
+                { new: true },
+            )
+            .exec();
     }
 
     async findById(id: string): Promise<MerchantDocument | null> {
         return await this.model.findById(id).exec();
     }
 
-    async updateUsage(id: string, usage: any): Promise<void> {
-        await this.model.updateOne({ _id: id }, usage).exec();
+    async updateUsage(id: string, usage: UpdateQuery<IMerchant>): Promise<void> {
+        await this.model.updateOne({ _id: id } as unknown as QueryFilter<IMerchant>, usage).exec();
     }
 }

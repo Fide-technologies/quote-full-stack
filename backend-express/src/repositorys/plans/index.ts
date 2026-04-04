@@ -1,7 +1,8 @@
-import { injectable } from "inversify";
+import type { IPlanRepository } from "@/interfaces";
 import { Plan } from "@/models/plan.model";
 import type { IPlan, PlanDocument } from "@/types";
-import type { IPlanRepository } from "@/interfaces";
+import { injectable } from "inversify";
+import type { QueryFilter } from "mongoose";
 
 @injectable()
 export class PlanRepository implements IPlanRepository {
@@ -21,7 +22,7 @@ export class PlanRepository implements IPlanRepository {
         return await Plan.find();
     }
 
-    async findOne(filter: any): Promise<PlanDocument | null> {
+    async findOne(filter: QueryFilter<IPlan>): Promise<PlanDocument | null> {
         return await Plan.findOne(filter);
     }
 }
