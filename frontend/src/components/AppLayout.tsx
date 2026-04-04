@@ -22,8 +22,16 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
         }
     };
 
+    const logo = {
+        width: 124,
+        topBarSource: '/app-icon.png',
+        contextualSaveBarSource: '/app-icon.png',
+        url: '/',
+        accessibilityLabel: 'Merchant Quote',
+    };
+
     return (
-        <Frame>
+        <Frame logo={logo}>
             {isFetching > 0 && <Loading />}
             <NavMenu>
                 <a href="/" rel="home">Dashboard</a>
@@ -36,7 +44,6 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             </NavMenu>
 
             <TitleBar title={getTitle(location.pathname)} />
-
             {children}
         </Frame>
     );
