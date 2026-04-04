@@ -83,7 +83,6 @@ export interface DraftOrderCreateResponse {
     };
 }
 
-
 export interface ShopResponse {
     shop: {
         currencyCode: string;
