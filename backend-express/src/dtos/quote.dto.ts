@@ -40,7 +40,7 @@ export interface QuoteResponseDto {
     productDetails?: {
         featuredImage?: {
             url: string;
-            altText: string;
+            altText?: string;
         };
     };
     createdAt: Date;

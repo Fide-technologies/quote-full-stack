@@ -3,6 +3,7 @@ import type { PaginatedResult, PaginationOptions } from "@/interfaces";
 import { Quote } from "@/models/quote.model";
 import type { IQuote, QuoteDocument } from "@/types";
 import { injectable } from "inversify";
+import type { DeleteResult, QueryFilter, UpdateWriteOpResult } from "mongoose";
 import { MongooseBaseRepository } from "../base/base.repository";
 
 @injectable()
@@ -19,7 +20,7 @@ export class QuoteRepository extends MongooseBaseRepository<IQuote> implements I
         const { page, limit } = options;
         const skip = (page - 1) * limit;
 
-        const query: unknown = { shop };
+        const query: Record<string, unknown> = { shop };
 
         if (filters.status) {
             query.status = filters.status;
@@ -45,7 +46,9 @@ export class QuoteRepository extends MongooseBaseRepository<IQuote> implements I
 
         if (filters.q) {
             const searchRegex = new RegExp(filters.q, "i");
+            const existingOr = (query.$or as Array<unknown>) || [];
             query.$or = [
+                ...existingOr,
                 { firstName: searchRegex },
                 { lastName: searchRegex },
                 { customerEmail: searchRegex },
@@ -54,8 +57,8 @@ export class QuoteRepository extends MongooseBaseRepository<IQuote> implements I
         }
 
         const [data, total] = await Promise.all([
-            this.model.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
-            this.model.countDocuments(query).exec(),
+            this.model.find(query as QueryFilter<IQuote>).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+            this.model.countDocuments(query as QueryFilter<IQuote>).exec(),
         ]);
 
         return {
@@ -68,7 +71,7 @@ export class QuoteRepository extends MongooseBaseRepository<IQuote> implements I
     }
 
     async findById(id: string): Promise<QuoteDocument | null> {
-        return await this.findOne({ _id: id } as unknown);
+        return await this.model.findById(id).exec();
     }
 
     async updateStatus(id: string, status: IQuote["status"]): Promise<QuoteDocument | null> {
@@ -86,11 +89,11 @@ export class QuoteRepository extends MongooseBaseRepository<IQuote> implements I
         });
     }
 
-    async deleteByShop(shop: string): Promise<unknown> {
+    async deleteByShop(shop: string): Promise<DeleteResult> {
         return await Quote.deleteMany({ shop });
     }
 
-    async redactByCustomerEmail(email: string): Promise<unknown> {
+    async redactByCustomerEmail(email: string): Promise<UpdateWriteOpResult> {
         return await Quote.updateMany(
             { $or: [{ email: email }, { customerEmail: email }] },
             {

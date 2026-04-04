@@ -18,7 +18,7 @@ export interface MetafieldDefinitionCreateResponse {
 export interface GetSettingsResponse {
     shop: {
         id: string;
-        showOnAll: {
+        config?: {
             id: string;
             value: string;
         } | null;

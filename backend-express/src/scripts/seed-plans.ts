@@ -4,6 +4,7 @@ import { connectDB, disconnectDB } from "../config/mongo-db.config";
 import { PlanAction, PlanType } from "../constants/plan.constants";
 import { Plan } from "../models/plan.model";
 import { logger } from "../utils/logger";
+import mongoose from "mongoose";
 
 const plans = [
     {
@@ -70,7 +71,7 @@ async function seedPlans() {
                 existingPlan.permissions = planData.permissions;
                 existingPlan.quoteLimit = planData.quoteLimit;
                 existingPlan.trialDays = planData.trialDays;
-                existingPlan.price = planData.price as unknown;
+                existingPlan.price = mongoose.Types.Decimal128.fromString(planData.price.toString()) as unknown as mongoose.Types.Decimal128;
                 await existingPlan.save();
             } else {
                 logger.info(`Creating new plan: ${planData.name}`);

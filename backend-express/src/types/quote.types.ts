@@ -60,6 +60,14 @@ export interface IQuote {
     createdAt: Date;
     updatedAt: Date;
 
+    // Additional UI Data
+    productDetails?: {
+        featuredImage?: {
+            url: string;
+            altText?: string;
+        };
+    };
+
     // Custom Form Data
     customData?: Record<string, unknown>;
     customImages?: string[];

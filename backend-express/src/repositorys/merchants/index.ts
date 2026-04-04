@@ -1,7 +1,7 @@
 import type { IMerchantRepository } from "@/interfaces";
 import { type IMerchant, Merchant, type MerchantDocument } from "@/models/merchant.model";
 import { injectable } from "inversify";
-import type { DeleteResult, UpdateWriteOpResult } from "mongoose";
+import type { DeleteResult, QueryFilter, UpdateQuery, UpdateWriteOpResult } from "mongoose";
 import { MongooseBaseRepository } from "../base/base.repository";
 
 @injectable()
@@ -44,7 +44,7 @@ export class MerchantRepository extends MongooseBaseRepository<IMerchant> implem
         return await this.model.findById(id).exec();
     }
 
-    async updateUsage(id: string, usage: unknown): Promise<void> {
-        await this.model.updateOne({ _id: id }, usage).exec();
+    async updateUsage(id: string, usage: UpdateQuery<IMerchant>): Promise<void> {
+        await this.model.updateOne({ _id: id } as unknown as QueryFilter<IMerchant>, usage).exec();
     }
 }

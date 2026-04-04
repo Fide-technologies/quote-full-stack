@@ -1,6 +1,7 @@
 import type { IFormRepository } from "@/interfaces";
 import { Form, type FormDocument, type IForm } from "@/models/form.model";
 import { injectable } from "inversify";
+import type { DeleteResult, QueryFilter } from "mongoose";
 import { MongooseBaseRepository } from "../base/base.repository";
 
 @injectable()
@@ -10,7 +11,7 @@ export class FormRepository extends MongooseBaseRepository<IForm> implements IFo
     }
 
     async findByShop(shop: string): Promise<FormDocument | null> {
-        return await this.findOne({ shop } as unknown);
+        return await this.findOne({ shop } as QueryFilter<IForm>);
     }
 
     async createOrUpdate(shop: string, formData: Partial<IForm>): Promise<FormDocument> {
@@ -19,7 +20,7 @@ export class FormRepository extends MongooseBaseRepository<IForm> implements IFo
             .exec()) as FormDocument;
     }
 
-    async deleteByShop(shop: string): Promise<unknown> {
+    async deleteByShop(shop: string): Promise<DeleteResult> {
         return await Form.deleteMany({ shop });
     }
 }

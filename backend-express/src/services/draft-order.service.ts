@@ -90,8 +90,9 @@ export class DraftOrderService implements IDraftOrderService {
                 draftOrderId: draftOrder.id,
                 invoiceUrl: draftOrder.invoiceUrl,
             };
-        } catch (error) {
-            logger.error("[DraftOrderService] Error creating draft order:", error);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            logger.error(`[DraftOrderService] Error creating draft order: ${message}`);
             throw error;
         }
     }
@@ -101,7 +102,7 @@ export class DraftOrderService implements IDraftOrderService {
             const client = new shopify.api.clients.Graphql({ session });
             const gid = draftOrderId.startsWith("gid://") ? draftOrderId : `gid://shopify/DraftOrder/${draftOrderId}`;
 
-            const response: unknown = await client.request(
+            const response = await client.request<unknown>(
                 `query getDraftOrder($id: ID!) {
                     draftOrder(id: $id) {
                         id
@@ -110,9 +111,11 @@ export class DraftOrderService implements IDraftOrderService {
                 { variables: { id: gid } },
             );
 
-            return !!response.data?.draftOrder;
-        } catch (error) {
-            logger.error("[DraftOrderService] Error checking draft order existence:", error);
+            const data = response.data as { draftOrder?: { id: string } };
+            return !!data?.draftOrder;
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            logger.error(`[DraftOrderService] Error checking draft order existence: ${message}`);
             // If it's a "Not Found" error from Shopify, we can treat it as doesn't exist
             return false;
         }

@@ -83,7 +83,8 @@ export class PlanController extends BaseController {
             const appUrl = await this.planService.handleCallback(shop, charge_id, plan, host);
             return res.redirect(appUrl);
         } catch (error: unknown) {
-            logger.error(`[PlanController] Callback failed: ${error.message}`);
+            const message = error instanceof Error ? error.message : String(error);
+            logger.error(`[PlanController] Callback failed: ${message}`);
 
             // Build safe fallback URL
             const params = new URLSearchParams({ shop: shop || "" });

@@ -45,7 +45,7 @@ export class SettingsService implements ISettingsService {
             if (userErrors && userErrors.length > 0) {
                 if (
                     userErrors.some(
-                        (e: unknown) =>
+                        (e: { code: string; message?: string }) =>
                             e.code === "ALREADY_EXISTS" || e.code === "TAKEN" || e.message?.includes("already exists"),
                     )
                 ) {
@@ -62,7 +62,7 @@ export class SettingsService implements ISettingsService {
         const client = new shopify.api.clients.Graphql({ session });
 
         try {
-            const response = await client.request<unknown>(GET_SETTINGS_QUERY);
+            const response = await client.request<GetSettingsResponse>(GET_SETTINGS_QUERY);
 
             if (!response.data?.shop) {
                 logger.warn("[SettingsService] No shop data returned from getSettings query");
@@ -80,8 +80,9 @@ export class SettingsService implements ISettingsService {
                 const parsedSettings = JSON.parse(configValue);
                 logger.debug("[SettingsService] Retrieved and parsed settings successfully");
                 return { ...SETTINGS_DEFAULTS.DEFAULTS, ...parsedSettings } as ISettings;
-            } catch (e) {
-                logger.error("[SettingsService] Failed to parse settings JSON:", e);
+            } catch (e: unknown) {
+                const message = e instanceof Error ? e.message : String(e);
+                logger.error(`[SettingsService] Failed to parse settings JSON: ${message}`);
                 return SETTINGS_DEFAULTS.DEFAULTS as ISettings;
             }
         } catch (error) {
@@ -135,26 +136,26 @@ export class SettingsService implements ISettingsService {
     }
     async checkAppEmbedStatus(session: Session): Promise<{ isEmbedded: boolean; themeId: string }> {
         try {
-            const themes = await (shopify.api.rest as unknown).Theme.all({
+            const themes = await (shopify.api.rest as unknown as { Theme: { all: (params: { session: Session }) => Promise<{ data: Array<{ role: string; id: number }> }> } }).Theme.all({
                 session: session,
             });
 
-            const mainTheme = themes.data.find((theme: unknown) => theme.role === "main");
+            const mainTheme = themes.data.find((theme: { role: string }) => theme.role === "main");
             if (!mainTheme) {
                 logger.warn("[SettingsService] No main theme found for shop:", session.shop);
                 return { isEmbedded: false, themeId: "" };
             }
 
-            const assets = await (shopify.api.rest as unknown).Asset.all({
+            const assets = await (shopify.api.rest as unknown as { Asset: { all: (params: { session: Session; theme_id: number }) => Promise<{ data: Array<{ key: string }> }> } }).Asset.all({
                 session,
                 theme_id: mainTheme.id,
             });
 
-            const settingsAsset = assets.data.find((a: unknown) => a.key === "config/settings_data.json");
+            const settingsAsset = assets.data.find((a: { key: string }) => a.key === "config/settings_data.json");
             if (!settingsAsset) return { isEmbedded: false, themeId: String(mainTheme.id) };
 
             // Fetch the full content of settings_data.json
-            const fullAsset = await (shopify.api.rest as unknown).Asset.all({
+            const fullAsset = await (shopify.api.rest as unknown as { Asset: { all: (params: { session: Session; theme_id: number; asset: { key: string } }) => Promise<{ data: Array<{ value: string }> }> } }).Asset.all({
                 session,
                 theme_id: mainTheme.id,
                 asset: { key: "config/settings_data.json" },
@@ -168,8 +169,10 @@ export class SettingsService implements ISettingsService {
 
             // Accurate identification of the app embed block
             const isEmbedded = Object.values(blocks).some(
-                (block: unknown) =>
-                    block.type.includes("merchant-quote") && block.type.includes("quote") && block.disabled === false,
+                (block: unknown) => {
+                    const b = block as { type?: string; disabled?: boolean };
+                    return b.type?.includes("merchant-quote") && b.type?.includes("quote") && b.disabled === false;
+                }
             );
 
             return { isEmbedded, themeId: String(mainTheme.id) };

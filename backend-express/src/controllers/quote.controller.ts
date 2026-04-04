@@ -1,7 +1,7 @@
 import { API_MESSAGES, CONTROLLER, HTTP_STATUS } from "@/constants";
 import type { IQuoteService } from "@/interfaces";
 import { QuoteMapper } from "@/mappers/quote.mapper";
-import { TYPES, type IQuote } from "@/types";
+import { TYPES, type IQuote, type QuoteDocument } from "@/types";
 import { logger } from "@/utils/logger";
 import type { Request, Response } from "express";
 import { inject, injectable } from "inversify";
@@ -34,7 +34,7 @@ export class QuoteController extends BaseController {
             return this.ok(
                 res,
                 {
-                    quotes: QuoteMapper.toResponseDtoList(result.data as unknown[]),
+                    quotes: QuoteMapper.toResponseDtoList(result.data as QuoteDocument[]),
                     totalCount: result.total,
                     page: result.page,
                     limit: result.limit,
@@ -121,16 +121,15 @@ export class QuoteController extends BaseController {
 
             let csv = "Date,Customer,Email,Phone,Product,Quantity,Total Price,Status\n";
 
-            for (const quote of quotes) {
-                const q = quote as unknown as IQuote;
-                const dateVal = q.createdAt ? q.createdAt.toLocaleDateString() : "";
-                const customer = `"${((q.customerName as string) || `${(q.firstName as string) || ""} ${(q.lastName as string) || ""}`).trim().replace(/"/g, '""')}"`;
-                const email = `"${((q.email as string) || "").replace(/"/g, '""')}"`;
-                const phone = `"${((q.phone as string) || "").replace(/"/g, '""')}"`;
-                const product = `"${((q.productTitle as string) || "").replace(/"/g, '""')}"`;
-                const quantity = q.quantity?.toString() || "";
-                const totalPrice = q.totalPrice?.toString() || "";
-                const statusVal = q.status || "";
+            for (const quote of quotes as QuoteDocument[]) {
+                const dateVal = quote.createdAt ? quote.createdAt.toLocaleDateString() : "";
+                const customer = `"${((quote.customerName as string) || `${(quote.firstName as string) || ""} ${(quote.lastName as string) || ""}`).trim().replace(/"/g, '""')}"`;
+                const email = `"${((quote.email as string) || "").replace(/"/g, '""')}"`;
+                const phone = `"${((quote.phone as string) || "").replace(/"/g, '""')}"`;
+                const product = `"${((quote.productTitle as string) || "").replace(/"/g, '""')}"`;
+                const quantity = quote.quantity?.toString() || "";
+                const totalPrice = quote.totalPrice?.toString() || "";
+                const statusVal = quote.status || "";
 
                 csv += `${dateVal},${customer},${email},${phone},${product},${quantity},${totalPrice},${statusVal}\n`;
             }

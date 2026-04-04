@@ -1,6 +1,7 @@
-import type { SubscriptionStatus } from "@/constants";
+import { SubscriptionStatus } from "@/constants";
 import type { IPlan, IPlanFeatures, PlanDocument } from "@/types";
 import type { Session } from "@shopify/shopify-api";
+import type { Types } from "mongoose";
 
 export interface IPlanService {
     getPlanByName(name: string): Promise<PlanDocument | null>;
@@ -15,7 +16,7 @@ export interface IPlanService {
     handleCallback(shop: string, charge_id?: string, plan?: string, host?: string): Promise<string>;
     verifyReinstallationBilling(
         session: Session,
-    ): Promise<{ planId?: string | null; subscriptionStatus?: SubscriptionStatus }>;
+    ): Promise<{ planId?: Types.ObjectId; subscriptionStatus?: SubscriptionStatus }>;
     handleSubscriptionUpdate(shop: string, subscriptionId: string): Promise<void>;
     getChargeHistory(session: Session): Promise<unknown>;
 }

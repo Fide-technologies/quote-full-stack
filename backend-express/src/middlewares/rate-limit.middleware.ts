@@ -6,7 +6,7 @@ export const quoteSubmissionLimiter = rateLimit({
     max: 3, // Limit each IP per store to 3 requests per `window` (here, per 1 minute)
     keyGenerator: (req: Request) => {
         // App proxy usually sets shopify.shop or query.shop
-        const shop = (req as unknown).shopify?.shop || req.query?.shop || "unknown";
+        const shop = (req.shopify?.shop || (req.query?.shop as string) || "unknown") as string;
 
         // Shopify proxy headers for actual client IP
         const forwarded =

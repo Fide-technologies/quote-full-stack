@@ -26,7 +26,14 @@ export class AuthController {
             }
 
             const client = new shopify.api.clients.Rest({ session });
-            const shopData: unknown = await client.get({ path: "shop" });
+            interface ShopResponse {
+                shop: {
+                    email: string;
+                    shop_owner: string;
+                    currency: string;
+                };
+            }
+            const shopData = (await client.get({ path: "shop" })) as unknown as { body: ShopResponse };
 
             if (!shopData?.body?.shop) {
                 return res.status(500).send("Failed to fetch shop details from Shopify");
