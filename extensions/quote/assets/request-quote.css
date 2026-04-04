@@ -9,34 +9,9 @@
    Instant Hide: Prevent flash of Add to Cart / Prices 
    These are applied as soon as the stylesheet loads.
 */
-.product-form__buttons,
-.shopify-payment-button,
-.price,
-.product-price,
-.product__price,
-.product-single__price,
-.product-form__item--quantity,
-.quantity,
-[name="add"],
-.product-form__submit,
-.payment-buttons,
-.shopify-payment-button__button--unbranded,
-.product-form__payment-container,
-.price-item,
-.product__tax,
-form[action*="/cart/add"] {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    height: 0 !important;
-    overflow: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
 :root {
-    --rq-primary: #000000;
-    --rq-primary-hover: #333333;
+    --rq-primary: #008060;
+    --rq-primary-hover: #006e52;
     --rq-accent: #6366f1;
     --rq-accent-hover: #4f46e5;
     --rq-success: #10b981;
@@ -49,7 +24,7 @@ form[action*="/cart/add"] {
     --rq-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --rq-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
     --rq-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --rq-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --rq-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* Product Page Native Integration */
@@ -156,7 +131,7 @@ form[action*="/cart/add"] {
     /* Removed uppercase for a more modern feel */
     letter-spacing: 0.02em;
     background-color: var(--rq-primary);
-    color: #ffffff;
+    color: inherit;
     position: relative;
     overflow: hidden;
     box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.15);
