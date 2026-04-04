@@ -1,5 +1,5 @@
-import type { HydratedDocument, Types } from "mongoose";
 import type { SubscriptionStatus } from "@/constants";
+import type { HydratedDocument, Types } from "mongoose";
 
 export interface IMerchantUsage {
     quotesUsed: number;
