@@ -1,20 +1,19 @@
-import { injectable } from "inversify";
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { IUploadService } from "@/interfaces";
-import { env } from "@/validations/env.validation";
 import { logger } from "@/utils/logger";
+import { env } from "@/validations/env.validation";
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { Express } from "express";
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
+import { injectable } from "inversify";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 @injectable()
 export class S3UploadService implements IUploadService {
-
     private s3Client: S3Client | null = null;
     private bucket: string;
 
