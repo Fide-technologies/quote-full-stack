@@ -1,9 +1,9 @@
-import { DeliveryMethod, type WebhookHandler } from "@shopify/shopify-api";
 import { shopify } from "@/config/shopify.config";
-import { logger } from "@/utils/logger";
+import type { IMerchantService } from "@/interfaces";
 import { container } from "@/inversify.config";
 import { TYPES } from "@/types";
-import type { IMerchantService } from "@/interfaces";
+import { logger } from "@/utils/logger";
+import { DeliveryMethod, type WebhookHandler } from "@shopify/shopify-api";
 
 export const uninstallWebhookHandler: WebhookHandler = {
     deliveryMethod: DeliveryMethod.Http,
@@ -11,7 +11,7 @@ export const uninstallWebhookHandler: WebhookHandler = {
     async callback(_topic, shop, _body, webhookId, apiVersion) {
         try {
             logger.info(`Processing APP_UNINSTALLED webhook for shop: ${shop}`);
-            
+
             const merchantService = container.get<IMerchantService>(TYPES.IMerchantService);
             await merchantService.uninstallMerchant(shop);
 
@@ -29,4 +29,3 @@ export const uninstallWebhookHandler: WebhookHandler = {
         }
     },
 };
- 
