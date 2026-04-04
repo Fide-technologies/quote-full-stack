@@ -1,14 +1,14 @@
 import "reflect-metadata";
 import "dotenv/config";
 import { connectDB, disconnectDB } from "../config/mongo-db.config";
+import { PlanAction, PlanType } from "../constants/plan.constants";
 import { Plan } from "../models/plan.model";
-import { PlanType, PlanAction } from "../constants/plan.constants";
 import { logger } from "../utils/logger";
 
 const plans = [
     {
         name: PlanType.FREE,
-        price: 0.00,
+        price: 0.0,
         quoteLimit: 2,
         billingReset: false,
         trialDays: 0,
@@ -16,9 +16,9 @@ const plans = [
             PlanAction.QUOTE_CREATE,
             PlanAction.QUOTE_UPDATE,
             PlanAction.QUOTE_SEND,
-            PlanAction.SETTINGS_UPDATE
+            PlanAction.SETTINGS_UPDATE,
         ],
-        isActive: true
+        isActive: true,
     },
     {
         name: PlanType.PRO,
@@ -34,9 +34,9 @@ const plans = [
             PlanAction.SETTINGS_UPDATE,
             PlanAction.CUSTOM_FORM_BUILDER,
             PlanAction.REMOVE_BRANDING,
-            PlanAction.MERCHANT_EMAIL_NOTIFICATIONS
+            PlanAction.MERCHANT_EMAIL_NOTIFICATIONS,
         ],
-        isActive: true
+        isActive: true,
     },
     {
         name: PlanType.ULTIMATE,
@@ -52,10 +52,10 @@ const plans = [
             PlanAction.SETTINGS_UPDATE,
             PlanAction.CUSTOM_FORM_BUILDER,
             PlanAction.REMOVE_BRANDING,
-            PlanAction.MERCHANT_EMAIL_NOTIFICATIONS
+            PlanAction.MERCHANT_EMAIL_NOTIFICATIONS,
         ],
-        isActive: true
-    }
+        isActive: true,
+    },
 ];
 
 async function seedPlans() {
@@ -70,7 +70,7 @@ async function seedPlans() {
                 existingPlan.permissions = planData.permissions;
                 existingPlan.quoteLimit = planData.quoteLimit;
                 existingPlan.trialDays = planData.trialDays;
-                existingPlan.price = planData.price as any;
+                existingPlan.price = planData.price as unknown;
                 await existingPlan.save();
             } else {
                 logger.info(`Creating new plan: ${planData.name}`);
