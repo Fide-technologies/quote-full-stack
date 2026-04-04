@@ -1,15 +1,13 @@
-import { injectable, inject } from "inversify";
-import type { Request, Response } from "express";
-import { BaseController } from "./base.controller";
-import { TYPES } from "@/types";
-import type { IUploadService } from "@/interfaces";
 import { HTTP_STATUS } from "@/constants";
+import type { IUploadService } from "@/interfaces";
+import { TYPES } from "@/types";
+import type { Request, Response } from "express";
+import { inject, injectable } from "inversify";
+import { BaseController } from "./base.controller";
 
 @injectable()
 export class UploadController extends BaseController {
-    constructor(
-        @inject(TYPES.IUploadService) private readonly uploadService: IUploadService
-    ) {
+    constructor(@inject(TYPES.IUploadService) private readonly uploadService: IUploadService) {
         super();
     }
 
@@ -25,7 +23,7 @@ export class UploadController extends BaseController {
             const keys = await this.uploadService.uploadImages(files);
 
             // Get presigned URLs for each key
-            const urls = await Promise.all(keys.map(key => this.uploadService.getPresignedUrl(key)));
+            const urls = await Promise.all(keys.map((key) => this.uploadService.getPresignedUrl(key)));
 
             return this.ok(res, { urls, keys }, "Images uploaded successfully to S3");
         } catch (error) {
