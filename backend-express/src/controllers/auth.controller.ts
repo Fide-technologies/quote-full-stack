@@ -1,17 +1,17 @@
-import { inject, injectable } from "inversify";
-import { TYPES } from "@/types";
-import { SubscriptionStatus } from "@/constants";
-import type { IPlanService, IMerchantService } from "@/interfaces";
 import { shopify } from "@/config/shopify.config";
+import { SubscriptionStatus } from "@/constants";
+import type { IMerchantService, IPlanService } from "@/interfaces";
+import { TYPES } from "@/types";
 import { logger } from "@/utils/logger";
-import type { Request, Response, NextFunction } from "express";
+import type { NextFunction, Request, Response } from "express";
+import { inject, injectable } from "inversify";
 
 @injectable()
 export class AuthController {
     constructor(
         @inject(TYPES.IMerchantService) private merchantService: IMerchantService,
-        @inject(TYPES.IPlanService) private planService: IPlanService
-    ) { }
+        @inject(TYPES.IPlanService) private planService: IPlanService,
+    ) {}
 
     callbackStore = async (req: Request, res: Response, next: NextFunction) => {
         try {
@@ -26,7 +26,7 @@ export class AuthController {
             }
 
             const client = new shopify.api.clients.Rest({ session });
-            const shopData: any = await client.get({ path: "shop" });
+            const shopData: unknown = await client.get({ path: "shop" });
 
             if (!shopData?.body?.shop) {
                 return res.status(500).send("Failed to fetch shop details from Shopify");
@@ -47,7 +47,7 @@ export class AuthController {
                 currency: shopInfo.currency,
                 isActive: true,
                 installedAt: new Date(),
-                ...billingState
+                ...billingState,
             });
 
             await shopify.api.webhooks.register({ session });
