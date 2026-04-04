@@ -41,7 +41,7 @@ export const FormStep: React.FC<FormStepProps> = ({
         transform: CSS.Transform.toString(transform),
         transition,
         zIndex: isDragging ? 999 : 1,
-        position: isDragging ? 'relative' : 'static' as any,
+        position: (isDragging ? 'relative' : 'static') as "relative" | "static",
     };
 
     return (
