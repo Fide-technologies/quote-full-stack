@@ -93,4 +93,26 @@ export class DraftOrderService implements IDraftOrderService {
             throw error;
         }
     }
+
+    async checkDraftOrderExists(session: Session, draftOrderId: string): Promise<boolean> {
+        try {
+            const client = new shopify.api.clients.Graphql({ session });
+            const gid = draftOrderId.startsWith('gid://') ? draftOrderId : `gid://shopify/DraftOrder/${draftOrderId}`;
+            
+            const response: any = await client.request(
+                `query getDraftOrder($id: ID!) {
+                    draftOrder(id: $id) {
+                        id
+                    }
+                }`,
+                { variables: { id: gid } }
+            );
+
+            return !!response.data?.draftOrder;
+        } catch (error) {
+            logger.error(`[DraftOrderService] Error checking draft order existence:`, error);
+            // If it's a "Not Found" error from Shopify, we can treat it as doesn't exist
+            return false;
+        }
+    }
 }

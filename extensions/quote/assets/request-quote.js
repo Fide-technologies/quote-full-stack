@@ -1,13 +1,40 @@
 (function () {
     const SETTINGS = window.rqGlobalSettings || {
         buttonText: 'Add to Quote',
-        buttonColor: '#000000'
+        buttonColor: '#008060',
+        buttonTextColor: '#FFFFFF',
+        hideAddToCart: true,
+        hideBuyNow: false,
+        placementLocation: 'above'
     };
 
 
     window.rqOpenModal = async function (blockId) {
         const modal = document.getElementById(`rqModal-${blockId}`);
         if (!modal) return;
+
+        // Default: not bulk unless specified (handled by opener, but just in case)
+        if (!modal.dataset.isBulk || modal.dataset.isBulk === 'undefined') {
+            modal.dataset.isBulk = 'false';
+        }
+
+        // If it's a single product (not bulk) and we're on a product page, 
+        // try to populate it even if Liquid didn't (e.g., global embed on product page)
+        if (modal.dataset.isBulk === 'false') {
+            const handleMatch = window.location.pathname.match(/\/products\/([^\/\?]+)/);
+            if (handleMatch) {
+                const handle = handleMatch[1];
+                try {
+                    const product = await window.RqApi.fetchProduct(handle);
+                    if (product && window.RqUi.populateHiddenFields) {
+                        window.RqUi.populateHiddenFields(modal, product);
+                        window.RqUi.showProductSummary(modal, product);
+                    }
+                } catch (e) {
+                    console.error("Failed to populate modal for product:", e);
+                }
+            }
+        }
 
         // Check if the form is already loaded so we don't fetch it every time
         if (modal.dataset.formLoaded !== 'true') {
@@ -21,6 +48,7 @@
                 const shop = window.Shopify ? window.Shopify.shop : window.location.hostname;
                 const formConfig = await window.RqApi.fetchFormConfig(shop);
                 if (formConfig && formConfig.steps) {
+                    window._rqFormConfig = formConfig;
                     window.RqUi.buildDynamicForm(blockId, formConfig);
                     modal.dataset.formLoaded = 'true';
                 } else {
@@ -88,7 +116,7 @@
         }
     };
 
-    window.rqOpenQuoteFormFromCart = function () {
+    window.rqOpenQuoteFormFromCart = async function () {
         const cart = window.RqCart.getCart();
         if (cart.length === 0) {
             alert('Your quote cart is empty.');
@@ -105,61 +133,173 @@
         window.RqCart.closeCart();
         window.RqUi.showBulkSummary(modal, cart);
 
-        // This will also handle fetching/building the dynamic form if not loaded yet
-        window.rqOpenModal(blockId);
+        // Mark as bulk BEFORE opening or right after
+        modal.dataset.isBulk = 'true';
 
-        // Mark this as a bulk submission
+        // This will also handle fetching/building the dynamic form if not loaded yet
+        await window.rqOpenModal(blockId);
+
+        // Re-ensure bulk remains true after potential reset inside openModal (safety)
         modal.dataset.isBulk = 'true';
     };
 
-    function rqPopulateReviewStep(blockId) {
-        // Collect all inputs from the dynamic form up to the review step
-        const formContainer = document.getElementById(`rq-dynamic-form-${blockId}`);
-        if (!formContainer) return;
-
-        const getVal = (id) => document.getElementById(id + blockId)?.value || '';
-        const setText = (id, text) => {
-            const el = document.getElementById(id + blockId);
-            if (el) el.innerText = text;
-        };
-
-        // Standard Contact Info (if available in form)
-        const fname = getVal('rq-fname-');
-        const lname = getVal('rq-lname-');
-        const email = getVal('rq-email-');
-        const phone = getVal('rq-phone-');
-        if (fname || lname || email || phone) {
-            setText('rq-review-contact-', `${fname} ${lname}\n${email}\n${phone}`);
-        } else {
-            setText('rq-review-contact-', 'N/A');
+    function resizeImage(url, size) {
+        if (!url || typeof url !== 'string') return url || '';
+        if (url.includes('cdn.shopify.com')) {
+            const separator = url.includes('?') ? '&' : '?';
+            return `${url}${separator}width=${size}`;
         }
-
-        // Standard Address
-        const addr1 = getVal('rq-address1-');
-        const addr2 = getVal('rq-address2-');
-        const city = getVal('rq-city-');
-        const dist = getVal('rq-district-');
-        const state = getVal('rq-state-');
-        const pin = getVal('rq-pincode-');
-
-        if (addr1 || city || state || dist || pin) {
-            let addressText = addr1;
-            if (addr2) addressText += `\n${addr2}`;
-            addressText += `\n${city}, ${dist}\n${state} - ${pin}`;
-            setText('rq-review-address-', addressText);
-        } else {
-            setText('rq-review-address-', 'N/A');
-        }
-
-        // Standard Message
-        const msg = getVal('rq-message-');
-        setText('rq-review-message-', msg || '(No message included)');
-
-        // Note: A truly dynamic review step would iterate all non-system fields and append them.
-        // But for this initial version, rendering standard mapped fields is the minimum requirement.
+        return url;
     }
 
-    window.rqNextStep = function (blockId, currentStep) {
+    async function rqPopulateReviewStep(blockId) {
+        const modal = document.getElementById(`rqModal-${blockId}`);
+        const setHtml = (id, html) => {
+            const el = document.getElementById(id + blockId);
+            if (el) el.innerHTML = html;
+        };
+
+        // 1. Items Review Section
+        const isBulk = modal?.dataset.isBulk === 'true';
+        if (isBulk && window.RqCart) {
+            const cart = window.RqCart.getCart();
+            let itemsHtml = '<div class="rq-review-items-card">';
+            let total = 0;
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                itemsHtml += `
+                    <div class="rq-review-item-row">
+                        <img src="${resizeImage(item.featured_image, 120)}">
+                        <div style="flex: 1; margin: 0 16px;">
+                            <div style="font-weight: 700; font-size: 15px; color: #1a1a1b; margin-bottom: 2px;">${item.title}</div>
+                            <div style="font-size: 13px; color: #6d7175;">${item.variantTitle !== 'Default Title' ? item.variantTitle : ''}</div>
+                        </div>
+                        <div style="text-align: right; flex-shrink: 0;">
+                            <div style="font-size: 14px; font-weight: 700; color: #1a1a1b;">× ${item.quantity}</div>
+                            <div style="font-size: 14px; color: #6366f1; font-weight: 700;">${window.RqCart.formatPrice(item.price)}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            itemsHtml += `
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 2px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 800; font-size: 16px; color: #1a1a1b;">Total Estimate</span>
+                    <span style="font-weight: 800; font-size: 20px; color: #6366f1;">${window.RqCart.formatPrice(total)}</span>
+                </div>
+            `;
+            itemsHtml += '</div>';
+            setHtml('rq-review-items-', itemsHtml);
+        } else {
+            const form = document.getElementById(`rq-form-${blockId}`);
+            if (form) {
+                const title = form.querySelector('[name="productTitle"]')?.value;
+                const price = parseFloat(form.querySelector('[name="price"]')?.value) || 0;
+                const qty = parseInt(form.querySelector('[name="quantity"]')?.value) || 1;
+                const vTitle = form.querySelector('[name="variantTitle"]')?.value;
+                const img = form.querySelector('[name="productImage"]')?.value;
+                const total = price * qty;
+
+                let itemsHtml = `
+                    <div class="rq-review-items-card">
+                        <div class="rq-review-item-row">
+                            <img src="${resizeImage(img, 120)}">
+                            <div style="flex: 1; margin: 0 16px;">
+                                <div style="font-weight: 700; font-size: 16px; color: #1a1a1b; margin-bottom: 2px;">${title}</div>
+                                <div style="font-size: 14px; color: #6d7175;">${vTitle !== 'Default Title' ? vTitle : ''}</div>
+                            </div>
+                            <div style="text-align: right; flex-shrink: 0;">
+                                <div style="font-size: 15px; font-weight: 700; color: #1a1a1b;">× ${qty}</div>
+                                <div style="font-size: 15px; color: #6366f1; font-weight: 700;">${window.RqCart.formatPrice(price * 100)}</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 16px; padding-top: 16px; border-top: 2px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 800; font-size: 16px; color: #1a1a1b;">Total Estimate</span>
+                            <span style="font-weight: 800; font-size: 20px; color: #6366f1;">${window.RqCart.formatPrice(total * 100)}</span>
+                        </div>
+                    </div>
+                `;
+                setHtml('rq-review-items-', itemsHtml);
+            }
+        }
+
+        // 2. Dynamic Field Population
+        const customFieldsContainer = document.getElementById(`rq-review-custom-fields-${blockId}`);
+        if (customFieldsContainer && window._rqFormConfig) {
+            let customHtml = '';
+
+            // Use for...of to handle await inside
+            for (const step of window._rqFormConfig.steps) {
+                if (step.id === 'step-review') continue;
+
+                let stepFieldsHtml = '';
+                let hasValue = false;
+
+                for (const field of step.fields) {
+                    const fieldName = field.id.replace('field-', '');
+                    const inputEl = document.getElementById(`rq-${fieldName}-${blockId}`);
+                    let displayValue = '';
+
+                    if (field.type === 'file') {
+                        const files = inputEl?._rq_files || (inputEl?.files ? Array.from(inputEl.files) : []);
+                        if (files.length > 0) {
+                            const fileDataUrls = await Promise.all(files.map(file => {
+                                return new Promise((resolve) => {
+                                    const reader = new FileReader();
+                                    reader.onload = (e) => resolve(e.target.result);
+                                    reader.onerror = () => resolve(null);
+                                    reader.readAsDataURL(file);
+                                });
+                            }));
+
+                            displayValue = '<div class="rq-review-image-grid">';
+                            fileDataUrls.forEach(url => {
+                                if (url) {
+                                    displayValue += `<div class="rq-review-image-item"><img src="${url}"></div>`;
+                                }
+                            });
+                            displayValue += '</div>';
+                        }
+                    } else if (inputEl) {
+                        displayValue = inputEl.value.trim();
+                    }
+
+                    if (displayValue) {
+                        hasValue = true;
+                        stepFieldsHtml += `
+                            <div class="rq-review-card">
+                                <div class="rq-card-header">
+                                    <h4>${field.label}</h4>
+                                </div>
+                                <div class="rq-card-content">
+                                    <div class="${field.type === 'file' ? 'rq-review-files' : 'rq-review-text'}">${displayValue}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+
+                if (hasValue) {
+                    customHtml += `
+                        <div class="rq-review-section-header">
+                            ${step.title}
+                        </div>
+                        <div class="rq-review-grid">${stepFieldsHtml}</div>
+                    `;
+                }
+            }
+
+            customFieldsContainer.innerHTML = customHtml;
+        }
+
+        // 3. Hide legacy fallback sections as they are now handled dynamically
+        const oldGrid = document.querySelector(`#rqModal-${blockId} .rq-review-grid`);
+        if (oldGrid && oldGrid.id !== 'dynamic-grid') { // safety
+            // oldGrid.style.display = 'none'; // We could hide them, but let's just leave the dynamic content to be the main source
+        }
+    }
+
+    window.rqNextStep = async function (blockId, currentStep) {
         let isValid = false;
         if (window.RqValidation && window.RqValidation.validateStep) {
             isValid = window.RqValidation.validateStep(blockId, currentStep);
@@ -175,7 +315,7 @@
             // If the next step is the last step (Review), populate it
             const isReviewStep = nextStepContainer.querySelector('.rq-review-container') !== null;
             if (isReviewStep) {
-                rqPopulateReviewStep(blockId);
+                await rqPopulateReviewStep(blockId);
             }
 
             document.getElementById('rq-step-' + currentStep + '-' + blockId).classList.remove('active');
@@ -302,6 +442,7 @@
         btn.innerText = SETTINGS.buttonText;
         btn.style.setProperty('--rq-primary', SETTINGS.buttonColor);
         btn.style.setProperty('--rq-primary-hover', SETTINGS.buttonColor);
+        btn.style.color = SETTINGS.buttonTextColor;
 
         btn.onclick = (e) => {
             e.preventDefault();
@@ -311,9 +452,9 @@
         return btn;
     }
 
-
-
     function scanAndInject() {
+        if (!SETTINGS.appEnabled || SETTINGS.shouldShow === false) return;
+        
         const productBlockExists = !!document.querySelector('.rq-product-page-form');
         const isProductPage = window.location.pathname.includes('/products/') || productBlockExists;
 
@@ -344,21 +485,42 @@
             }
 
             if (handle) {
-                hideElement(form);
+                // 1. Hide Standard Buttons and Quantity based on settings
+                if (SETTINGS.hideAddToCart) {
+                    const selectors = [
+                        '[name="add"]', '.product-form__submit', '.add-to-cart', '.btn--add-to-cart', '[data-add-to-cart]',
+                        '.quantity', '.product-form__input--quantity', '.product-form__item--quantity', '[name="quantity"]', '.qty-wrapper', '.product-form__quantity',
+                        '.quantity-selector-wrapper', 'quantity-selector-component', '.quantity-selector', '.quantity__input'
+                    ];
+                    selectors.forEach(selector => {
+                        form.querySelectorAll(selector).forEach(hideElement);
+                    });
 
-                // Identify the best container to search for prices
-                // On product pages, we search a broader area (the section) because prices are often not near the form
-                const container = isProductPage
-                    ? (form.closest('.shopify-section, section, .product-grid, main') || form.parentNode)
-                    : (card || form.parentNode);
+                    // Identify the best container to search for prices
+                    const container = isProductPage
+                        ? (form.closest('.shopify-section, section, .product-grid, main') || form.parentNode)
+                        : (card || form.parentNode);
 
-                if (container) {
-                    const priceSelectors = '.price, .money, .product-price, .product__price, .price__regular, .price__sale, .regular-price, .product-item__price, .product-single__price, .price-item';
-                    container.querySelectorAll(priceSelectors).forEach(hideElement);
+                    if (container) {
+                        const priceSelectors = '.price, .money, .product-price, .product__price, .price__regular, .price__sale, .regular-price, .product-item__price, .product-single__price, .price-item';
+                        container.querySelectorAll(priceSelectors).forEach(hideElement);
+                    }
                 }
 
-                // Only inject the Quote button on actual Product detail pages
-                // AND ensure it's not in a "recommendations" or "suggested" section
+        // 2. Hide Buy It Now / Dynamic Checkout
+        if (SETTINGS.hideBuyNow) {
+            const buyNowSelectors = [
+                '.shopify-payment-button',
+                '.shopify-payment-button__button--unbranded',
+                '.payment-buttons',
+                '.product-form__payment-container'
+            ];
+            buyNowSelectors.forEach(selector => {
+                document.querySelectorAll(selector).forEach(hideElement);
+            });
+        }
+
+                // 3. Inject Quote Button with specific placement
                 const isRecommendation = form.closest('.product-recommendations, .related-products, .recommendations, .up-sell, .cross-sell, .complementary-products, .suggested-products, [class*="recommendation"], [class*="related-"]');
 
                 if (isProductPage && !isRecommendation) {
@@ -366,7 +528,14 @@
                     if (card && hasQuoteBtn(card)) return;
 
                     const btn = createQuoteButton(handle);
-                    form.parentNode.insertBefore(btn, form);
+                    
+                    if (SETTINGS.placementLocation === 'below') {
+                        // After the form
+                        form.parentNode.insertBefore(btn, form.nextSibling);
+                    } else {
+                        // Before the form (default)
+                        form.parentNode.insertBefore(btn, form);
+                    }
                 }
 
                 form.dataset.rqProcessed = 'true';
@@ -375,8 +544,23 @@
     }
 
     window.rqScanAndInject = scanAndInject;
-    window.addEventListener('load', scanAndInject);
-    const observer = new MutationObserver((mutations) => scanAndInject());
+    window.addEventListener('load', () => {
+        scanAndInject();
+        // Dynamic Checkout Catch-up Polling
+        if (SETTINGS.appEnabled && SETTINGS.shouldShow !== false && SETTINGS.hideBuyNow) {
+            let count = 0;
+            const interval = setInterval(() => {
+                scanAndInject();
+                if (++count >= 10) clearInterval(interval);
+            }, 300);
+        }
+    });
+
+    const observer = new MutationObserver((mutations) => {
+        // Only run scan if children changed or dynamically injected buttons might be present
+        scanAndInject();
+    });
+
     observer.observe(document.body, { childList: true, subtree: true });
     scanAndInject();
     window.rqInitialized = true;

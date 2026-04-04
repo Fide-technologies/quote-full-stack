@@ -1,125 +1,146 @@
 <div id="rqModal-{{ block_id }}" class="rq-modal" aria-hidden="true" role="dialog">
-    <div id="rq-app-root-{{ block_id }}" data-shop="{{ shop.permanent_domain }}" style="display:none;"></div>
-    <div class="rq-modal-overlay" onclick="rqCloseModal('{{ block_id }}')"></div>
-    <div class="rq-modal-content">
-        <button class="rq-modal-close" onclick="rqCloseModal('{{ block_id }}')" aria-label="Close Modal">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </button>
+  <div id="rq-app-root-{{ block_id }}" data-shop="{{ shop.permanent_domain }}" style="display:none;"></div>
+  <div class="rq-modal-overlay" onclick="rqCloseModal('{{ block_id }}')"></div>
+  <div class="rq-modal-content">
+    <button class="rq-modal-close" onclick="rqCloseModal('{{ block_id }}')" aria-label="Close Modal">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
 
-        <div class="rq-form-container">
-            <div class="rq-progress-wrapper">
-                <div class="rq-progress-steps">
-                    <div class="rq-progress-step active" data-step="1">
-                        <div class="rq-progress-circle">
-                            <span>1</span>
-                            <svg class="rq-progress-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M20 6L9 17L4 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <span class="rq-progress-label">Contact</span>
-                    </div>
-                    <div class="rq-progress-line"></div>
-                    <div class="rq-progress-step" data-step="2">
-                        <div class="rq-progress-circle">
-                            <span>2</span>
-                            <svg class="rq-progress-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M20 6L9 17L4 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <span class="rq-progress-label">Address</span>
-                    </div>
-                    <div class="rq-progress-line"></div>
-                    <div class="rq-progress-step" data-step="3">
-                        <div class="rq-progress-circle">
-                            <span>3</span>
-                            <svg class="rq-progress-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M20 6L9 17L4 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <span class="rq-progress-label">Details</span>
-                    </div>
-                    <div class="rq-progress-line"></div>
-                    <div class="rq-progress-step" data-step="4">
-                        <div class="rq-progress-circle">
-                            <span>4</span>
-                            <svg class="rq-progress-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M20 6L9 17L4 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                        <span class="rq-progress-label">Review</span>
-                    </div>
-                </div>
+    <div class="rq-form-container">
+      <div class="rq-progress-wrapper">
+        <div class="rq-progress-steps">
+          <div class="rq-progress-step active" data-step="1">
+            <div class="rq-progress-circle">
+              <span>1</span>
+              <svg class="rq-progress-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 6L9 17L4 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             </div>
-
-            <div class="rq-form-header">
-                <h2>Submit Your Quote Request</h2>
-                <p>Fill in your details and we'll get back to you shortly</p>
+            <span class="rq-progress-label">Contact</span>
+          </div>
+          <div class="rq-progress-line"></div>
+          <div class="rq-progress-step" data-step="2">
+            <div class="rq-progress-circle">
+              <span>2</span>
+              <svg class="rq-progress-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 6L9 17L4 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             </div>
-
-
-
-            <form id="rq-form-{{ block_id }}" onsubmit="event.preventDefault();" class="rq-form">
-                <input type="hidden" name="productId" value="{{ product.id }}">
-                <input type="hidden" name="variantId" value="{{ product.selected_or_first_available_variant.id }}">
-                <input type="hidden" name="productTitle" value="{{ product.title }}">
-                <input type="hidden" name="variantTitle" value="{{ product.selected_or_first_available_variant.title }}">
-                <input type="hidden" name="productUrl" value="{{ shop.url }}{{ product.url }}">
-                <input type="hidden" name="productImage" value="{{ product.featured_image | image_url: width: 200 }}">
-                <input type="hidden" name="price" value="{{ product.selected_or_first_available_variant.price | divided_by: 100.0 }}">
-
-                <div id="rq-step-input-{{ block_id }}">
-                    
-                    <div class="rq-product-hero">
-                        {% if product %}
-                        <div class="rq-product-summary">
-                            {% if product.featured_image %}
-                                <img src="{{ product.featured_image | image_url: width: 80 }}" alt="{{ product.title }}" width="60" height="60">
-                            {% endif %}
-                            <div class="rq-product-info">
-                                <span class="rq-product-title">{{ product.title }}</span>
-                                {% unless product.has_only_default_variant %}
-                                    <span class="rq-product-variant">{{ product.selected_or_first_available_variant.title }}</span>
-                                {% endunless %}
-                            </div>
-                        </div>
-                        {% endif %}
-    
-                        <div class="rq-quantity-container">
-                            <label for="rq-qty-{{ block_id }}">Quantity</label>
-                            <div class="rq-qty-control-group">
-                                 <button type="button" class="rq-qty-adjust minus" onclick="rqAdjustQty('{{ block_id }}', -1)">
-                                    <svg width="12" height="2" viewBox="0 0 12 2" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 1H12" stroke="currentColor" stroke-width="2"/></svg>
-                                 </button>
-                                 <input type="number" name="quantity" id="rq-qty-{{ block_id }}" value="1" min="1" onchange="if(this.value < 1) this.value = 1;">
-                                 <button type="button" class="rq-qty-adjust plus" onclick="rqAdjustQty('{{ block_id }}', 1)">
-                                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 0V12M0 6H12" stroke="currentColor" stroke-width="2"/></svg>
-                                 </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="rq-dynamic-form-{{ block_id }}">
-                        <!-- Form steps will be injected here dynamically by rq-ui.js -->
-                    </div>
-                </div>
-
-                <div id="rq-step-success-{{ block_id }}" class="rq-success-screen">
-                    <div class="rq-success-icon">
-                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="12" cy="12" r="10" stroke="#10b981" stroke-width="2"/>
-                            <path d="M9 12l2 2 4-4" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <h2>Quote Requested Successfully!</h2>
-                    <p>Thank you for your request. Our team will review your quote and get back to you shortly.</p>
-                    <button type="button" onclick="rqResetAndClose('{{ block_id }}')" class="rq-submit-btn">
-                        Continue Shopping
-                    </button>
-                </div>
-            </form>
+            <span class="rq-progress-label">Address</span>
+          </div>
+          <div class="rq-progress-line"></div>
+          <div class="rq-progress-step" data-step="3">
+            <div class="rq-progress-circle">
+              <span>3</span>
+              <svg class="rq-progress-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 6L9 17L4 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <span class="rq-progress-label">Details</span>
+          </div>
+          <div class="rq-progress-line"></div>
+          <div class="rq-progress-step" data-step="4">
+            <div class="rq-progress-circle">
+              <span>4</span>
+              <svg class="rq-progress-check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 6L9 17L4 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <span class="rq-progress-label">Review</span>
+          </div>
         </div>
+      </div>
+
+      <div class="rq-form-header">
+        <h2>Submit Your Quote Request</h2>
+        <p>Fill in your details and we'll get back to you shortly</p>
+      </div>
+
+      <form id="rq-form-{{ block_id }}" onsubmit="event.preventDefault();" class="rq-form">
+        <input type="hidden" name="productId" value="{{ product.id }}">
+        <input type="hidden" name="variantId" value="{{ product.selected_or_first_available_variant.id }}">
+        <input type="hidden" name="productTitle" value="{{ product.title }}">
+        <input type="hidden" name="variantTitle" value="{{ product.selected_or_first_available_variant.title }}">
+        <input type="hidden" name="productUrl" value="{{ shop.url }}{{ product.url }}">
+        <input
+          type="hidden"
+          name="productImage"
+          value="{% if product.featured_image %}{{ product.featured_image | image_url: width: 200 }}{% endif %}"
+        >
+        <input
+          type="hidden"
+          name="price"
+          value="{{ product.selected_or_first_available_variant.price | divided_by: 100.0 }}"
+        >
+
+        <div id="rq-step-input-{{ block_id }}">
+          <div class="rq-product-hero">
+            {% if product %}
+              <div class="rq-product-summary">
+                {% if product.featured_image %}
+                  <img
+                    src="{{ product.featured_image | image_url: width: 80 }}"
+                    alt="{{ product.title }}"
+                    width="60"
+                    height="60"
+                  >
+                {% endif %}
+                <div class="rq-product-info">
+                  <span class="rq-product-title">{{ product.title }}</span>
+                  {% unless product.has_only_default_variant %}
+                    <span class="rq-product-variant">{{ product.selected_or_first_available_variant.title }}</span>
+                  {% endunless %}
+                </div>
+              </div>
+            {% endif %}
+
+            <div class="rq-quantity-container">
+              <label for="rq-qty-{{ block_id }}">Quantity</label>
+              <div class="rq-qty-control-group">
+                <button type="button" class="rq-qty-adjust minus" onclick="rqAdjustQty('{{ block_id }}', -1)">
+                  <svg width="12" height="2" viewBox="0 0 12 2" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 1H12" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                </button>
+                <input
+                  type="number"
+                  name="quantity"
+                  id="rq-qty-{{ block_id }}"
+                  value="1"
+                  min="1"
+                  onchange="if(this.value < 1) this.value = 1;"
+                >
+                <button type="button" class="rq-qty-adjust plus" onclick="rqAdjustQty('{{ block_id }}', 1)">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 0V12M0 6H12" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="rq-dynamic-form-{{ block_id }}">
+            <!-- Form steps will be injected here dynamically by rq-ui.js -->
+          </div>
+        </div>
+
+        <div id="rq-step-success-{{ block_id }}" class="rq-success-screen">
+          <div class="rq-success-icon">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="#10b981" stroke-width="2"/>
+              <path d="M9 12l2 2 4-4" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h2>Quote Requested Successfully!</h2>
+          <p>Thank you for your request. Our team will review your quote and get back to you shortly.</p>
+          <button type="button" onclick="rqResetAndClose('{{ block_id }}')" class="rq-submit-btn">
+            Continue Shopping
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
 </div>

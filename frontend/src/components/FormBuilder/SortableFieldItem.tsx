@@ -1,9 +1,9 @@
 import React from 'react';
 import {
     Box, InlineStack, Icon, TextField, Select, Checkbox,
-    Tooltip, Button, Badge, Divider, BlockStack, Text, ChoiceList
+    Tooltip, Button, Badge, Divider, BlockStack, Text, ChoiceList, Collapsible
 } from '@shopify/polaris';
-import { DragHandleIcon, DeleteIcon } from '@shopify/polaris-icons';
+import { DragHandleIcon, DeleteIcon, ChevronDownIcon, ChevronUpIcon } from '@shopify/polaris-icons';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { IForm, IFormField } from '../../api/forms';
@@ -17,7 +17,8 @@ const fieldTypes = [
     { label: 'Dropdown', value: 'select' },
     { label: 'Radio Buttons', value: 'radio' },
     { label: 'Checkboxes', value: 'checkbox' },
-    { label: 'File Upload', value: 'file' }
+    { label: 'File Upload', value: 'file' },
+    { label: 'Price (Propose)', value: 'price' }
 ];
 
 const regexOptions = [
@@ -33,9 +34,10 @@ interface SortableFieldProps {
     stepIdx: number;
     formState: IForm;
     setFormState: React.Dispatch<React.SetStateAction<IForm | null>>;
+    readOnly?: boolean;
 }
 
-export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setFormState }: SortableFieldProps) {
+export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setFormState, readOnly = false }: SortableFieldProps) {
     const {
         attributes,
         listeners,
@@ -43,7 +45,8 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
         transform,
         transition,
         isDragging
-    } = useSortable({ id: field.id, disabled: field.isSystem });
+    } = useSortable({ id: field.id, disabled: field.isSystem || readOnly });
+    const [isExpanded, setIsExpanded] = React.useState(false);
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -52,28 +55,34 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
         position: isDragging ? 'relative' : 'static' as any,
     };
 
-    const updateFieldLabel = (val: string) => {
-        const updated = { ...formState, steps: [...formState.steps] };
-        updated.steps[stepIdx].fields[fieldIdx].label = val;
-        setFormState(updated);
-    };
+    // Auto-fix system fields to be required if they aren't
+    React.useEffect(() => {
+        if (field.isSystem && !field.required && formState) {
+            updateFieldRequired(true);
+        }
+    }, [field.isSystem, field.required]);
 
-    const updateFieldType = (val: string) => {
-        const updated = { ...formState, steps: [...formState.steps] };
-        updated.steps[stepIdx].fields[fieldIdx].type = val;
-        setFormState(updated);
-    };
+    const updateFieldLabel = (val: string) => updateFieldProperty('label', val);
 
-    const updateFieldRequired = (checked: boolean) => {
-        const updated = { ...formState, steps: [...formState.steps] };
-        updated.steps[stepIdx].fields[fieldIdx].required = checked;
-        setFormState(updated);
-    };
+    const updateFieldType = (val: string) => updateFieldProperty('type', val);
+
+    const updateFieldRequired = (checked: boolean) => updateFieldProperty('required', checked);
 
     const updateFieldProperty = (prop: keyof IFormField, value: any) => {
-        const updated = { ...formState, steps: [...formState.steps] };
-        (updated.steps[stepIdx].fields[fieldIdx] as any)[prop] = value;
-        setFormState(updated);
+        if (!formState) return;
+        
+        const updatedSteps = [...formState.steps];
+        const updatedFields = [...updatedSteps[stepIdx].fields];
+        updatedFields[fieldIdx] = { 
+            ...updatedFields[fieldIdx], 
+            [prop]: value 
+        };
+        updatedSteps[stepIdx].fields = updatedFields;
+        
+        setFormState({ 
+            ...formState, 
+            steps: updatedSteps 
+        });
     };
 
     const removeField = () => {
@@ -86,14 +95,14 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
         <div ref={setNodeRef} style={style}>
             <Box
                 background={field.isSystem ? "bg-surface-secondary" : "bg-surface"}
-                padding="300"
+                padding="150"
                 borderRadius="200"
                 borderColor="border"
                 borderWidth="025"
                 shadow={isDragging ? '400' : '100'}
             >
-                <InlineStack align="start" blockAlign="center" gap="400" wrap={false}>
-                    {field.isSystem ? (
+                <InlineStack align="start" blockAlign="center" gap="200" wrap={false}>
+                    {field.isSystem || readOnly ? (
                         <div className="p-1 opacity-30 cursor-not-allowed">
                             <Icon source={DragHandleIcon} tone="base" />
                         </div>
@@ -110,7 +119,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                             value={field.label}
                             onChange={updateFieldLabel}
                             autoComplete="off"
-                            disabled={field.isSystem}
+                            disabled={readOnly}
                         />
                     </div>
 
@@ -121,7 +130,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                             options={fieldTypes}
                             value={field.type}
                             onChange={updateFieldType}
-                            disabled={field.isSystem}
+                            disabled={field.isSystem || readOnly}
                         />
                     </div>
 
@@ -135,42 +144,56 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                             ]}
                             value={field.layoutWidth || 'full'}
                             onChange={(val) => updateFieldProperty('layoutWidth', val)}
+                            disabled={readOnly}
                         />
                     </div>
 
-                    <div className="flex items-center w-[100px]">
+                    <div className="flex items-center min-w-[90px]">
                         <Checkbox
                             label="Required"
-                            checked={field.required}
+                            checked={field.required || field.isSystem}
                             onChange={updateFieldRequired}
-                            disabled={field.isSystem && field.required}
+                            disabled={field.isSystem || readOnly}
                         />
                     </div>
 
-                    {field.isSystem ? (
-                        <div className="min-w-[85px] flex justify-center">
-                            <Badge tone="info">System</Badge>
-                        </div>
-                    ) : (
-                        <div className="min-w-[85px] flex justify-center">
-                            <Tooltip content="Remove field">
-                                <Button variant="plain" tone="critical" icon={DeleteIcon} onClick={removeField} accessibilityLabel="Remove field" />
-                            </Tooltip>
-                        </div>
-                    )}
+                    <div className="flex gap-2">
+                        <Button
+                            variant="plain"
+                            icon={isExpanded ? ChevronUpIcon : ChevronDownIcon}
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            accessibilityLabel="Toggle advanced settings"
+                        />
+                        {field.isSystem || readOnly ? (
+                            <div className="min-w-[85px] flex justify-center">
+                                <Badge tone="info">{field.isSystem ? 'System' : 'Read Only'}</Badge>
+                            </div>
+                        ) : (
+                            <div className="min-w-[85px] flex justify-center">
+                                <Tooltip content="Remove field">
+                                    <Button variant="plain" tone="critical" icon={DeleteIcon} onClick={removeField} accessibilityLabel="Remove field" />
+                                </Tooltip>
+                            </div>
+                        )}
+                    </div>
                 </InlineStack>
 
                 {/* Advanced Validation & Layout Configuration Box */}
-                {!field.isSystem && (
+                <Collapsible
+                    open={isExpanded}
+                    id={`field-collapsible-${field.id}`}
+                    transition={{ duration: '500ms', timingFunction: 'ease-in-out' }}
+                >
                     <Box paddingBlockStart="400">
                         <Divider />
                         <Box paddingBlockStart="300">
+                             {/* ... same content ... */}
                             <BlockStack gap="400">
                                 <Text variant="bodyMd" as="h4" tone="subdued">Advanced Settings</Text>
 
                                 <InlineStack gap="400">
 
-                                    {(field.type === 'text' || field.type === 'textarea') && (
+                                    {['text', 'textarea', 'number', 'phone', 'price', 'email'].includes(field.type) && (
                                         <>
                                             <div className="flex-1">
                                                 <TextField
@@ -179,6 +202,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                                     value={field.minLength?.toString() || ''}
                                                     onChange={(val) => updateFieldProperty('minLength', val ? parseInt(val) : undefined)}
                                                     autoComplete="off"
+                                                    disabled={readOnly}
                                                 />
                                             </div>
                                             <div className="flex-1">
@@ -188,18 +212,20 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                                     value={field.maxLength?.toString() || ''}
                                                     onChange={(val) => updateFieldProperty('maxLength', val ? parseInt(val) : undefined)}
                                                     autoComplete="off"
+                                                    disabled={readOnly}
                                                 />
                                             </div>
                                         </>
                                     )}
 
-                                    {field.type === 'text' && (
+                                    {['text', 'number', 'phone', 'price', 'email'].includes(field.type) && (
                                         <div className="flex-[2]">
                                             <Select
                                                 label="Validation Rule (Regex)"
                                                 options={regexOptions}
                                                 value={field.validationRegex || ''}
                                                 onChange={(val) => updateFieldProperty('validationRegex', val)}
+                                                disabled={readOnly}
                                             />
                                         </div>
                                     )}
@@ -217,6 +243,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                                             ]}
                                                             value={field.allowMultiple ? 'multiple' : 'single'}
                                                             onChange={(val) => updateFieldProperty('allowMultiple', val === 'multiple')}
+                                                            disabled={readOnly}
                                                         />
                                                     </div>
                                                     <div className="flex-1">
@@ -226,6 +253,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                                             value={field.maxFileSizeMB?.toString() || ''}
                                                             onChange={(val) => updateFieldProperty('maxFileSizeMB', val ? parseInt(val) : undefined)}
                                                             autoComplete="off"
+                                                            disabled={readOnly}
                                                         />
                                                     </div>
                                                 </InlineStack>
@@ -243,6 +271,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                                         ]}
                                                         selected={field.allowedImageFormats || []}
                                                         onChange={(val) => updateFieldProperty('allowedImageFormats', val)}
+                                                        disabled={readOnly}
                                                     />
                                                 </Box>
 
@@ -253,6 +282,7 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                                     placeholder="application/pdf, .zip"
                                                     autoComplete="off"
                                                     helpText="If you select image formats above, they will be combined with these."
+                                                    disabled={readOnly}
                                                 />
                                             </BlockStack>
                                         </div>
@@ -266,12 +296,13 @@ export function SortableFieldItem({ field, fieldIdx, stepIdx, formState, setForm
                                         onChange={(val) => updateFieldProperty('validationMessage', val)}
                                         placeholder="Please enter a valid format."
                                         autoComplete="off"
+                                        disabled={readOnly}
                                     />
                                 )}
                             </BlockStack>
                         </Box>
                     </Box>
-                )}
+                </Collapsible>
             </Box>
         </div>
     );

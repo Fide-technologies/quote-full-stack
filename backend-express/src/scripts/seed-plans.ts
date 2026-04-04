@@ -9,7 +9,7 @@ const plans = [
     {
         name: PlanType.FREE,
         price: 0.00,
-        quoteLimit: 50,
+        quoteLimit: 2,
         billingReset: false,
         trialDays: 0,
         permissions: [

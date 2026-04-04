@@ -1,5 +1,6 @@
 
 import { Box, Button, BlockStack, Text, Card } from "@shopify/polaris";
+import { ExternalIcon } from "@shopify/polaris-icons";
 
 import type { QuoteDraftOrderInfoProps } from "@/types/quote-details";
 
@@ -16,6 +17,7 @@ export function QuoteDraftOrderInfo({ draftOrderId, draftOrderUrl }: QuoteDraftO
                         url={draftOrderUrl}
                         external
                         variant="primary"
+                        icon={ExternalIcon}
                     >
                         View in Shopify Checkout
                     </Button>

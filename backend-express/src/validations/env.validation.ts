@@ -12,7 +12,7 @@ const envSchema = z.object({
 
     SHOPIFY_API_KEY: z.string().min(1),
     SHOPIFY_API_SECRET: z.string().min(1),
-    NODE_ENV: z.enum(["development", "production"]),
+    NODE_ENV: z.enum(["development", "production", "test"]),
 
     SHOPIFY_SCOPES: z
         .string()
@@ -22,17 +22,30 @@ const envSchema = z.object({
         }),
     HOST_NAME: z.string().min(4),
     HOST_SCHEMA: z.enum(["http", "https"]),
+    IS_PAID_APP: z.enum(["true", "false"]).optional().default("false"),
     NGROK_AUTHTOKEN: z.string().min(1),
 
     NGROK_DOMAIN: z.string().min(1).optional(),
 
     SMTP_HOST: z.string().optional(),
-    SMTP_PORT: z.string().optional(),
+    SMTP_PORT: z.coerce.number().optional(),
     SMTP_USER: z.string().optional(),
     SMTP_PASS: z.string().optional(),
     SMTP_SECURE: z.string().optional(),
     SMTP_FROM: z.string().optional(),
+
+    // AWS S3 Configuration
+    AWS_ACCESS_KEY_ID: z.string().optional(),
+    AWS_SECRET_ACCESS_KEY: z.string().optional(),
+    AWS_REGION: z.string().optional(),
+    AWS_S3_BUCKET: z.string().optional(),
+
+    // Cloudinary Configuration
+    CLOUDINARY_CLOUD_NAME: z.string().optional(),
+    CLOUDINARY_API_KEY: z.string().optional(),
+    CLOUDINARY_API_SECRET: z.string().optional(),
 });
+
 
 const parsed = envSchema.safeParse(process.env);
 

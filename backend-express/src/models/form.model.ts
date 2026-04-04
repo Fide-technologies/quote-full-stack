@@ -18,7 +18,9 @@ const formFieldSchema = new Schema<IFormField>({
     validationRegex: { type: String },
     validationMessage: { type: String },
     allowedFileTypes: { type: String },
+    allowedImageFormats: [{ type: String }],
     maxFileSizeMB: { type: Number },
+    allowMultiple: { type: Boolean, default: false },
     layoutWidth: { type: String, enum: ['full', 'half'], default: 'full' },
     isSystem: { type: Boolean, default: false }
 }, { _id: false });
@@ -32,8 +34,8 @@ const formStepSchema = new Schema<IFormStep>({
 }, { _id: false });
 
 const formSettingsSchema = new Schema<IFormSettings>({
-    submitButtonText: { type: String, default: "Submit Request" },
-    successMessage: { type: String, default: "Your request has been submitted successfully." }
+    successTitle: { type: String, default: "Quote Requested Successfully!" },
+    successMessage: { type: String, default: "Thank you for your request. Our team will review your quote and get back to you shortly." }
 }, { _id: false });
 
 const formSchema = new Schema<IForm>(
@@ -41,7 +43,7 @@ const formSchema = new Schema<IForm>(
         shop: {
             type: String,
             required: true,
-            unique: true, // Assuming one custom form per shop for now
+            unique: true,
             index: true
         },
         title: {

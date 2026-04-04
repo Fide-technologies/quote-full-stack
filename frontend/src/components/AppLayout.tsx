@@ -4,6 +4,7 @@ import { TitleBar, NavMenu } from '@shopify/app-bridge-react';
 import { Frame, Loading } from '@shopify/polaris';
 import { useIsFetching } from '@tanstack/react-query';
 
+
 export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const location = useLocation();
     const isFetching = useIsFetching();
@@ -16,12 +17,21 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             case '/quotes': return 'Quotes';
             case '/draft-orders': return 'Draft Orders';
             case '/plans': return 'Plans & Billing';
+            case '/support': return 'Help & Support';
             default: return 'My B2B App';
         }
     };
 
+    const logo = {
+        width: 124,
+        topBarSource: '/app-icon.png',
+        contextualSaveBarSource: '/app-icon.png',
+        url: '/',
+        accessibilityLabel: 'Merchant Quote',
+    };
+
     return (
-        <Frame>
+        <Frame logo={logo}>
             {isFetching > 0 && <Loading />}
             <NavMenu>
                 <a href="/" rel="home">Dashboard</a>
@@ -30,10 +40,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                 <a href='/quotes'>Quotes</a>
                 <a href='/draft-orders'>Draft Orders</a>
                 <a href='/plans'>Plans & Billing</a>
+                <a href='/support'>Help & Support</a>
             </NavMenu>
 
             <TitleBar title={getTitle(location.pathname)} />
-
             {children}
         </Frame>
     );

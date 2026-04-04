@@ -7,10 +7,29 @@ import { logger } from "@/utils/logger";
 import { env } from "@/validations/env.validation";
 import { App } from "./app";
 
-// Ensure DI container is loaded - critical for Inversify
 import "./inversify.config";
+import cluster from "node:cluster";
+import os from "node:os";
+
+const numCPUs = os.cpus().length;
 
 async function bootstrap() {
+    if (env.NODE_ENV === "production" && cluster.isPrimary) {
+        logger.info(`Primary process ${process.pid} is running. Forking for ${numCPUs} CPUs...`);
+
+        // Fork workers.
+        for (let i = 0; i < numCPUs; i++) {
+            cluster.fork();
+        }
+
+        cluster.on("exit", (worker, code, signal) => {
+            logger.warn(`Worker ${worker.process.pid} died. Signal: ${signal}, Code: ${code}. Restarting...`);
+            cluster.fork();
+        });
+        
+        return;
+    }
+
     try {
         // 1. Connect to Database (Fail fast if DB is down)
         logger.info("Connecting to MongoDB...");
@@ -23,24 +42,19 @@ async function bootstrap() {
         // 3. Create HTTP Server
         const server = http.createServer(app);
 
+
+        logger.info("port is: ", env.PORT)
+
         // 4. Start Server
         server.listen(env.PORT, async () => {
-            logger.info(`🚀 Server running on port ${env.PORT}`);
-            logger.info(`👉 Health check: http://localhost:${env.PORT}/health`);
+            const actualPort = env.PORT
+
+            console.log(`🚀 SERVER IS LIVE ON PORT: ${actualPort}`);
+            console.log(`👉 Health check: http://${env.HOST_NAME}/health`);
+            console.log(`🔧 Configuration: HOST_NAME=${env.HOST_NAME}, API_KEY=${env.SHOPIFY_API_KEY?.substring(0, 5)}...`);
 
             // 5. Setup Ngrok (Development Only)
-            if (env.NODE_ENV === "development" && env.NGROK_AUTHTOKEN) {
-                try {
-                    const url = await ngrok.connect({
-                        addr: env.PORT,
-                        domain: env.NGROK_DOMAIN,
-                        authtoken: env.NGROK_AUTHTOKEN,
-                    });
-                    logger.info(`🌍 Ngrok tunnel established at: ${url}`);
-                } catch (ngrokError) {
-                    logger.error("Failed to connect to Ngrok:", ngrokError);
-                }
-            }
+            // Removed Ngrok setup since we are using Cloudflare Tunnels
         });
 
         // 6. Graceful Shutdown Implementation
@@ -74,6 +88,22 @@ async function bootstrap() {
         // Listen for termination signals
         process.on("SIGTERM", () => shutdown("SIGTERM"));
         process.on("SIGINT", () => shutdown("SIGINT"));
+
+        // Global crash prevention for unhandled rejections/exceptions
+        process.on("unhandledRejection", (reason, promise) => {
+            logger.error("Unhandled Rejection at:", promise, "reason:", reason);
+            // In a worker, we might want to shut down gracefully and let cluster restart it
+            if (env.NODE_ENV === "production") {
+                shutdown("UNHANDLED_REJECTION");
+            }
+        });
+
+        process.on("uncaughtException", (err) => {
+            logger.error("Uncaught Exception thrown:", err);
+            if (env.NODE_ENV === "production") {
+                shutdown("UNCAUGHT_EXCEPTION");
+            }
+        });
 
     } catch (error) {
         logger.error("Fatal Error during bootstrap:", error);

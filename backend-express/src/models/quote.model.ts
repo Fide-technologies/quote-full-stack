@@ -29,7 +29,9 @@ const quoteSchema = new Schema<IQuote>(
         shop: {
             type: String,
             required: true,
+            index: true,
         },
+
 
         // --------------------
         // Customer
@@ -122,6 +124,10 @@ const quoteSchema = new Schema<IQuote>(
         customData: {
             type: Schema.Types.Mixed,
             default: {}
+        },
+        customImages: {
+            type: [String],
+            default: []
         },
     },
     { timestamps: true }

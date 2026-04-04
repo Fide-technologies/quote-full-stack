@@ -1,46 +1,61 @@
 import { inject, injectable } from "inversify";
 import { TYPES } from "@/types";
-import type { IMerchantService } from "@/interfaces";
-import { shopify } from "@/config";
+import { SubscriptionStatus } from "@/constants";
+import type { IPlanService, IMerchantService } from "@/interfaces";
+import { shopify } from "@/config/shopify.config";
+import { logger } from "@/utils/logger";
 import type { Request, Response, NextFunction } from "express";
 
 @injectable()
 export class AuthController {
     constructor(
-        @inject(TYPES.IMerchantService) private merchantService: IMerchantService
+        @inject(TYPES.IMerchantService) private merchantService: IMerchantService,
+        @inject(TYPES.IPlanService) private planService: IPlanService
     ) { }
 
     callbackStore = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const session = res.locals.shopify.session;
-            const client = new shopify.api.clients.Rest({ session });
-            const shopResponse = await client.get({ path: "shop" });
+            const callbackResponse = await shopify.api.auth.callback({
+                rawRequest: req,
+                rawResponse: res,
+            });
 
-            interface Shop {
-                email: string;
-                shop_owner: string;
-                currency: string;
+            const { session } = callbackResponse;
+            if (!session || !session.accessToken) {
+                return res.status(500).send("No session found in callback");
             }
 
-            const shop = (shopResponse.body as { shop: Shop }).shop;
+            const client = new shopify.api.clients.Rest({ session });
+            const shopData: any = await client.get({ path: "shop" });
 
+            if (!shopData?.body?.shop) {
+                return res.status(500).send("Failed to fetch shop details from Shopify");
+            }
+
+            const shopInfo = shopData.body.shop;
+
+            // 3. Fetch current billing status from Shopify (Managed Billing)
+            // This is handled in the PlanService following our service-layer rules.
+            const billingState = await this.planService.verifyReinstallationBilling(session);
 
             await this.merchantService.createOrUpdateMerchant({
                 shop: session.shop,
                 accessToken: session.accessToken,
                 scopes: session.scope,
-                email: shop.email,
-                shopOwner: shop.shop_owner,
-                currency: shop.currency,
+                email: shopInfo.email,
+                shopOwner: shopInfo.shop_owner,
+                currency: shopInfo.currency,
                 isActive: true,
                 installedAt: new Date(),
+                ...billingState
             });
 
             await shopify.api.webhooks.register({ session });
 
-            next();
+            return res.redirect(`/api/auth?shop=${session.shop}&host=${req.query.host}`);
         } catch (error) {
+            logger.error(`Error in callbackStore: ${error}`);
             next(error);
         }
-    }
+    };
 }

@@ -24,7 +24,7 @@ export default defineConfig({
     react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(process.cwd(), './src'),
     },
   },
   build: {

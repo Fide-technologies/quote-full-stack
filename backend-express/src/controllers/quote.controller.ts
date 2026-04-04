@@ -43,6 +43,31 @@ export class QuoteController extends BaseController {
         }
     };
 
+    getQuoteById = async (req: Request, res: Response) => {
+        try {
+            const session = res.locals.shopify.session;
+            const id = req.params.id as string;
+
+            if (!id) {
+                return this.handleError(res, new Error("Quote ID is required"), "Quote ID is required", HTTP_STATUS.BAD_REQUEST);
+            }
+
+            const quote = await this.quoteService.getQuoteById(session, id);
+
+            if (!quote) {
+                return this.handleError(res, new Error(API_MESSAGES.QUOTES.NOT_FOUND), API_MESSAGES.QUOTES.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
+            }
+
+            return this.ok(
+                res,
+                QuoteMapper.toResponseDto(quote),
+                API_MESSAGES.QUOTES.RETRIEVED
+            );
+        } catch (error) {
+            return this.handleError(res, error, API_MESSAGES.QUOTES.FAILED_RETRIEVE);
+        }
+    };
+
     public createQuote = async (req: Request, res: Response) => {
         try {
             const shop = req.shopify?.shop || res.locals.shopify?.session?.shop || req.body.shop;
@@ -63,6 +88,40 @@ export class QuoteController extends BaseController {
             const message = error instanceof Error ? error.message : API_MESSAGES.QUOTES.FAILED_CREATE;
             const statusCode = message.includes("limit reached") ? HTTP_STATUS.FORBIDDEN : HTTP_STATUS.BAD_REQUEST;
             return this.handleError(res, error, message, statusCode);
+        }
+    };
+
+    public exportQuotesCsv = async (req: Request, res: Response) => {
+        try {
+            const session = res.locals.shopify.session;
+            const q = req.query.q as string;
+            const status = req.query.status as string;
+            const date = req.query.date as string;
+            const hasDraftOrder = req.query.hasDraftOrder === 'true' ? true : req.query.hasDraftOrder === 'false' ? false : undefined;
+
+            const result = await this.quoteService.getEnrichedQuotesByMerchant(session, 1, 10000, { q, status, date, hasDraftOrder });
+            const quotes = result.data;
+
+            let csv = 'Date,Customer,Email,Phone,Product,Quantity,Total Price,Status\n';
+
+            quotes.forEach((quote: any) => {
+                const dateVal = new Date(quote.createdAt).toLocaleDateString() || '';
+                const customer = `"${(quote.customerName || `${quote.firstName || ''} ${quote.lastName || ''}`).trim().replace(/"/g, '""')}"`;
+                const email = `"${(quote.email || '').replace(/"/g, '""')}"`;
+                const phone = `"${(quote.phone || '').replace(/"/g, '""')}"`;
+                const product = `"${(quote.productTitle || '').replace(/"/g, '""')}"`;
+                const quantity = quote.quantity || '';
+                const totalPrice = quote.totalPrice || '';
+                const statusVal = quote.status || '';
+
+                csv += `${dateVal},${customer},${email},${phone},${product},${quantity},${totalPrice},${statusVal}\n`;
+            });
+
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', 'attachment; filename="quotes_export.csv"');
+            return res.status(200).send(csv);
+        } catch (error) {
+            return this.handleError(res, error, "Failed to export CSV");
         }
     };
 }

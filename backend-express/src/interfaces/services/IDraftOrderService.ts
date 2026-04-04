@@ -6,4 +6,5 @@ export interface IDraftOrderService {
         draftOrderId: string;
         invoiceUrl: string;
     }>;
+    checkDraftOrderExists(session: Session, draftOrderId: string): Promise<boolean>;
 }

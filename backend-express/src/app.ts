@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { shopify } from "@/config/shopify.config";
 import { logger } from "@/utils/logger";
+import { env } from "@/validations/env.validation";
 import { API_MESSAGES, HTTP_STATUS } from "@/constants/app.constants";
 
 // Routes
@@ -15,6 +16,9 @@ import draftOrderRouter from "./routes/draft-order.routes";
 import planRouter from "./routes/plan.routes";
 import formRouter from "./routes/form.routes";
 import dashboardRouter from "./routes/dashboard.routes";
+import uploadRouter from "./routes/upload.routes";
+import rateLimit from "express-rate-limit";
+import mongoose from "mongoose";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,41 +29,64 @@ export class App {
 
     constructor() {
         this.app = express();
+        this.securityConfig();
         this.config();
         this.routes();
         this.errorHandling();
     }
 
+    private securityConfig(): void {
+        this.app.set("trust proxy", true);
+
+        const globalLimiter = rateLimit({
+            windowMs: 15 * 60 * 1000,
+            max: 1000,
+            message: {
+                success: false,
+                message: "Too many requests from this IP, please try again later."
+            },
+            standardHeaders: true,
+            legacyHeaders: false,
+        });
+
+        this.app.use(globalLimiter);
+    }
+
     private config(): void {
-        // Security headers for Shopify
         this.app.use(shopify.cspHeaders());
 
-        // Body parsing is handled by Shopify for some routes, or Express for others
-        // If needed, add express.json() for non-webhook routes, but be careful with raw body requirements
-        this.app.use(express.json());
-        this.app.use(express.urlencoded({ extended: true }));
-
-        // Serve Static files
         this.app.use(express.static(STATIC_PATH));
         this.app.use('/public', express.static(path.join(__dirname, '..', 'public')));
     }
 
     private routes(): void {
-        // Health Check
-        this.app.get("/health", (req, res) => {
-            res.status(HTTP_STATUS.OK).json({ message: "OK", timestamp: new Date().toISOString() });
+        this.app.get("/health", async (req, res) => {
+            const dbStatus = mongoose.connection.readyState === 1 ? "Connected" : "Disconnected";
+            const status = dbStatus === "Connected" ? HTTP_STATUS.OK : HTTP_STATUS.INTERNAL_SERVER_ERROR;
+
+            res.status(status).json({
+                message: dbStatus === "Connected" ? "OK" : "Service Unavailable",
+                database: dbStatus,
+                timestamp: new Date().toISOString(),
+                uptime: process.uptime()
+            });
         });
 
-        // API Routes
+        this.app.use("/api/webhooks", webhooksRouter);
+
+        this.app.use(express.json());
+        this.app.use(express.urlencoded({ extended: true }));
+
         this.app.use("/api/auth", authRouter);
         this.app.use("/api/quotes", quotesRouter);
-        this.app.use("/api/webhooks", webhooksRouter);
         this.app.use("/api/merchants", merchantsRouter);
         this.app.use("/api/settings", settingsRouter);
         this.app.use("/api/draft-orders", draftOrderRouter);
         this.app.use("/api/plans", planRouter);
         this.app.use("/api/forms", formRouter);
         this.app.use("/api/dashboard", dashboardRouter);
+        this.app.use("/api/upload", uploadRouter);
+
 
         // Frontend Fallback (SPA)
         // Must be last

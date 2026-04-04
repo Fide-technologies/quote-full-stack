@@ -26,9 +26,10 @@ export interface Quote {
     draftOrderId?: string;
     draftOrderUrl?: string;
     customData?: Record<string, any>;
+    customImages?: string[];
 }
 
-export interface QuotesResponse {
+interface QuotesResponse {
     success: boolean;
     data: {
         quotes: Quote[];
@@ -39,7 +40,7 @@ export interface QuotesResponse {
     }
 }
 
-export interface QuoteFilters {
+interface QuoteFilters {
     page?: number;
     limit?: number;
     q?: string;
@@ -57,9 +58,17 @@ export async function getQuotes(filters: QuoteFilters = {}): Promise<QuotesRespo
     if (filters.date) params.append("date", filters.date);
     if (filters.hasDraftOrder !== undefined) params.append("hasDraftOrder", filters.hasDraftOrder.toString());
 
-    const res = await fetch(`/api/quotes?${params.toString()}`);
+    const res = await fetch(`/api/quotes?${params.toString()}`, {
+    });
     if (!res.ok) throw new Error("Failed to fetch quotes");
 
+    const json = await res.json();
+    return json.data;
+}
+
+export async function getQuoteById(id: string): Promise<Quote> {
+    const res = await fetch(`/api/quotes/${id}`);
+    if (!res.ok) throw new Error("Failed to fetch quote details");
     const json = await res.json();
     return json.data;
 }
@@ -80,4 +89,25 @@ export async function createDraftOrder(quoteId: string): Promise<{ draftOrderId:
 
     const json = await res.json();
     return json.data;
+}
+
+export async function exportQuotesCSV(filters: QuoteFilters = {}): Promise<void> {
+    const params = new URLSearchParams();
+    if (filters.q) params.append("q", filters.q);
+    if (filters.status) params.append("status", filters.status);
+    if (filters.date) params.append("date", filters.date);
+    if (filters.hasDraftOrder !== undefined) params.append("hasDraftOrder", filters.hasDraftOrder.toString());
+
+    const res = await fetch(`/api/quotes/export?${params.toString()}`);
+    if (!res.ok) throw new Error("Failed to export quotes");
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "quotes_export.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
 }

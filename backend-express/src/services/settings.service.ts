@@ -24,11 +24,14 @@ export class SettingsService implements ISettingsService {
     const client = new shopify.api.clients.Graphql({ session });
 
     const definition = {
-      name: "Show on all products",
+      name: "App Configuration",
       namespace: SETTINGS_DEFAULTS.NAMESPACE,
-      key: SETTINGS_DEFAULTS.KEY_SHOW_ON_ALL,
-      type: SETTINGS_DEFAULTS.TYPE_BOOLEAN,
-      ownerType: SETTINGS_DEFAULTS.OWNER_TYPE_SHOP
+      key: SETTINGS_DEFAULTS.KEY,
+      type: SETTINGS_DEFAULTS.TYPE,
+      ownerType: SETTINGS_DEFAULTS.OWNER_TYPE_SHOP,
+      access: {
+        storefront: "PUBLIC_READ"
+      }
     };
 
     try {
@@ -52,36 +55,36 @@ export class SettingsService implements ISettingsService {
     const client = new shopify.api.clients.Graphql({ session });
 
     try {
-      const response = await client.request<GetSettingsResponse>(GET_SETTINGS_QUERY);
+      const response = await client.request<any>(GET_SETTINGS_QUERY);
 
       if (!response.data?.shop) {
         logger.warn("[SettingsService] No shop data returned from getSettings query");
-        return { showOnAll: true };
+        return SETTINGS_DEFAULTS.DEFAULTS as ISettings;
       }
 
-      const showOnAllValue = response.data.shop.showOnAll?.value;
+      const configValue = response.data.shop.config?.value;
 
-      logger.info(`[SettingsService] RAW Metafield Value from Shopify: '${showOnAllValue}' (Type: ${typeof showOnAllValue})`);
+      if (!configValue) {
+        logger.info("[SettingsService] No config metafield found, returning defaults");
+        return SETTINGS_DEFAULTS.DEFAULTS as ISettings;
+      }
 
-      // Explicitly check for "false" string, otherwise default to true if null/undefined
-      const showOnAll = showOnAllValue === "false" ? false : true;
-
-      logger.debug(`[SettingsService] Retrieved settings: showOnAll=${showOnAll} (derived from raw value)`);
-
-      return { showOnAll };
+      try {
+        const parsedSettings = JSON.parse(configValue);
+        logger.debug("[SettingsService] Retrieved and parsed settings successfully");
+        return { ...SETTINGS_DEFAULTS.DEFAULTS, ...parsedSettings } as ISettings;
+      } catch (e) {
+        logger.error("[SettingsService] Failed to parse settings JSON:", e);
+        return SETTINGS_DEFAULTS.DEFAULTS as ISettings;
+      }
     } catch (error) {
       logger.error("[SettingsService] Failed to fetch settings:", error);
-      return { showOnAll: true }; // Default fallback
+      return SETTINGS_DEFAULTS.DEFAULTS as ISettings;
     }
   }
 
   async updateSettings(session: Session, settings: ISettings): Promise<void> {
-
-    if (typeof settings.showOnAll !== "boolean") {
-      throw new Error(ERROR_MESSAGES.SETTINGS.INVALID_TYPE);
-    }
-
-    logger.info(`[SettingsService] Executing UPDATE (No Inversion). Incoming value: ${settings.showOnAll}`);
+    logger.info(`[SettingsService] Updating settings for shop: ${session.shop}`);
 
     const client = new shopify.api.clients.Graphql({ session });
 
@@ -94,18 +97,17 @@ export class SettingsService implements ISettingsService {
         throw new Error(ERROR_MESSAGES.SETTINGS.NO_SHOP_ID);
       }
 
-      const valueToSend = String(settings.showOnAll);
-      logger.info(`[SettingsService] Sending to Shopify -> Owner: ${ownerId}, Key: ${SETTINGS_DEFAULTS.KEY_SHOW_ON_ALL}, Value: '${valueToSend}'`);
-
+      const valueToSend = JSON.stringify(settings);
+      
       const response = await client.request<MetafieldsSetResponse>(UPDATE_GLOBAL_SETTINGS_MUTATION, {
         variables: {
           metafields: [
             {
               ownerId,
               namespace: SETTINGS_DEFAULTS.NAMESPACE,
-              key: SETTINGS_DEFAULTS.KEY_SHOW_ON_ALL,
+              key: SETTINGS_DEFAULTS.KEY,
               value: valueToSend,
-              type: SETTINGS_DEFAULTS.TYPE_BOOLEAN
+              type: SETTINGS_DEFAULTS.TYPE
             }
           ]
         }
@@ -118,10 +120,56 @@ export class SettingsService implements ISettingsService {
         throw new Error(`${ERROR_MESSAGES.SETTINGS.UPDATE_ERROR}${firstError?.message || 'Unknown error'}`);
       }
 
-      logger.info(`[SettingsService] Successfully updated settings: showOnAll=${settings.showOnAll}`);
+      logger.info("[SettingsService] Successfully updated settings JSON");
     } catch (error) {
       logger.error("[SettingsService] Failed to update settings:", error);
       throw error;
+    }
+  }
+  async checkAppEmbedStatus(session: Session): Promise<{ isEmbedded: boolean; themeId: string }> {
+    try {
+        const themes = await (shopify.api.rest as any).Theme.all({
+            session: session,
+        });
+
+        const mainTheme = themes.data.find((theme: any) => theme.role === "main");
+        if (!mainTheme) {
+            logger.warn("[SettingsService] No main theme found for shop:", session.shop);
+            return { isEmbedded: false, themeId: "" };
+        }
+
+        const assets = await (shopify.api.rest as any).Asset.all({
+            session,
+            theme_id: mainTheme.id,
+        });
+
+        const settingsAsset = assets.data.find((a: any) => a.key === "config/settings_data.json");
+        if (!settingsAsset) return { isEmbedded: false, themeId: String(mainTheme.id) };
+
+        // Fetch the full content of settings_data.json
+        const fullAsset = await (shopify.api.rest as any).Asset.all({
+            session,
+            theme_id: mainTheme.id,
+            asset: { key: "config/settings_data.json" }
+        });
+
+        const content = fullAsset.data?.[0]?.value;
+        if (!content) return { isEmbedded: false, themeId: String(mainTheme.id) };
+
+        const settingsData = JSON.parse(content);
+        const blocks = settingsData.current?.blocks || {};
+        
+        // Accurate identification of the app embed block
+        const isEmbedded = Object.values(blocks).some((block: any) => 
+            block.type.includes("merchant-quote") && 
+            block.type.includes("quote") && 
+            block.disabled === false
+        );
+
+        return { isEmbedded, themeId: String(mainTheme.id) };
+    } catch (error) {
+        logger.error("[SettingsService] Failed to accurately audit theme embed status:", error);
+        return { isEmbedded: false, themeId: "" };
     }
   }
 }

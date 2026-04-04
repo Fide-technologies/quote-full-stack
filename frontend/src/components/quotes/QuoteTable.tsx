@@ -8,8 +8,7 @@ import {
     Button,
     BlockStack,
     EmptySearchResult,
-    SkeletonBodyText,
-    Card,
+    useBreakpoints,
 } from '@shopify/polaris';
 import { useState, useEffect } from 'react';
 import { ViewIcon, ImageIcon } from '@shopify/polaris-icons';
@@ -37,6 +36,7 @@ export function QuoteTable({
     onViewDetails,
 }: QuoteTableProps) {
     const [isClient, setIsClient] = useState(false);
+    const { smUp } = useBreakpoints();
 
     useEffect(() => {
         setIsClient(true);
@@ -50,13 +50,7 @@ export function QuoteTable({
     const { selectedResources, allResourcesSelected, handleSelectionChange } =
         useIndexResourceState(quotes as any);
 
-    if (!isClient || isLoading) {
-        return (
-            <Card>
-                <SkeletonBodyText lines={10} />
-            </Card>
-        );
-    }
+    if (!isClient) return null;
 
     const rowMarkup = quotes.map(
         (quote, index) => (
@@ -73,7 +67,7 @@ export function QuoteTable({
                 </IndexTable.Cell>
                 <IndexTable.Cell>{quote.email}</IndexTable.Cell>
                 <IndexTable.Cell>
-                    <InlineStack gap="300" align="start" blockAlign="center">
+                    <InlineStack gap="300" align="start" blockAlign="center" wrap>
                         <Thumbnail
                             source={quote.productDetails?.featuredImage?.url || ImageIcon}
                             alt={quote.productDetails?.featuredImage?.altText || quote.productTitle}
@@ -103,6 +97,9 @@ export function QuoteTable({
                         {quote.draftOrderId && (
                             <Badge tone="success">Draft Created</Badge>
                         )}
+                        {quote.customImages && quote.customImages.length > 0 && (
+                            <Badge tone="info">Images</Badge>
+                        )}
                     </BlockStack>
                 </IndexTable.Cell>
                 <IndexTable.Cell>
@@ -122,6 +119,7 @@ export function QuoteTable({
 
     return (
         <IndexTable
+            condensed={!smUp}
             resourceName={resourceName}
             itemCount={totalCount}
             selectedItemsCount={
@@ -144,6 +142,7 @@ export function QuoteTable({
                 onNext: onNextPage,
                 onPrevious: onPrevPage
             }}
+            loading={isLoading}
             emptyState={
                 <EmptySearchResult
                     title={'No quotes found'}

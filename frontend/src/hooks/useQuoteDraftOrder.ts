@@ -1,8 +1,8 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createDraftOrder, type Quote } from "@/api/quotes";
-import { useSettings } from "./useSettings";
+import { usePlanUsage } from "./usePlanUsage";
+import { PlanAction } from "../constants/plan.constants";
 
 interface UseQuoteDraftOrderProps {
     quote: Quote | null;
@@ -10,24 +10,26 @@ interface UseQuoteDraftOrderProps {
 
 export function useQuoteDraftOrder({ quote }: UseQuoteDraftOrderProps) {
     const queryClient = useQueryClient();
-    const { settings, isLoading: isSettingsLoading } = useSettings();
+    const { hasPermission, isLoading: isPlanLoading } = usePlanUsage();
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [localDraftOrderUrl, setLocalDraftOrderUrl] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (!quote) return;
+    // Reset success/error only when quote selection changes (to satisfy project requirements and logic)
+    const [lastQuoteId, setLastQuoteId] = useState(quote?.id);
+    if (quote?.id !== lastQuoteId) {
+        setLastQuoteId(quote?.id);
         setSuccess(null);
         setLocalDraftOrderUrl(null);
         setError(null);
-    }, [quote?.id]);
+    }
 
     const { mutate: handleCreateDraftOrder, isPending } = useMutation({
         mutationFn: () => {
             if (!quote) throw new Error("No quote selected");
             return createDraftOrder(quote.id);
         },
-        onSuccess: (data) => {
+        onSuccess: (data: { invoiceUrl: string }) => {
             queryClient.invalidateQueries({ queryKey: ['quotes'] });
             setSuccess("Draft order created successfully! You can now view the invoice.");
             setLocalDraftOrderUrl(data.invoiceUrl);
@@ -42,14 +44,14 @@ export function useQuoteDraftOrder({ quote }: UseQuoteDraftOrderProps) {
         },
     });
 
-    const isPro = settings?.plan === 'PRO';
+    const isPro = hasPermission(PlanAction.DRAFT_ORDER_CREATE);
     const currentDraftOrderUrl = quote?.draftOrderUrl || localDraftOrderUrl;
 
     return {
         handleCreateDraftOrder,
         isPending,
         isPro,
-        isSettingsLoading,
+        isSettingsLoading: isPlanLoading,
         error,
         success,
         currentDraftOrderUrl,

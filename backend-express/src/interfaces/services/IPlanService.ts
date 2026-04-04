@@ -1,3 +1,4 @@
+import { SubscriptionStatus } from "@/constants";
 import type { IPlan, PlanDocument, IPlanFeatures } from "@/types";
 
 export interface IPlanService {
@@ -9,6 +10,9 @@ export interface IPlanService {
     checkQuoteLimit(shop: string): Promise<{ allowed: boolean; message?: string }>;
     getQuoteLimit(shop: string): Promise<number>;
     hasFeature(shop: string, feature: keyof IPlanFeatures): Promise<boolean>;
-    createSubscription(session: any, planName: string): Promise<string>;
-    handleCallback(shop: string, charge_id?: string, plan?: string): Promise<string>;
+    createSubscription(session: any, planName: string, host: string): Promise<string>;
+    handleCallback(shop: string, charge_id?: string, plan?: string, host?: string): Promise<string>;
+    verifyReinstallationBilling(session: any): Promise<{ planId?: any; subscriptionStatus?: SubscriptionStatus }>;
+    handleSubscriptionUpdate(shop: string, subscriptionId: string): Promise<void>;
+    getChargeHistory(session: any): Promise<any>;
 }

@@ -26,7 +26,9 @@ export interface IFormField {
     validationMessage?: string;
     // File constraints
     allowedFileTypes?: string;
+    allowedImageFormats?: string[];
     maxFileSizeMB?: number;
+    allowMultiple?: boolean;
     // UI layout Grid
     layoutWidth?: 'full' | 'half';
     // Access control
@@ -42,7 +44,7 @@ export interface IFormStep {
 }
 
 export interface IFormSettings {
-    submitButtonText?: string;
+    successTitle?: string;
     successMessage?: string;
 }
 

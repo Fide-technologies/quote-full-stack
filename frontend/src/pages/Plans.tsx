@@ -1,10 +1,28 @@
-import React, { useState } from 'react';
-import { Page, Layout, Card, BlockStack, Text, Button, InlineStack, Badge, Banner, Box, Icon, Divider, Link } from '@shopify/polaris';
-import { CheckIcon, XIcon } from "@shopify/polaris-icons";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import React, { useState, useEffect } from 'react';
+import { 
+    Page, 
+    Layout, 
+    Card, 
+    BlockStack, 
+    Text, 
+    Button, 
+    InlineStack, 
+    Badge, 
+    Banner, 
+    Box, 
+    Icon, 
+    Divider, 
+    Link, 
+    InlineGrid, 
+    FooterHelp
+} from '@shopify/polaris';
+import { CheckIcon, XIcon, EmailIcon } from "@shopify/polaris-icons";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentPlan, upgradePlan } from "../api/plans";
-import { useAppBridge } from '@shopify/app-bridge-react';
+import { TitleBar } from '@shopify/app-bridge-react';
 import planData from '../data/plans.json';
+import { TransactionHistory } from '../components/plans/TransactionHistory';
+import { PageLoader } from '../components/loaders/PageLoader';
 
 interface Feature {
     text: string;
@@ -24,28 +42,62 @@ interface Plan {
     features: Feature[];
 }
 
-
-
 export const Plans: React.FC = () => {
-    const shopify = useAppBridge();
+    const queryClient = useQueryClient();
     const [upgradeError, setUpgradeError] = useState<string | null>(null);
+    
+    // Initialize banners directly from URL to avoid set-state-in-effect issues
+    const urlParams = new URL(window.location.href).searchParams;
+    const billingStatus = urlParams.get('billing');
+    
+    const [showSuccessBanner, setShowSuccessBanner] = useState(billingStatus === 'success');
+    const [showErrorBanner, setShowErrorBanner] = useState(billingStatus === 'error');
 
     const { data: currentPlanData, isLoading } = useQuery({
         queryKey: ["currentPlan"],
-        queryFn: getCurrentPlan
+        queryFn: getCurrentPlan,
     });
 
+    const cleanBillingParam = () => {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('billing');
+        window.history.replaceState({}, '', newUrl.toString());
+    };
+
+    useEffect(() => {
+        if (billingStatus === 'success') {
+            queryClient.invalidateQueries({ queryKey: ["currentPlan"] });
+            // App Bridge toast might be handled here since it's a pure side effect
+            // We only show it once per billingStatus change
+            if (typeof shopify !== 'undefined') shopify.toast.show("✓ Plan upgraded successfully!");
+        }
+        
+        if (billingStatus) {
+            cleanBillingParam();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [billingStatus]);
+
     const upgradeMutation = useMutation({
-        mutationFn: (planName: string) => upgradePlan(planName),
-        onSuccess: (data: any) => {
-            const url = data.data?.confirmationUrl || data.confirmationUrl;
-            if (url) {
-                window.open(url, "_top");
+        mutationFn: async (planName: string) => {
+            const params = new URLSearchParams(window.location.search);
+            let host = params.get("host");
+            if (!host) host = sessionStorage.getItem("shopify_host") || sessionStorage.getItem("host");
+            return upgradePlan(planName, host || "");
+        },
+        onSuccess: (data: { data?: { confirmationUrl?: string }; confirmationUrl?: string }) => {
+            const confirmationUrl = data.data?.confirmationUrl || data.confirmationUrl;
+            if (confirmationUrl) {
+                if (window.top) {
+                    window.top.location.href = confirmationUrl;
+                } else {
+                    window.location.href = confirmationUrl;
+                }
             }
         },
-        onError: (error: any) => {
-            setUpgradeError(error.message);
-            shopify.toast.show("Upgrade failed", { isError: true });
+        onError: (error: Error) => {
+            setUpgradeError(error.message || "An unknown error occurred during upgrade.");
+            if (typeof shopify !== 'undefined') shopify.toast.show("Upgrade failed", { isError: true });
         }
     });
 
@@ -55,118 +107,142 @@ export const Plans: React.FC = () => {
     };
 
     if (isLoading) {
-        return (
-            <Page>
-                <Box paddingBlockStart="800">
-                    <InlineStack align="center">
-                        <Text as="p" variant="bodyMd">Loading plans...</Text>
-                    </InlineStack>
-                </Box>
-            </Page>
-        );
+        return <PageLoader title="Pricing Plans" />;
     }
 
+    const currentPlanName = currentPlanData?.plan?.name || 'FREE';
+    const plans = planData as unknown as Plan[];
+
     return (
-        <Page>
+        <Page title="Pricing Plans">
+            <TitleBar title="Pricing Plans" />
             <Box paddingBlockEnd="800">
                 <Layout>
+                    {showSuccessBanner && (
+                        <Layout.Section>
+                            <Banner 
+                                tone="success" 
+                                onDismiss={() => setShowSuccessBanner(false)}
+                                title="Plan updated"
+                            >
+                                <p>Your plan has been updated successfully. New features are now available.</p>
+                            </Banner>
+                        </Layout.Section>
+                    )}
+
+                    {showErrorBanner && (
+                        <Layout.Section>
+                            <Banner 
+                                tone="critical" 
+                                onDismiss={() => setShowErrorBanner(false)}
+                                title="Upgrade failed"
+                            >
+                                <p>Could not process your plan upgrade. Please try again or contact support.</p>
+                            </Banner>
+                        </Layout.Section>
+                    )}
+
                     {upgradeError && (
                         <Layout.Section>
-                            <Banner tone="critical" onDismiss={() => setUpgradeError(null)}>
+                            <Banner tone="critical" title="Upgrade Error">
                                 <p>{upgradeError}</p>
                             </Banner>
                         </Layout.Section>
                     )}
 
-                    <Layout.Section>
-                        <Box paddingBlockEnd="400" paddingBlockStart="400">
-                            <BlockStack gap="200" align="center">
-                                <Text as="h1" variant="heading2xl" alignment="center">Choose the right plan for your business</Text>
-                                <Text as="p" variant="bodyLg" tone="subdued" alignment="center">
-                                    Scale your quoting process with advanced automation and professional branding.
-                                </Text>
-                            </BlockStack>
-                        </Box>
-                    </Layout.Section>
-
-                    <Layout.Section>
-                        <div className="max-w-[1100px] mx-auto w-full px-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-                                {(planData as Plan[]).map((plan) => (
-                                    <div key={plan.id} className="flex flex-col">
-                                        <div className={`h-full ${plan.isPopular ? 'border-2 border-[var(--p-color-border-brand)] rounded-[var(--p-border-radius-300)] overflow-hidden' : ''}`}>
-                                            <Card padding="400">
-                                                <div className="flex flex-col h-[300px]">
-                                                    <BlockStack gap="200">
-                                                        <div className="min-h-[40px]">
-                                                            <div className="flex justify-between items-start">
-                                                                <BlockStack gap="200">
-                                                                    <Text as="h2" variant="headingLg" fontWeight={plan.isPopular ? "bold" : undefined}>{plan.name}</Text>
-                                                                    <Text as="p" variant="bodyMd" tone="subdued">{plan.description}</Text>
-                                                                </BlockStack>
-                                                                {plan.isPopular && <Badge tone="info">Popular</Badge>}
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="flex flex-col gap-1 min-h-[40px] justify-center">
-                                                            <div className="flex items-baseline gap-1">
-                                                                <Text as="span" variant="heading3xl" fontWeight={plan.price !== 'Free' ? 'bold' : undefined}>{plan.price}</Text>
-                                                                <Text as="span" variant="bodyMd" tone="subdued">{plan.period}</Text>
-                                                            </div>
-                                                            {plan.trialDays && (
-                                                                <Text as="p" variant="bodySm" tone="success" fontWeight="bold">{plan.trialDays} DAY FREE TRIAL</Text>
-                                                            )}
-                                                        </div>
-
-                                                        <Button
-                                                            variant={currentPlanData?.name === plan.id ? "secondary" : (plan.id === 'PRO' ? 'primary' : 'secondary')}
-                                                            fullWidth
-                                                            size="large"
-                                                            loading={upgradeMutation.isPending && upgradeMutation.variables === plan.id}
-                                                            disabled={currentPlanData?.name === plan.id}
-                                                            onClick={() => handleUpgrade(plan.id)}
+                    {currentPlanData?.isPaidApp === false ? (
+                        <Layout.Section>
+                            <Card padding="800">
+                                <BlockStack gap="400" align="center" inlineAlign="center">
+                                    <Box paddingBlockEnd="400">
+                                        <Text as="h2" variant="heading2xl" alignment="center">
+                                            Merchant Quote is completely FREE 🎉
+                                        </Text>
+                                    </Box>
+                                    <Text as="p" variant="bodyLg" alignment="center" tone="subdued">
+                                        We're thrilled to offer you full access to the Merchant Quote platform without any subscriptions or credit card requirements. Enjoy all features with a massive quota of 10,000 completely free quotes every single month!
+                                    </Text>
+                                    <Box paddingBlockStart="400">
+                                        <Button size="large" variant="primary" url="/">Go to Dashboard</Button>
+                                    </Box>
+                                </BlockStack>
+                            </Card>
+                        </Layout.Section>
+                    ) : (
+                        <Layout.Section>
+                            <InlineGrid columns={{ xs: 1, md: 3 }} gap="400">
+                                {plans.map((plan) => (
+                                    <Card key={plan.id} padding="500">
+                                        <BlockStack gap="400">
+                                            <InlineStack align="space-between" blockAlign="center">
+                                                <Text variant="headingLg" as="h2">{plan.name}</Text>
+                                                {plan.isPopular && <Badge tone="attention">Popular</Badge>}
+                                                {currentPlanName === plan.id && <Badge tone="success">Active</Badge>}
+                                            </InlineStack>
+                                            <Text variant="bodyMd" as="p" tone="subdued">{plan.description}</Text>
+                                            
+                                            <Box paddingBlock="400">
+                                                <InlineStack align="start" blockAlign="end" gap="100">
+                                                    <Text variant="heading2xl" as="p">{plan.price}</Text>
+                                                    <Text variant="bodySm" as="p" tone="subdued">/{plan.period}</Text>
+                                                </InlineStack>
+                                                {plan.trialDays && (
+                                                    <Text variant="bodySm" as="p" tone="success">{plan.trialDays} day free trial</Text>
+                                                )}
+                                            </Box>
+                                            
+                                            <Divider />
+                                            
+                                            <BlockStack gap="200">
+                                                {plan.features.map((feature, fIdx) => (
+                                                    <InlineStack key={fIdx} gap="200" blockAlign="center">
+                                                        <Icon 
+                                                            source={feature.included ? CheckIcon : XIcon} 
+                                                            tone={feature.included ? "success" : "subdued"} 
+                                                        />
+                                                        <Text 
+                                                            as="span" 
+                                                            variant="bodyMd" 
+                                                            fontWeight={feature.bold ? "bold" : "regular"}
+                                                            tone={feature.included ? "base" : "subdued"}
                                                         >
-                                                            {currentPlanData?.name === plan.id ? "Current plan" : (plan.id === 'FREE' ? "Switch to Free" : `Upgrade to ${plan.name}`)}
-                                                        </Button>
-
-                                                        <Divider />
-
-                                                        <BlockStack gap="200">
-                                                            {plan.features.map((feature, idx) => (
-                                                                <div key={idx} className={`flex items-start gap-3 ${!feature.included ? 'opacity-30' : ''}`}>
-                                                                    <div className="min-w-[20px]">
-                                                                        <Icon source={feature.included ? CheckIcon : XIcon} tone={feature.included ? "success" : "critical"} />
-                                                                    </div>
-                                                                    <Text as="span" variant="bodyMd" fontWeight={feature.bold ? 'bold' : (feature.highlighted ? 'semibold' : undefined)} tone={feature.highlighted ? 'success' : undefined}>
-                                                                        {feature.text}
-                                                                    </Text>
-                                                                </div>
-                                                            ))}
-                                                        </BlockStack>
-                                                    </BlockStack>
-                                                </div>
-                                            </Card>
-                                        </div>
-                                    </div>
+                                                            {feature.text}
+                                                        </Text>
+                                                    </InlineStack>
+                                                ))}
+                                            </BlockStack>
+                                            
+                                            <Box paddingBlockStart="400">
+                                                <Button 
+                                                    fullWidth 
+                                                    variant={plan.isPopular ? "primary" : "secondary"}
+                                                    disabled={currentPlanName === plan.id || upgradeMutation.isPending}
+                                                    loading={upgradeMutation.isPending && upgradeMutation.variables === plan.id}
+                                                    onClick={() => handleUpgrade(plan.id)}
+                                                >
+                                                    {currentPlanName === plan.id ? 'Current Plan' : 'Select Plan'}
+                                                </Button>
+                                            </Box>
+                                        </BlockStack>
+                                    </Card>
                                 ))}
-                            </div>
-                        </div>
-                    </Layout.Section>
-
-                    <Layout.Section>
-                        <Box paddingBlockStart="400" paddingBlockEnd="400">
-                            <BlockStack gap="200" align="center">
-                                <Text as="p" variant="bodySm" tone="subdued" alignment="center">
-                                    All recurring charges occur every 30 days in USD. Trial period is completely free.
-                                </Text>
-                                <Text as="p" variant="bodySm" tone="subdued" alignment="center">
-                                    Have questions? <Link url="mailto:krishnauday320@gmail.com" monochrome>Contact our support team</Link>
-                                </Text>
-                            </BlockStack>
-                        </Box>
-                    </Layout.Section>
+                            </InlineGrid>
+                        </Layout.Section>
+                    )}
+                    
+                    {currentPlanData?.isPaidApp !== false && (
+                        <Layout.Section>
+                            <TransactionHistory />
+                        </Layout.Section>
+                    )}
                 </Layout>
             </Box>
+            <FooterHelp>
+                <InlineStack gap="100" align="center" blockAlign="center">
+                    <Icon source={EmailIcon} tone="base" />
+                    <span>Have questions about our plans? <Link url="/support">Contact Support</Link></span>
+                </InlineStack>
+            </FooterHelp>
         </Page>
     );
 };

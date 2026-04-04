@@ -22,4 +22,9 @@ export class FormRepository
             { new: true, upsert: true }
         ).exec()) as FormDocument;
     }
+
+    async deleteByShop(shop: string): Promise<any> {
+        return await Form.deleteMany({ shop });
+    }
 }
+

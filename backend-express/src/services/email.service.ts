@@ -9,21 +9,37 @@ import { env } from "@/validations/env.validation";
 
 @injectable()
 export class EmailService implements IEmailService {
-    private transporter: nodemailer.Transporter;
+    private transporter?: nodemailer.Transporter;
 
     constructor(
         @inject(TYPES.IMerchantService) private merchantService: IMerchantService,
         @inject(TYPES.IPlanService) private planService: IPlanService
     ) {
-        this.transporter = nodemailer.createTransport({
-            auth: {
-                user: env.SMTP_USER,
-                pass: env.SMTP_PASS,
-            },
-        });
+        logger.debug(`[EmailService] Initializing. SMTP_USER: ${env.SMTP_USER ? 'Set' : 'Missing'}, SMTP_PASS: ${env.SMTP_PASS ? 'Set' : 'Missing'}`);
+
+        if (env.SMTP_USER && env.SMTP_PASS) {
+            this.transporter = nodemailer.createTransport({
+                host: 'smtp.gmail.com',
+                port: 465,
+                secure: true,
+                auth: {
+                    user: env.SMTP_USER,
+                    pass: env.SMTP_PASS,
+                },
+            });
+            logger.info("[EmailService] Transporter created successfully for Gmail (SSL).");
+        } else {
+            logger.warn("[EmailService] Transporter NOT created: missing credentials in env.");
+        }
     }
 
     async sendQuoteNotification(shop: string, quote: QuoteDocument): Promise<void> {
+        // Guard against missing transporter
+        if (!this.transporter) {
+            logger.warn("[EmailService] Quote created but email notifications are skipped because SMTP_USER or SMTP_PASS is not set.");
+            return;
+        }
+
         try {
             const merchant: MerchantDocument | null = await this.merchantService.getMerchantByShop(shop);
             if (!merchant) {
@@ -31,18 +47,13 @@ export class EmailService implements IEmailService {
                 return;
             }
 
-            console.log(merchant)
-
             const plan = await this.planService.getMerchantPlan(shop);
-            const hasMerchantNotifications = await this.planService.hasFeature(shop, "emailNotifications");
             const isPro = plan?.name === PlanType.PRO;
 
-            if (hasMerchantNotifications) {
-                await this.sendToMerchant(merchant.email as string, quote, isPro);
-            } else {
-                logger.info(`[EmailService] Merchant notification skipped (not in plan) for shop: ${shop}`);
-            }
+            // MERCHANT NOTIFICATION (Always sent, no plan limits)
+            await this.sendToMerchant(merchant.email as string, quote);
 
+            // CUSTOMER CONFIRMATION (Always sent, no plan limits)
             await this.sendToCustomer(quote.customerEmail, quote, isPro);
 
         } catch (error) {
@@ -50,7 +61,9 @@ export class EmailService implements IEmailService {
         }
     }
 
-    private async sendToMerchant(merchantEmail: string, quote: QuoteDocument, isPro: boolean) {
+    private async sendToMerchant(merchantEmail: string, quote: QuoteDocument) {
+        if (!this.transporter) return;
+
         const mailOptions = {
             from: `"${APP_DEFAULTS.EMAIL_SENDER_NAME}" <${env.SMTP_FROM || APP_DEFAULTS.EMAIL_FROM}>`,
             to: merchantEmail,
@@ -63,6 +76,8 @@ export class EmailService implements IEmailService {
     }
 
     private async sendToCustomer(customerEmail: string, quote: QuoteDocument, isPro: boolean) {
+        if (!this.transporter) return;
+
         const mailOptions = {
             from: `"${APP_DEFAULTS.EMAIL_SENDER_NAME}" <${env.SMTP_FROM || APP_DEFAULTS.EMAIL_FROM}>`,
             to: customerEmail,
@@ -79,6 +94,13 @@ export class EmailService implements IEmailService {
             `<li>${item.title} - Qty: ${item.quantity} (Price: ${item.price})</li>`
         ).join('');
 
+        const imagesHtml = (quote.customImages && quote.customImages.length > 0)
+            ? `<h3>Attached Images:</h3>
+               <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                 ${quote.customImages.map(url => `<a href="${url}" target="_blank"><img src="${url}" style="width: 150px; height: 150px; object-fit: cover; border: 1px solid #ddd; border-radius: 5px;" /></a>`).join('')}
+               </div>`
+            : '';
+
         return `
             <h2>New Quote Request Received</h2>
             <p><strong>Customer Name:</strong> ${quote.customerName || (quote.firstName + ' ' + quote.lastName)}</p>
@@ -87,6 +109,7 @@ export class EmailService implements IEmailService {
             <h3>Items:</h3>
             <ul>${itemsList}</ul>
             <p><strong>Total Price:</strong> ${quote.totalPrice}</p>
+            ${imagesHtml}
             <p>Manage this quote in your dashboard.</p>
         `;
     }
