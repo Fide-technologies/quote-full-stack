@@ -1,5 +1,5 @@
-import type { HydratedDocument, Types } from "mongoose";
 import type { PlanType } from "@/constants";
+import type { HydratedDocument, Types } from "mongoose";
 
 export interface IPlanFeatures {
     quoteLimit: number;
