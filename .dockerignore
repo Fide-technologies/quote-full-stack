@@ -1,0 +1,17 @@
+node_modules/
+.git/
+.shopify/
+.vscode/
+dist/
+build/
+README.md
+TESTING.md
+Jenkinsfile
+e2e/
+playwright.config.ts
+.env*
+!backend-express/.env.example
+frontend/node_modules/
+backend-express/node_modules/
+frontend/dist/
+backend-express/dist/

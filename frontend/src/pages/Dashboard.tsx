@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Page,
     Layout,
@@ -9,74 +9,86 @@ import {
     Icon,
     Box,
     InlineStack,
-    Banner,
     Button,
-    Divider,
     SkeletonBodyText,
     SkeletonPage,
-    Grid
+    ProgressBar,
+    SkeletonDisplayText
 } from '@shopify/polaris';
 import {
-    ProductIcon,
-    OrderIcon,
-    PlanIcon,
     CalendarIcon,
-    CheckIcon
+    CheckIcon,
+    QuestionCircleIcon,
+    PersonIcon,
+    AlertCircleIcon
 } from '@shopify/polaris-icons';
 import { useDashboardStats } from '../hooks/useDashboardStats';
-import { usePlanUsage } from '../hooks/usePlanUsage';
 import { useNavigate } from 'react-router-dom';
 import { StatsLoader } from '../components/loaders/StatsLoader';
 
-interface StatCardProps {
-    title: string;
-    value: string | number;
-    icon: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
-    color?: "base" | "subdued" | "critical" | "warning" | "success" | "info" | "magic";
-}
-
-const StatCard = ({ title, value, icon, color }: StatCardProps) => (
-    <Card>
-        <BlockStack gap="200">
-            <InlineStack align="space-between">
-                <Text as="h2" variant="headingSm" tone="subdued">
-                    {title}
-                </Text>
-                <Box padding="100" borderRadius="200">
-                    <Icon source={icon} tone={color || "base"} />
-                </Box>
-            </InlineStack>
-            <Text as="p" variant="headingLg">
-                {value}
-            </Text>
-        </BlockStack>
-    </Card>
-);
-
 export const Dashboard: React.FC = () => {
-    const { data: stats, isLoading: statsLoading, error } = useDashboardStats() as { 
-        data: import("../api/dashboard").DashboardStats | undefined; 
-        isLoading: boolean; 
-        error: Error | null 
+    // Correctly define the DashboardStats type to include theme auditing properties
+    const { data: stats, isLoading: statsLoading, error } = useDashboardStats() as {
+        data: (import("../api/dashboard").DashboardStats & { 
+            isAppEmbedded: boolean;
+            deepLinkUrl: string;
+            activeThemeId: string;
+        }) | undefined;
+        isLoading: boolean;
+        error: Error | null
     };
-    const { usage, isLoading: planLoading } = usePlanUsage();
+    
     const navigate = useNavigate();
-    const [showPromo, setShowPromo] = useState(true);
+    const [isClient, setIsClient] = useState(false);
 
-    const loading = statsLoading || planLoading;
-    const isFreeMode = usage?.isPaidApp === false;
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
-    if (loading) {
+    const loading = statsLoading;
+    
+    // Core Status: Physical check from theme assets
+    const isAppEnabled = stats?.isAppEmbedded ?? false;
+    const deepLinkUrl = stats?.deepLinkUrl || 'shopify:admin/themes/current/editor?context=apps';
+    
+    // Calculate progress based on dynamic stats and real-time status
+    const steps = [
+        { label: 'Install and activate the app', completed: true, description: "Successfully installed in your store" },
+        { label: 'Customize your Quote Form', completed: stats?.totalQuotes ? stats.totalQuotes > 0 : false, description: "Adjust fields to gather the right info." },
+        { label: 'Configure button visibility', completed: isAppEnabled === true, description: "Decide which products show the quote button." },
+        { label: 'Receive your first quote', completed: stats?.totalQuotes ? stats.totalQuotes > 0 : false, description: "Wait for customers to start receiving quotes." }
+    ];
+    const completedSteps = steps.filter(s => s.completed).length;
+    const progress = (completedSteps / steps.length) * 100;
+
+    // Helper component for the Direct Session Link Button
+    const ThemeEditorLink = ({ children, primary = false }: { children: string, primary?: boolean }) => (
+        <a 
+          href={deepLinkUrl} 
+          target="_blank" 
+          rel="opener noreferrer" 
+          style={{ textDecoration: 'none', width: '100%' }}
+        >
+          <Button 
+            variant={primary ? "primary" : undefined} 
+            tone={primary && !isAppEnabled ? "success" : undefined}
+            fullWidth
+          >
+            {children}
+          </Button>
+        </a>
+    );
+
+    if (!isClient || loading) {
         return (
             <SkeletonPage title="Dashboard">
                 <Layout>
                     <Layout.Section>
-                        <Card>
-                            <SkeletonBodyText lines={3} />
-                        </Card>
-                    </Layout.Section>
-                    <Layout.Section>
+                        <Card><SkeletonBodyText lines={3} /></Card>
                         <StatsLoader columns={4} />
+                    </Layout.Section>
+                    <Layout.Section variant="oneThird">
+                        <Card padding="400"><SkeletonBodyText lines={5} /></Card>
                     </Layout.Section>
                 </Layout>
             </SkeletonPage>
@@ -88,9 +100,13 @@ export const Dashboard: React.FC = () => {
             <Page title="Dashboard">
                 <Layout>
                     <Layout.Section>
-                        <Banner tone="critical" title="Connection error">
-                            <p>Failed to load dashboard statistics. Please try again later.</p>
-                        </Banner>
+                        <Card padding="400">
+                            <BlockStack gap="400" align="center" inlineAlign="center">
+                                <Icon source={AlertCircleIcon} tone="critical" />
+                                <Text as="p" tone="critical">Failed to load dashboard statistics. Please try again later.</Text>
+                                <Button onClick={() => window.location.reload()}>Retry</Button>
+                            </BlockStack>
+                        </Card>
                     </Layout.Section>
                 </Layout>
             </Page>
@@ -98,141 +114,154 @@ export const Dashboard: React.FC = () => {
     }
 
     return (
-        <Page title="Dashboard">
-            <Box paddingBlockEnd="800">
-                <Layout>
-                    {/* Onboarding / Setup Guide */}
-                    <Layout.Section>
-                        <Card>
-                            <BlockStack gap="400">
+        <Page 
+            title="Welcome to Merchant Quote"
+            subtitle="Merchant Quote - Solution for all your quote demand."
+            secondaryActions={[{ content: 'English', icon: QuestionCircleIcon }]}
+        >
+            <Layout>
+                <Layout.Section>
+                    <BlockStack gap="400">
+                        <Card padding="500">
+                            <InlineStack gap="400" align="space-around">
                                 <BlockStack gap="100">
-                                    <Text as="h2" variant="headingMd">Getting started</Text>
-                                    <Text as="p" variant="bodyMd" tone="subdued">
-                                        Complete these steps to start receiving and managing quotes efficiently.
-                                    </Text>
+                                    <Text as="p" variant="bodySm" tone="subdued">Last 7 days</Text>
+                                    <Icon source={CalendarIcon} tone="subdued" />
                                 </BlockStack>
-
-                                <BlockStack gap="300">
-                                    <InlineStack gap="400" blockAlign="center">
-                                        <div style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <Icon source={CheckIcon} tone="success" />
-                                        </div>
-                                        <BlockStack gap="0">
-                                            <Text as="span" variant="bodyMd" fontWeight="semibold">Install and activate the app</Text>
-                                            <Text as="span" variant="bodySm" tone="subdued">You're already here!</Text>
-                                        </BlockStack>
-                                    </InlineStack>
-
-                                    <Divider />
-
-                                    <InlineStack gap="400" blockAlign="center" align="space-between">
-                                        <InlineStack gap="400" blockAlign="center">
-                                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid var(--p-color-border-brand)', boxSizing: 'border-box' }} />
-                                            <BlockStack gap="0">
-                                                <Text as="span" variant="bodyMd">Customize your Quote Form</Text>
-                                                <Text as="span" variant="bodySm" tone="subdued">Adjust fields to gather the right info.</Text>
-                                            </BlockStack>
-                                        </InlineStack>
-                                        <Button variant="plain" onClick={() => navigate('/form-builder')}>Configure form</Button>
-                                    </InlineStack>
-
-                                    <Divider />
-
-                                    <InlineStack gap="400" blockAlign="center" align="space-between">
-                                        <InlineStack gap="400" blockAlign="center">
-                                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid var(--p-color-border-brand)', boxSizing: 'border-box' }} />
-                                            <BlockStack gap="0">
-                                                <Text as="span" variant="bodyMd">Configure button visibility</Text>
-                                                <Text as="span" variant="bodySm" tone="subdued">Decide which products show the quote button.</Text>
-                                            </BlockStack>
-                                        </InlineStack>
-                                        <Button variant="plain" onClick={() => navigate('/settings')}>Go to settings</Button>
-                                    </InlineStack>
+                                <BlockStack gap="100">
+                                    <Text as="p" variant="bodySm" tone="subdued">Total quote value</Text>
+                                    <Text variant="headingMd" as="p">$0.00</Text>
                                 </BlockStack>
-                            </BlockStack>
+                                <BlockStack gap="100">
+                                    <Text as="p" variant="bodySm" tone="subdued">Total draft orders</Text>
+                                    <Text variant="headingMd" as="p">{stats?.convertedQuotes || 0}</Text>
+                                </BlockStack>
+                                <BlockStack gap="100">
+                                    <Text as="p" variant="bodySm" tone="subdued">Total quotes</Text>
+                                    <Text variant="headingMd" as="p">{stats?.totalQuotes || 0}</Text>
+                                </BlockStack>
+                            </InlineStack>
                         </Card>
-                    </Layout.Section>
 
-                    {/* Performance Stats */}
-                    <Layout.Section>
-                        <StatsLoader columns={4} />
-                    </Layout.Section>
-
-                    {!loading && (
-                        <Layout.Section>
-                            <Grid>
-                                <Grid.Cell columnSpan={{ xs: 6, sm: 6, md: 3, lg: 3 }}>
-                                    <StatCard
-                                        title="Total Quotes"
-                                        value={stats?.totalQuotes ?? 0}
-                                        icon={ProductIcon}
-                                        color="info"
-                                    />
-                                </Grid.Cell>
-                                <Grid.Cell columnSpan={{ xs: 6, sm: 6, md: 3, lg: 3 }}>
-                                    <StatCard
-                                        title="Converted Quotes"
-                                        value={stats?.convertedQuotes ?? 0}
-                                        icon={OrderIcon}
-                                        color="success"
-                                    />
-                                </Grid.Cell>
-                                <Grid.Cell columnSpan={{ xs: 6, sm: 6, md: 3, lg: 3 }}>
-                                    <StatCard
-                                        title="Current Plan"
-                                        value={isFreeMode ? "Free (Unlocked)" : (stats?.currentPlan ?? "Free")}
-                                        icon={PlanIcon}
-                                        color="warning"
-                                    />
-                                </Grid.Cell>
-                                <Grid.Cell columnSpan={{ xs: 6, sm: 6, md: 3, lg: 3 }}>
-                                    <StatCard
-                                        title="Days Remaining"
-                                        value={isFreeMode ? "∞" : (stats?.daysRemaining ?? 0)}
-                                        icon={CalendarIcon}
-                                        color="critical"
-                                    />
-                                </Grid.Cell>
-                            </Grid>
-                        </Layout.Section>
-                    )}
-
-                    <Layout.Section>
                         <Card>
                             <BlockStack gap="400">
-                                <Text as="h2" variant="headingMd">
-                                    Account Overview
-                                </Text>
-                                <Text as="p" variant="bodyMd">
-                                    You have converted <Text as="span" fontWeight="bold">{((stats?.convertedQuotes ?? 0) / (stats?.totalQuotes || 1) * 100).toFixed(1)}%</Text> of your quotes into draft orders.
-                                    {isFreeMode ? (
-                                        <> Your app is completely unlocked and <b>free</b> to use.</>
-                                    ) : (
-                                        <> Your current plan is <Badge tone={stats?.currentPlan === 'PRO' ? 'success' : 'info'}>{stats?.currentPlan}</Badge>.</>
-                                    )}
-                                </Text>
+                                <InlineStack align="space-between" blockAlign="center">
+                                    <BlockStack gap="100">
+                                      <Text variant="headingMd" as="h2">Getting started</Text>
+                                      <Text as="p" variant="bodySm" tone="subdued">Complete these steps to start receiving quotes.</Text>
+                                    </BlockStack>
+                                    <Badge tone={progress === 100 ? "success" : "info"}>
+                                        {`${completedSteps} of ${steps.length} tasks completed`}
+                                    </Badge>
+                                </InlineStack>
+                                <ProgressBar progress={progress} size="small" tone="success" />
+                                <BlockStack gap="300">
+                                    {steps.map((step, idx) => (
+                                        <InlineStack key={idx} gap="300" blockAlign="center" align="space-between">
+                                            <InlineStack gap="300" blockAlign="center">
+                                                <Box padding="100">
+                                                    {step.completed ? (
+                                                        <div style={{ color: 'var(--p-color-bg-fill-success)' }}>
+                                                            <Icon source={CheckIcon} tone="success" />
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ 
+                                                            width: '20px', 
+                                                            height: '20px', 
+                                                            borderRadius: '50%', 
+                                                            border: '2px solid var(--p-color-border-subdued)' 
+                                                        }} />
+                                                    )}
+                                                </Box>
+                                                <BlockStack gap="0">
+                                                    <Text as="span" variant="bodyMd" fontWeight={step.completed ? "semibold" : "regular"}>{step.label}</Text>
+                                                    <Text as="span" variant="bodySm" tone="subdued">{step.description}</Text>
+                                                </BlockStack>
+                                            </InlineStack>
+                                            {!step.completed && (
+                                                idx === 2 ? (
+                                                    <ThemeEditorLink>Set up</ThemeEditorLink>
+                                                ) : (
+                                                    <Button variant="plain" onClick={() => navigate('/form-builder')}>Set up</Button>
+                                                )
+                                            )}
+                                        </InlineStack>
+                                    ))}
+                                </BlockStack>
                             </BlockStack>
                         </Card>
-                    </Layout.Section>
 
-                    {/* Promotional Upsell at the bottom */}
-                    {showPromo && !isFreeMode && stats?.currentPlan !== 'PRO' && stats?.currentPlan !== 'ULTIMATE' && (
-                        <Layout.Section>
-                            <Banner
-                                onDismiss={() => setShowPromo(false)}
-                                tone="info"
-                                title="Unlock advanced features with the Pro Plan"
-                                action={{
-                                    content: 'Upgrade now',
-                                    onAction: () => navigate('/plans')
-                                }}
-                            >
-                                <p>Upgrade to Pro and get up to 10,000 quotes per month, custom branding, and wholesale draft order support.</p>
-                            </Banner>
-                        </Layout.Section>
-                    )}
-                </Layout>
-            </Box>
+                        <Card padding="400">
+                            <InlineStack align="space-between" blockAlign="center">
+                                <InlineStack gap="400" blockAlign="center">
+                                    <Box padding="200" background="bg-fill-info" borderRadius="200">
+                                        <Icon source={CheckIcon} tone="info" />
+                                    </Box>
+                                    <BlockStack gap="100">
+                                        <Text variant="headingMd" as="h3">Advanced Notifications</Text>
+                                        <Text variant="bodyMd" tone="subdued" as="p">Stay updated with email alerts for every new quote request.</Text>
+                                    </BlockStack>
+                                </InlineStack>
+                                <Button variant="primary" onClick={() => navigate('/settings')}>Configure</Button>
+                            </InlineStack>
+                        </Card>
+                    </BlockStack>
+                </Layout.Section>
+
+                <Layout.Section variant="oneThird">
+                    <BlockStack gap="400">
+                        <Card background={(!loading && isAppEnabled === false) ? "bg-surface-secondary-active" : "bg-surface"}>
+                            <BlockStack gap="300">
+                                {loading ? (
+                                    <BlockStack gap="200">
+                                        <SkeletonDisplayText size="small" />
+                                        <SkeletonBodyText lines={2} />
+                                    </BlockStack>
+                                ) : (
+                                    <>
+                                        <BlockStack gap="100">
+                                            <InlineStack align="space-between" blockAlign="center">
+                                                <Text variant="headingSm" as="h3">App Connectivity</Text>
+                                                <Badge tone={isAppEnabled ? "success" : "critical"}>
+                                                    {isAppEnabled ? "Active" : "Disabled"}
+                                                </Badge>
+                                            </InlineStack>
+                                            <Text as="p" variant="bodySm" tone="subdued">
+                                                {isAppEnabled 
+                                                    ? "Your app is currently live and visible on your storefront." 
+                                                    : "The app is not visible to customers. Enable it to start receiving quotes."}
+                                            </Text>
+                                        </BlockStack>
+                                        <ThemeEditorLink primary={true}>
+                                            {isAppEnabled ? "Manage in Theme" : "Enable App Embed"}
+                                        </ThemeEditorLink>
+                                    </>
+                                )}
+                            </BlockStack>
+                        </Card>
+
+                        <Card>
+                            <BlockStack gap="300">
+                                <Text variant="headingMd" as="h3">Quick Analytics</Text>
+                                <BlockStack gap="200">
+                                    <InlineStack gap="200" blockAlign="center">
+                                        <Box width="20px">
+                                            <Icon source={PersonIcon} tone="subdued" />
+                                        </Box>
+                                        <Text as="span">Total Customer Requests: {stats?.totalQuotes || 0}</Text>
+                                    </InlineStack>
+                                    <InlineStack gap="200" blockAlign="center">
+                                        <Box width="20px">
+                                            <Icon source={CheckIcon} tone="subdued" />
+                                        </Box>
+                                        <Text as="span">Converted to Orders: {stats?.convertedQuotes || 0}</Text>
+                                    </InlineStack>
+                                </BlockStack>
+                            </BlockStack>
+                        </Card>
+                    </BlockStack>
+                </Layout.Section>
+            </Layout>
         </Page>
     );
 };
