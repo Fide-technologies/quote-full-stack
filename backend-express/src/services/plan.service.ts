@@ -1,13 +1,19 @@
-import { injectable, inject } from "inversify";
-import { TYPES } from "@/types";
-import type { IPlanRepository, IMerchantRepository, IMerchantService } from "@/interfaces";
-import type { IPlanService } from "@/interfaces";
-import type { PlanDocument, IPlan, IPlanFeatures, MerchantDocument } from "@/types";
-import { PlanType, PLAN_DEFAULTS, ERROR_MESSAGES, SubscriptionStatus } from "@/constants";
 import { shopify } from "@/config/shopify.config";
-import { env } from "@/validations/env.validation";
+import { ERROR_MESSAGES, PLAN_DEFAULTS, PlanType, SubscriptionStatus } from "@/constants";
+import {
+    CANCEL_SUBSCRIPTION_MUTATION,
+    GET_ALL_SUBSCRIPTIONS_QUERY,
+    GET_CHARGE_HISTORY_QUERY,
+    GET_SUBSCRIPTION_QUERY,
+} from "@/graphql/billing-queries";
+import type { IMerchantService, IPlanRepository } from "@/interfaces";
+import type { IPlanService } from "@/interfaces";
+import { TYPES } from "@/types";
+import type { IPlan, IPlanFeatures, PlanDocument, ShopifyBillingQueryResult } from "@/types";
 import { logger } from "@/utils/logger";
-import { GET_SUBSCRIPTION_QUERY, GET_ALL_SUBSCRIPTIONS_QUERY, GET_CHARGE_HISTORY_QUERY, CANCEL_SUBSCRIPTION_MUTATION } from "@/graphql/billing-queries";
+import { env } from "@/validations/env.validation";
+import type { Session } from "@shopify/shopify-api";
+import { inject, injectable } from "inversify";
 import mongoose from "mongoose";
 
 @injectable()
@@ -26,7 +32,7 @@ export class PlanService implements IPlanService {
 
     constructor(
         @inject(TYPES.IPlanRepository) private planRepository: IPlanRepository,
-        @inject(TYPES.IMerchantService) private merchantService: IMerchantService
+        @inject(TYPES.IMerchantService) private merchantService: IMerchantService,
     ) { }
 
     async getPlanByName(name: string): Promise<PlanDocument | null> {
@@ -67,14 +73,16 @@ export class PlanService implements IPlanService {
             plan = await this.planRepository.findById(merchant.planId.toString());
         }
 
-        const quoteLimit = plan?.quoteLimit ?? (plan?.name === PlanType.PRO ? this.defaultProFeatures.quoteLimit : this.defaultFreeFeatures.quoteLimit);
+        const quoteLimit =
+            plan?.quoteLimit ??
+            (plan?.name === PlanType.PRO ? this.defaultProFeatures.quoteLimit : this.defaultFreeFeatures.quoteLimit);
         const currentUsage = merchant.usage?.quotesUsed || 0;
 
         if (currentUsage >= quoteLimit) {
             const planName = plan?.name || PlanType.FREE;
             return {
                 allowed: false,
-                message: ERROR_MESSAGES.PLAN.LIMIT_REACHED(planName, quoteLimit)
+                message: ERROR_MESSAGES.PLAN.LIMIT_REACHED(planName, quoteLimit),
             };
         }
 
@@ -90,7 +98,7 @@ export class PlanService implements IPlanService {
         const plan = await this.getMerchantPlan(shop);
 
         // If it's a direct property on the plan (like permissions check)
-        if (feature === 'removeBranding' || feature === 'emailNotifications') {
+        if (feature === "removeBranding" || feature === "emailNotifications") {
             // Check if plan exists and has permissions or features (adjusting for schema)
             // Currently our schema has permissions array.
             const hasPermission = plan?.permissions?.includes(feature.toUpperCase());
@@ -104,7 +112,7 @@ export class PlanService implements IPlanService {
         return false;
     }
 
-    async createSubscription(session: any, planName: string, host: string): Promise<string> {
+    async createSubscription(session: Session, planName: string, host: string): Promise<string> {
         // We're switching to "Managed Billing". The controller handles the redirect now.
         // This method is kept for legacy compatibility but can be removed once controller is fully migrated.
         const confirmationUrl = await shopify.api.billing.request({
@@ -113,15 +121,17 @@ export class PlanService implements IPlanService {
             isTest: env.NODE_ENV !== "production",
             returnUrl: `https://${env.HOST_NAME}/api/plans/callback?shop=${session.shop}&plan=${planName}`,
         });
-        return confirmationUrl;
+        return confirmationUrl as string;
     }
 
-    async verifyReinstallationBilling(session: any): Promise<{ planId?: any; subscriptionStatus?: SubscriptionStatus }> {
+    async verifyReinstallationBilling(
+        session: Session,
+    ): Promise<{ planId?: mongoose.Types.ObjectId; subscriptionStatus?: SubscriptionStatus }> {
         try {
             const client = new shopify.api.clients.Graphql({ session });
-            const billingResponse: any = await (client as any).request(GET_ALL_SUBSCRIPTIONS_QUERY);
-
-            const edges = billingResponse.body?.data?.currentAppInstallation?.allSubscriptions?.edges || [];
+            const billingResponse = await client.request<ShopifyBillingQueryResult>(GET_ALL_SUBSCRIPTIONS_QUERY);
+            const data = billingResponse.data;
+            const edges = data?.currentAppInstallation?.allSubscriptions?.edges || [];
             const lastSub = edges[0]?.node;
 
             if (!lastSub) return {};
@@ -133,7 +143,7 @@ export class PlanService implements IPlanService {
             if (status === "ACTIVE" || (status === "CANCELLED" && periodEnd && now < periodEnd)) {
                 const planDoc = await this.planRepository.findByName(lastSub.name);
                 if (planDoc) {
-                    return { planId: planDoc._id, subscriptionStatus: SubscriptionStatus.ACTIVE };
+                    return { planId: (planDoc._id as mongoose.Types.ObjectId), subscriptionStatus: SubscriptionStatus.ACTIVE };
                 }
             }
 
@@ -142,9 +152,10 @@ export class PlanService implements IPlanService {
             }
 
             const freePlan = await this.planRepository.findByName(PlanType.FREE);
-            return { planId: freePlan?._id, subscriptionStatus: SubscriptionStatus.CANCELLED };
-        } catch (billingErr) {
-            logger.warn(`PlanService: Failed verifyReinstallationBilling for ${session.shop}: ${billingErr}`);
+            return { planId: (freePlan?._id as mongoose.Types.ObjectId), subscriptionStatus: SubscriptionStatus.CANCELLED };
+        } catch (billingErr: unknown) {
+            const message = billingErr instanceof Error ? billingErr.message : String(billingErr);
+            logger.warn(`PlanService: Failed verifyReinstallationBilling for ${session.shop}: ${message}`);
         }
         return {};
     }
@@ -165,11 +176,12 @@ export class PlanService implements IPlanService {
 
         try {
             const client = new shopify.api.clients.Graphql({ session: offlineSession });
-            const response: any = await (client as any).request(GET_SUBSCRIPTION_QUERY, {
-                variables: { id: `gid://shopify/AppSubscription/${subscriptionId}` }
+            const response = await client.request<unknown>(GET_SUBSCRIPTION_QUERY, {
+                variables: { id: `gid://shopify/AppSubscription/${subscriptionId}` },
             });
 
-            const subDetails = response.body?.data?.node || response.data?.node;
+            const data = response.data as { node?: { status: string; currentPeriodEnd: string; name: string } };
+            const subDetails = data?.node;
             if (!subDetails) return;
 
             const status = subDetails.status.toUpperCase();
@@ -186,8 +198,9 @@ export class PlanService implements IPlanService {
                 const freePlan = await this.planRepository.findByName(PlanType.FREE);
                 await this.updateMerchantStatus(shop, freePlan?._id, SubscriptionStatus.CANCELLED);
             }
-        } catch (err: any) {
-            logger.error(`PlanService: handleSubscriptionUpdate failed: ${err.message}`);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err);
+            logger.error(`PlanService: handleSubscriptionUpdate failed: ${message}`);
         }
     }
 
@@ -195,17 +208,18 @@ export class PlanService implements IPlanService {
         if (!shop) throw new Error("Missing shop parameter");
 
         const redirectParams = new URLSearchParams({ shop });
-        if (host) redirectParams.set('host', host);
+        if (host) redirectParams.set("host", host);
 
         try {
             if (charge_id && plan) {
                 await this.processPaidPlanCallback(shop, charge_id, plan, redirectParams);
-            } else if (plan === 'FREE') {
+            } else if (plan === "FREE") {
                 await this.processFreePlanCallback(shop, redirectParams);
             }
-        } catch (err: any) {
-            logger.error(`[PlanService] handleCallback failed: ${err.message}`);
-            redirectParams.set('billing', 'error');
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err);
+            logger.error(`[PlanService] handleCallback failed: ${message}`);
+            redirectParams.set("billing", "error");
         }
 
         const appUrl = `https://${env.HOST_NAME}/plans?${redirectParams.toString()}`;
@@ -233,56 +247,58 @@ export class PlanService implements IPlanService {
         const planDoc = await this.getPlanByName(planName);
         if (planDoc) {
             await this.updateMerchantStatus(shop, planDoc._id, SubscriptionStatus.ACTIVE);
-            params.set('billing', 'success');
+            params.set("billing", "success");
         }
     }
 
     private async processFreePlanCallback(shop: string, params: URLSearchParams) {
         const session = await this.getShopSession(shop);
-        
+
         if (session) {
             await this.cancelAllActiveSubscriptions(session, shop);
         }
 
-        const planDoc = await this.getPlanByName('FREE');
+        const planDoc = await this.getPlanByName("FREE");
         if (planDoc) {
             await this.updateMerchantStatus(shop, planDoc._id, SubscriptionStatus.CANCELLED);
-            params.set('billing', 'success');
+            params.set("billing", "success");
         }
     }
 
-    private async verifyChargeStatus(session: any, chargeId: string): Promise<boolean> {
+    private async verifyChargeStatus(session: Session, chargeId: string): Promise<boolean> {
         try {
             const client = new shopify.api.clients.Graphql({ session });
-            const response: any = await (client as any).request(GET_SUBSCRIPTION_QUERY, {
-                variables: { id: `gid://shopify/AppSubscription/${chargeId}` }
+            const response = await client.request<unknown>(GET_SUBSCRIPTION_QUERY, {
+                variables: { id: `gid://shopify/AppSubscription/${chargeId}` },
             });
 
-            const status = response.body?.data?.node?.status || response.data?.node?.status;
-            return status?.toUpperCase() === 'ACTIVE';
-        } catch (err) {
+            const data = response.data as { node?: { status: string } };
+            const status = data?.node?.status;
+            return status?.toUpperCase() === "ACTIVE";
+        } catch (err: unknown) {
             return true; // Default to true on network error to avoid locking merchant out
         }
     }
 
-    private async cancelAllActiveSubscriptions(session: any, shop: string) {
+    private async cancelAllActiveSubscriptions(session: Session, shop: string) {
         const client = new shopify.api.clients.Graphql({ session });
-        const allSubsRes: any = await (client as any).request(GET_ALL_SUBSCRIPTIONS_QUERY);
-        const activeSub = allSubsRes.body?.data?.currentAppInstallation?.allSubscriptions?.edges?.[0]?.node;
+        const allSubsRes = await client.request<unknown>(GET_ALL_SUBSCRIPTIONS_QUERY);
+        const data = allSubsRes.data as { currentAppInstallation?: { allSubscriptions?: { edges?: Array<{ node: { id: string, name: string, status: string } }> } } };
+        const activeSub = data?.currentAppInstallation?.allSubscriptions?.edges?.[0]?.node;
 
-        if (activeSub?.status?.toUpperCase() === 'ACTIVE') {
+        if (activeSub?.status?.toUpperCase() === "ACTIVE") {
             logger.info(`[PlanService] Cancelling active subscription: ${activeSub.name} for ${shop}`);
-            await (client as any).request(CANCEL_SUBSCRIPTION_MUTATION, {
-                variables: { id: activeSub.id }
+            await client.request(CANCEL_SUBSCRIPTION_MUTATION, {
+                variables: { id: activeSub.id },
             });
         }
     }
 
-    private async updateMerchantStatus(shop: string, planId: any, status: SubscriptionStatus) {
+    private async updateMerchantStatus(shop: string, planId: unknown, status: SubscriptionStatus) {
         await this.merchantService.createOrUpdateMerchant({
             shop,
-            planId,
-            subscriptionStatus: status
+            planId: planId as unknown as mongoose.Types.ObjectId,
+            subscriptionStatus: status,
         });
     }
 
@@ -291,21 +307,23 @@ export class PlanService implements IPlanService {
         return sessions?.[0];
     }
 
-    async getChargeHistory(session: any): Promise<any> {
+    async getChargeHistory(session: Session): Promise<unknown> {
         try {
             const client = new shopify.api.clients.Graphql({ session });
-            const response: any = await (client as any).request(GET_CHARGE_HISTORY_QUERY);
-            
-            const data = response?.data || response?.body?.data;
+            const response = await client.request<unknown>(GET_CHARGE_HISTORY_QUERY);
+
+            const data = response.data as { currentAppInstallation?: { allSubscriptions?: { edges?: Array<{ node: unknown }> }, oneTimePurchases?: { edges?: Array<{ node: unknown }> } } };
             const subscriptions = data?.currentAppInstallation?.allSubscriptions?.edges || [];
             const oneTimePurchases = data?.currentAppInstallation?.oneTimePurchases?.edges || [];
-            
+
             return {
-                subscriptions: subscriptions.map((edge: any) => edge.node),
-                oneTimePurchases: oneTimePurchases.map((edge: any) => edge.node)
+                subscriptions: subscriptions.map((edge: { node: unknown }) => edge.node),
+                oneTimePurchases: oneTimePurchases.map((edge: { node: unknown }) => edge.node),
             };
-        } catch (error: any) {
-            logger.error(`PlanService: Error getChargeHistory: ${error.message}`);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            logger.error(`PlanService: Error getChargeHistory: ${message}`);
+            return { subscriptions: [], oneTimePurchases: [] };
         }
     }
 }

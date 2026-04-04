@@ -35,12 +35,12 @@ export interface QuoteResponseDto {
     requestedPrice?: number;
     draftOrderId?: string;
     draftOrderUrl?: string;
-    customData?: Record<string, any>;
+    customData?: Record<string, unknown>;
     customImages?: string[];
     productDetails?: {
         featuredImage?: {
             url: string;
-            altText: string;
+            altText?: string;
         };
     };
     createdAt: Date;

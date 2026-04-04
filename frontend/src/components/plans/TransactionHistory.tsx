@@ -1,15 +1,42 @@
-import React, { useState } from 'react';
-import { Card, IndexTable, Text, BlockStack, Badge, Box, EmptyState, Pagination, InlineStack, Button } from '@shopify/polaris';
-import { ExternalIcon } from '@shopify/polaris-icons';
-import { useQuery } from '@tanstack/react-query';
-import { getChargeHistory } from '../../api/plans';
-import { formatPricingDetails, formatChargeDate, getChargeStatusTone } from '../../utils/billingFormatters';
+import {
+    Badge,
+    BlockStack,
+    Box,
+    Button,
+    Card,
+    EmptyState,
+    IndexTable,
+    InlineStack,
+    Pagination,
+    Text,
+} from "@shopify/polaris";
+import { ExternalIcon } from "@shopify/polaris-icons";
+import { useQuery } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { getChargeHistory } from "../../api/plans";
+import {
+    type BillingItem,
+    formatChargeDate,
+    formatPricingDetails,
+    getChargeStatusTone,
+} from "../../utils/billingFormatters";
+
+interface TransactionItem extends BillingItem {
+    id: string;
+    name: string;
+    createdAt: string;
+    status: string;
+}
 
 export const TransactionHistory: React.FC = () => {
     const [page, setPage] = useState(1);
     const itemsPerPage = 10;
 
-    const { data: rawData, isLoading, isError } = useQuery({
+    const {
+        data: rawData,
+        isLoading,
+        isError,
+    } = useQuery({
         queryKey: ["chargeHistory"],
         queryFn: getChargeHistory,
     });
@@ -18,7 +45,9 @@ export const TransactionHistory: React.FC = () => {
         return (
             <Card>
                 <Box padding="400">
-                    <Text as="p" tone="subdued">Loading transaction history...</Text>
+                    <Text as="p" tone="subdued">
+                        Loading transaction history...
+                    </Text>
                 </Box>
             </Card>
         );
@@ -28,7 +57,9 @@ export const TransactionHistory: React.FC = () => {
         return (
             <Card>
                 <Box padding="400">
-                    <Text as="p" tone="critical">Unable to load transaction history. Please refresh the page.</Text>
+                    <Text as="p" tone="critical">
+                        Unable to load transaction history. Please refresh the page.
+                    </Text>
                 </Box>
             </Card>
         );
@@ -36,8 +67,8 @@ export const TransactionHistory: React.FC = () => {
 
     // Combine subscriptions and oneTimePurchases for a full history
     const allItems = [
-        ...(rawData?.subscriptions || []),
-        ...(rawData?.oneTimePurchases || [])
+        ...((rawData?.subscriptions as TransactionItem[]) || []),
+        ...((rawData?.oneTimePurchases as TransactionItem[]) || []),
     ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     if (allItems.length === 0) {
@@ -58,11 +89,11 @@ export const TransactionHistory: React.FC = () => {
     const paginatedItems = allItems.slice(startIndex, startIndex + itemsPerPage);
 
     const resourceName = {
-        singular: 'transaction',
-        plural: 'transactions',
+        singular: "transaction",
+        plural: "transactions",
     };
 
-    const rowMarkup = paginatedItems.map((item: any, index: number) => {
+    const rowMarkup = paginatedItems.map((item: TransactionItem, index: number) => {
         const { price, currency, detail } = formatPricingDetails(item);
         const formattedDate = formatChargeDate(item.createdAt);
         const status = item.status.toUpperCase();
@@ -106,12 +137,16 @@ export const TransactionHistory: React.FC = () => {
             <Box padding="400">
                 <InlineStack align="space-between" blockAlign="center">
                     <BlockStack gap="100">
-                        <Text as="h2" variant="headingMd">Billing History</Text>
-                        <Text as="p" tone="subdued">Detailed view of your app subscriptions and one-time charges.</Text>
+                        <Text as="h2" variant="headingMd">
+                            Billing History
+                        </Text>
+                        <Text as="p" tone="subdued">
+                            Detailed view of your app subscriptions and one-time charges.
+                        </Text>
                     </BlockStack>
                     <Button
                         variant="tertiary"
-                        url={`https://${new URLSearchParams(window.location.search).get('shop')}/admin/settings/billing/charges`}
+                        url={`https://${new URLSearchParams(window.location.search).get("shop")}/admin/settings/billing/charges`}
                         external
                         icon={ExternalIcon}
                     >
@@ -124,10 +159,10 @@ export const TransactionHistory: React.FC = () => {
                 resourceName={resourceName}
                 itemCount={allItems.length}
                 headings={[
-                    { title: 'Resource' },
-                    { title: 'Date' },
-                    { title: 'Amount', alignment: 'end' },
-                    { title: 'Status', alignment: 'end' },
+                    { title: "Resource" },
+                    { title: "Date" },
+                    { title: "Amount", alignment: "end" },
+                    { title: "Status", alignment: "end" },
                 ]}
                 selectable={false}
             >

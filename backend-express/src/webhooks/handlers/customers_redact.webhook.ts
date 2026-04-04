@@ -1,13 +1,13 @@
-import { DeliveryMethod, type WebhookHandler } from "@shopify/shopify-api";
 import { shopify } from "@/config/shopify.config";
-import { logger } from "@/utils/logger";
+import type { IQuoteService } from "@/interfaces";
 import { container } from "@/inversify.config";
 import { TYPES } from "@/types";
-import type { IQuoteService } from "@/interfaces";
+import { logger } from "@/utils/logger";
+import { DeliveryMethod, type WebhookHandler } from "@shopify/shopify-api";
 
 /**
  * Customers Redact Webhook
- * 
+ *
  * Triggered when a merchant requests that you delete all data related to a specific customer.
  */
 export const customersRedactWebhookHandler: WebhookHandler = {
@@ -25,7 +25,6 @@ export const customersRedactWebhookHandler: WebhookHandler = {
                 await quoteService.redactCustomerData(customerEmail);
                 logger.info(`Successfully redacted data for customer email: ${customerEmail}`);
             }
-
         } catch (error) {
             logger.error("Error handling CUSTOMERS_REDACT webhook", {
                 shop,
@@ -36,4 +35,3 @@ export const customersRedactWebhookHandler: WebhookHandler = {
         }
     },
 };
-

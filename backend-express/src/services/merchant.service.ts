@@ -1,11 +1,11 @@
-import { injectable, inject } from "inversify";
-import { TYPES } from "@/types";
-import type { IMerchantRepository, IPlanRepository, IQuoteRepository, IFormRepository } from "@/interfaces";
+import { shopify } from "@/config/shopify.config";
+import { PlanType, SubscriptionStatus } from "@/constants";
+import type { IFormRepository, IMerchantRepository, IPlanRepository, IQuoteRepository } from "@/interfaces";
 import type { IMerchantService } from "@/interfaces";
 import type { IMerchant, MerchantDocument } from "@/models/merchant.model";
-import { PlanType, SubscriptionStatus } from "@/constants";
+import { TYPES } from "@/types";
+import { inject, injectable } from "inversify";
 import type { UpdateWriteOpResult } from "mongoose";
-import { shopify } from "@/config/shopify.config";
 
 @injectable()
 export class MerchantService implements IMerchantService {
@@ -13,14 +13,16 @@ export class MerchantService implements IMerchantService {
         @inject(TYPES.IMerchantRepository) private merchantRepository: IMerchantRepository,
         @inject(TYPES.IPlanRepository) private planRepository: IPlanRepository,
         @inject(TYPES.IQuoteRepository) private quoteRepository: IQuoteRepository,
-        @inject(TYPES.IFormRepository) private formRepository: IFormRepository
-    ) { }
+        @inject(TYPES.IFormRepository) private formRepository: IFormRepository,
+    ) {}
 
     async getMerchantByShop(shop: string): Promise<MerchantDocument | null> {
         return await this.merchantRepository.findMerchantByShop(shop);
     }
 
-    async createOrUpdateMerchant(merchantData: Partial<IMerchant> & { shop: string }): Promise<MerchantDocument | UpdateWriteOpResult> {
+    async createOrUpdateMerchant(
+        merchantData: Partial<IMerchant> & { shop: string },
+    ): Promise<MerchantDocument | UpdateWriteOpResult> {
         const existing = await this.merchantRepository.findMerchantByShop(merchantData.shop);
 
         if (existing) {
@@ -34,7 +36,7 @@ export class MerchantService implements IMerchantService {
             planId: freePlan?._id,
             subscriptionStatus: SubscriptionStatus.ACTIVE,
             isActive: true, // Always active on new/re-install
-            usage: { quotesUsed: 0, quotaPeriodStart: new Date() }
+            usage: { quotesUsed: 0, quotaPeriodStart: new Date() },
         };
 
         return await this.merchantRepository.createMerchant(dataToCreate);
@@ -61,8 +63,7 @@ export class MerchantService implements IMerchantService {
         await Promise.all([
             this.quoteRepository.deleteByShop(shop),
             this.formRepository.deleteByShop(shop),
-            this.merchantRepository.deleteMerchant(shop)
+            this.merchantRepository.deleteMerchant(shop),
         ]);
     }
 }
-

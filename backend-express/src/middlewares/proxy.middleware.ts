@@ -1,6 +1,6 @@
-import type { Request, Response, NextFunction } from "express";
 import { shopify } from "@/config/shopify.config";
 import { logger } from "@/utils/logger";
+import type { NextFunction, Request, Response } from "express";
 
 /**
  * Middleware to validate Shopify App Proxy requests.
@@ -18,27 +18,27 @@ export const validateAppProxy = async (req: Request, res: Response, next: NextFu
             logger.warn(`Invalid App Proxy request attempted for shop: ${query.shop}`);
             return res.status(401).json({
                 success: false,
-                message: "Unauthorized: Invalid signature"
+                message: "Unauthorized: Invalid signature",
             });
         }
 
-        logger.debug("checking 1")
+        logger.debug("checking 1");
 
         // If valid, you can trust the 'shop' query parameter
-        if (typeof query.shop === 'string') {
+        if (typeof query.shop === "string") {
             req.shopify = {
-                shop: query.shop
+                shop: query.shop,
             };
         }
 
-        logger.debug("checking 2")
+        logger.debug("checking 2");
 
         next();
     } catch (error) {
         logger.error("Error validating App Proxy request:", error);
         return res.status(500).json({
             success: false,
-            message: "Internal Server Error during proxy validation"
+            message: "Internal Server Error during proxy validation",
         });
     }
 };

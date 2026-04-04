@@ -1,5 +1,5 @@
-import type { HydratedDocument, Types } from "mongoose";
 import type { QuoteStatus } from "@/constants";
+import type { HydratedDocument, Types } from "mongoose";
 
 export interface IQuoteItem {
     variantId?: string;
@@ -60,8 +60,16 @@ export interface IQuote {
     createdAt: Date;
     updatedAt: Date;
 
+    // Additional UI Data
+    productDetails?: {
+        featuredImage?: {
+            url: string;
+            altText?: string;
+        };
+    };
+
     // Custom Form Data
-    customData?: Record<string, any>;
+    customData?: Record<string, unknown>;
     customImages?: string[];
 
     // Draft Order Integration

@@ -1,10 +1,10 @@
+import { logger } from "@/utils/logger";
 import { env } from "@/validations/env.validation";
 import mongoose from "mongoose";
-import { logger } from "@/utils/logger";
 
 export const connectDB = async () => {
     mongoose.connection.on("connected", () => {
-        logger.info("MongoDB connected successfully")
+        logger.info("MongoDB connected successfully");
     });
 
     mongoose.connection.on("error", (err) => {
@@ -21,14 +21,13 @@ export const connectDB = async () => {
             minPoolSize: 10,
             connectTimeoutMS: 10000,
             socketTimeoutMS: 45000,
-            dbName: env.MONGODB_NAME
+            dbName: env.MONGODB_NAME,
         });
-
     } catch (error) {
         logger.error("MongoDB connection error", error);
         process.exit(1);
     }
-}
+};
 
 export const disconnectDB = async () => {
     try {

@@ -1,15 +1,13 @@
-import { inject, injectable } from "inversify";
-import { TYPES } from "@/types";
-import type { IDashboardService } from "@/interfaces";
-import type { Request, Response } from "express";
-import { BaseController } from "./base.controller";
 import { API_MESSAGES, CONTROLLER } from "@/constants";
+import type { IDashboardService } from "@/interfaces";
+import { TYPES } from "@/types";
+import type { Request, Response } from "express";
+import { inject, injectable } from "inversify";
+import { BaseController } from "./base.controller";
 
 @injectable()
 export class DashboardController extends BaseController {
-    constructor(
-        @inject(TYPES.IDashboardService) private dashboardService: IDashboardService
-    ) {
+    constructor(@inject(TYPES.IDashboardService) private dashboardService: IDashboardService) {
         super();
     }
 
@@ -23,11 +21,7 @@ export class DashboardController extends BaseController {
 
             const stats = await this.dashboardService.getStats(session);
 
-            return this.ok(
-                res,
-                stats,
-                "Dashboard stats retrieved successfully"
-            );
+            return this.ok(res, stats, "Dashboard stats retrieved successfully");
         } catch (error) {
             return this.handleError(res, error, "Failed to retrieve dashboard stats");
         }

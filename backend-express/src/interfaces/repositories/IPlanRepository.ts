@@ -5,5 +5,5 @@ export interface IPlanRepository {
     findById(id: string): Promise<PlanDocument | null>;
     create(planData: Partial<IPlan>): Promise<PlanDocument>;
     findAll(): Promise<PlanDocument[]>;
-    findOne(filter: any): Promise<PlanDocument | null>;
+    findOne(filter: unknown): Promise<PlanDocument | null>;
 }

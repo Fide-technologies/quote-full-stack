@@ -1,8 +1,8 @@
-import { Router } from "express";
+import { shopify } from "@/config";
+import type { AuthController } from "@/controllers";
 import { container } from "@/inversify.config";
 import { TYPES } from "@/types";
-import { AuthController } from "@/controllers";
-import { shopify } from "@/config";
+import { Router } from "express";
 
 const router = Router();
 const authController = container.get<AuthController>(TYPES.AuthController);
@@ -10,4 +10,4 @@ const authController = container.get<AuthController>(TYPES.AuthController);
 router.get("/", shopify.auth.begin());
 router.get("/callback", shopify.auth.callback(), authController.callbackStore, shopify.redirectToShopifyOrAppRoot());
 
-export default router; 
+export default router;

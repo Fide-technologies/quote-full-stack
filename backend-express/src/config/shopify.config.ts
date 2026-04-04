@@ -1,14 +1,10 @@
-import { ApiVersion, shopifyApp } from "@shopify/shopify-app-express";
-import { LogSeverity, BillingInterval, BillingReplacementBehavior } from "@shopify/shopify-api";
-import { restResources } from "@shopify/shopify-api/rest/admin/2026-01";
-import { MongoDBSessionStorage } from "@shopify/shopify-app-session-storage-mongodb";
-import { PlanType } from "@/constants/plan.constants";
 import { env } from "@/validations/env.validation";
+import { LogSeverity } from "@shopify/shopify-api";
+import { restResources } from "@shopify/shopify-api/rest/admin/2026-01";
+import { type ApiVersion, shopifyApp } from "@shopify/shopify-app-express";
+import { MongoDBSessionStorage } from "@shopify/shopify-app-session-storage-mongodb";
 
-const sessionStorage = new MongoDBSessionStorage(
-    new URL(env.MONGODB_URI),
-    env.MONGODB_NAME
-);
+const sessionStorage = new MongoDBSessionStorage(new URL(env.MONGODB_URI), env.MONGODB_NAME);
 
 const shopify = shopifyApp({
     api: {
@@ -25,22 +21,6 @@ const shopify = shopifyApp({
         },
         isTesting: env.NODE_ENV !== "production",
         isCustomStoreApp: false,
-        billing: {
-            [PlanType.PRO]: {
-                amount: 14.99,
-                currencyCode: "USD",
-                interval: BillingInterval.Every30Days,
-                trialDays: 7,
-                replacementBehavior: BillingReplacementBehavior.ApplyImmediately,
-            },
-            [PlanType.ULTIMATE]: {
-                amount: 49.99,
-                currencyCode: "USD",
-                interval: BillingInterval.Every30Days,
-                trialDays: 14,
-                replacementBehavior: BillingReplacementBehavior.ApplyImmediately,
-            }
-        } as any
     },
     auth: {
         path: "/api/auth",

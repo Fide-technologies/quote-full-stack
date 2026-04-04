@@ -1,9 +1,9 @@
-import { injectable } from "inversify";
-import { v2 as cloudinary } from "cloudinary";
 import type { IUploadService } from "@/interfaces";
-import { env } from "@/validations/env.validation";
 import { logger } from "@/utils/logger";
+import { env } from "@/validations/env.validation";
+import { v2 as cloudinary } from "cloudinary";
 import type { Express } from "express";
+import { injectable } from "inversify";
 
 @injectable()
 export class CloudinaryUploadService implements IUploadService {
@@ -37,7 +37,7 @@ export class CloudinaryUploadService implements IUploadService {
                         }
                         // Return the public_id as the "key" for the DB
                         resolve(result.public_id);
-                    }
+                    },
                 );
 
                 uploadStream.end(file.buffer);
@@ -50,7 +50,7 @@ export class CloudinaryUploadService implements IUploadService {
     async getPresignedUrl(publicId: string): Promise<string> {
         // Return the secure URL for a given public_id. Cloudinary handles this via direct URL or signed URL.
         // If the public_id is already a full URL (possible transition legacy), just return it.
-        if (publicId.startsWith('http')) {
+        if (publicId.startsWith("http")) {
             return publicId;
         }
 
@@ -60,4 +60,3 @@ export class CloudinaryUploadService implements IUploadService {
         });
     }
 }
-

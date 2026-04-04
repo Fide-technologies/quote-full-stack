@@ -1,7 +1,7 @@
-import { Router } from "express";
+import type { MerchantController } from "@/controllers/merchant.controller";
 import { container } from "@/inversify.config";
 import { TYPES } from "@/types";
-import { MerchantController } from "@/controllers/merchant.controller";
+import { Router } from "express";
 
 const merchantsRouter = Router();
 const merchantController = container.get<MerchantController>(TYPES.MerchantController);
