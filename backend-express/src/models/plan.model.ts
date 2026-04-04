@@ -1,6 +1,6 @@
-import mongoose, { Schema } from "mongoose";
-import type { IPlan, PlanDocument } from "@/types";
 import { PLAN_TYPE_VALUES } from "@/constants";
+import type { IPlan, PlanDocument } from "@/types";
+import mongoose, { Schema } from "mongoose";
 
 const planSchema = new Schema<IPlan>(
     {
@@ -22,9 +22,11 @@ const planSchema = new Schema<IPlan>(
             type: Boolean,
             default: false,
         },
-        permissions: [{
-            type: String,
-        }],
+        permissions: [
+            {
+                type: String,
+            },
+        ],
         trialDays: {
             type: Number,
             default: 0,
@@ -34,7 +36,7 @@ const planSchema = new Schema<IPlan>(
             default: true,
         },
     },
-    { timestamps: true }
+    { timestamps: true },
 );
 
 export const Plan = mongoose.model<IPlan>("Plan", planSchema);
