@@ -4,9 +4,11 @@ WORKDIR /app
 
 # --- Step 1: Build Frontend ---
 FROM base AS frontend-builder
-# Copy only necessary files for frontend build to leverage Docker caching
+# Copy only necessary files for frontend build
+COPY package.json bun.lock ./
 COPY frontend/package.json frontend/bun.lock ./frontend/
-RUN cd frontend && bun install --frozen-lockfile
+COPY backend-express/package.json backend-express/bun.lock ./backend-express/
+RUN bun install --frozen-lockfile
 COPY frontend/ ./frontend/
 RUN cd frontend && bun run build
 
@@ -14,16 +16,14 @@ RUN cd frontend && bun run build
 FROM base AS runner
 # Copy root package files
 COPY package.json bun.lock ./
-# Copy backend workspace package files
+# Copy workspace package files
 COPY backend-express/package.json backend-express/bun.lock ./backend-express/
+COPY frontend/package.json frontend/bun.lock ./frontend/
 RUN bun install --frozen-lockfile
 
 # Copy backend source
 COPY backend-express/ ./backend-express/
-# Copy the BUILT frontend to the path expected by the backend
-# Your app.ts uses: path.join(__dirname, "..", "..", "frontend", "dist")
-# In the runner, we'll place it in /app/frontend/dist so that if the backend
-# is in /app/backend-express, the relative path works.
+# Copy the BUILT frontend
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 
 # Build backend (TypeScript)
