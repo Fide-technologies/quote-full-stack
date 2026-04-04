@@ -36,10 +36,11 @@ export class App {
     }
 
     private securityConfig(): void {
-        // Global Rate Limiter to prevent brute force and DoS
+        this.app.set("trust proxy", true);
+
         const globalLimiter = rateLimit({
-            windowMs: 15 * 60 * 1000, // 15 minutes
-            max: 1000, // limit each IP to 1000 requests per windowMs
+            windowMs: 15 * 60 * 1000,
+            max: 1000,
             message: {
                 success: false,
                 message: "Too many requests from this IP, please try again later."
@@ -52,17 +53,13 @@ export class App {
     }
 
     private config(): void {
-        // shopify.cspHeaders() sets the frame-ancestors CSP directive
-        // that allows Shopify's admin to embed this app in an iframe.
         this.app.use(shopify.cspHeaders());
 
-        // Serve Static files
         this.app.use(express.static(STATIC_PATH));
         this.app.use('/public', express.static(path.join(__dirname, '..', 'public')));
     }
 
     private routes(): void {
-        // Health Check with DB connectivity test
         this.app.get("/health", async (req, res) => {
             const dbStatus = mongoose.connection.readyState === 1 ? "Connected" : "Disconnected";
             const status = dbStatus === "Connected" ? HTTP_STATUS.OK : HTTP_STATUS.INTERNAL_SERVER_ERROR;
@@ -75,15 +72,11 @@ export class App {
             });
         });
 
-        // 1. Webhooks MUST be registered before any body-parsing middleware
-        // This is because shopify.processWebhooks needs the raw request body for HMAC verification
         this.app.use("/api/webhooks", webhooksRouter);
 
-        // 2. Global body parsers for all other routes
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
 
-        // API Routes
         this.app.use("/api/auth", authRouter);
         this.app.use("/api/quotes", quotesRouter);
         this.app.use("/api/merchants", merchantsRouter);
