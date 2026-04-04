@@ -15,13 +15,13 @@ export class DashboardController extends BaseController {
 
     public getStats = async (req: Request, res: Response) => {
         try {
-            const shop = res.locals.shopify?.session?.shop || req.query.shop as string;
+            const session = res.locals.shopify?.session;
 
-            if (!shop) {
-                return this.handleError(res, new Error(CONTROLLER.SHOP_REQUIRED), CONTROLLER.AUTH_FAILED);
+            if (!session) {
+                return this.handleError(res, new Error(CONTROLLER.AUTH_FAILED), CONTROLLER.AUTH_FAILED);
             }
 
-            const stats = await this.dashboardService.getStats(shop);
+            const stats = await this.dashboardService.getStats(session);
 
             return this.ok(
                 res,
