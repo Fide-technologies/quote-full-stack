@@ -1,24 +1,22 @@
-
-import { injectable, inject } from "inversify";
-import { TYPES } from "@/types/types";
+import { ERROR_MESSAGES } from "@/constants";
 import type { IMerchantRepository } from "@/interfaces/repositories/IMerchantRepository";
 import type { IPlanRepository } from "@/interfaces/repositories/IPlanRepository";
 import type { IUsageService } from "@/interfaces/services/IUsageService";
 import type { MerchantDocument } from "@/types/merchant.types";
 import type { PlanDocument } from "@/types/plan.types";
-import { ERROR_MESSAGES } from "@/constants";
+import { TYPES } from "@/types/types";
+import { inject, injectable } from "inversify";
 
 @injectable()
 export class UsageService implements IUsageService {
     constructor(
         @inject(TYPES.IMerchantRepository) private merchantRepository: IMerchantRepository,
-        @inject(TYPES.IPlanRepository) private planRepository: IPlanRepository
-    ) { }
+        @inject(TYPES.IPlanRepository) private planRepository: IPlanRepository,
+    ) {}
 
     async getMerchantPlanAndUsage(shop: string): Promise<{ merchant: MerchantDocument; plan: PlanDocument }> {
         const merchant = await this.merchantRepository.findOne({ shop });
         if (!merchant) throw new Error(ERROR_MESSAGES.MERCHANT.NOT_FOUND_FOR_SHOP(shop));
-
 
         if (!merchant.planId) {
             throw new Error(ERROR_MESSAGES.MERCHANT.NO_PLAN);
@@ -63,10 +61,7 @@ export class UsageService implements IUsageService {
 
     async incrementUsage(merchantId: string): Promise<void> {
         // We use update with atomic operator
-        await this.merchantRepository.update(
-            { _id: merchantId },
-            { $inc: { "usage.quotesUsed": 1 } }
-        );
+        await this.merchantRepository.update({ _id: merchantId }, { $inc: { "usage.quotesUsed": 1 } });
     }
 
     async resetQuotaIfNeeded(merchant: MerchantDocument, plan: PlanDocument): Promise<void> {
@@ -83,19 +78,16 @@ export class UsageService implements IUsageService {
                 {
                     $set: {
                         "usage.quotesUsed": 0,
-                        "usage.quotaPeriodStart": now
-                    }
-                }
+                        "usage.quotaPeriodStart": now,
+                    },
+                },
             );
             // Update local instance to reflect changes for immediate checks
             merchant.usage.quotesUsed = 0;
             merchant.usage.quotaPeriodStart = now;
         } else if (!merchant.usage.quotaPeriodStart) {
             // Initialize usage period if missing
-            await this.merchantRepository.update(
-                { _id: merchant._id },
-                { $set: { "usage.quotaPeriodStart": now } }
-            );
+            await this.merchantRepository.update({ _id: merchant._id }, { $set: { "usage.quotaPeriodStart": now } });
             merchant.usage.quotaPeriodStart = now;
         }
     }
