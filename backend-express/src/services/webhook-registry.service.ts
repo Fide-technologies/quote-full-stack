@@ -1,6 +1,6 @@
-import { injectable } from "inversify";
-import type { WebhookHandler } from "@shopify/shopify-api";
 import type { IWebhookRegistry } from "@/interfaces";
+import type { WebhookHandler } from "@shopify/shopify-api";
+import { injectable } from "inversify";
 
 @injectable()
 export class WebhookRegistry implements IWebhookRegistry {
