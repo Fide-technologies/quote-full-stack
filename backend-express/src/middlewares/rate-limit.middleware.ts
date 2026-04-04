@@ -8,8 +8,8 @@ export const quoteSubmissionLimiter = rateLimit({
         // App proxy usually sets shopify.shop or query.shop
         const shop = (req as any).shopify?.shop || req.query?.shop || 'unknown';
 
-        // Shopify proxy headers for actual client IP (ipKeyGenerator bypass token)
-        const forwarded = req.headers['x-forwarded-for'] || req.headers['x-shopify-client-ip'] || req['ip'];
+        // Shopify proxy headers for actual client IP
+        const forwarded = req.headers['x-forwarded-for'] || req.headers['x-shopify-client-ip'] || req.socket.remoteAddress;
         let clientIp = 'unknown';
         if (Array.isArray(forwarded) && forwarded.length > 0) {
             clientIp = forwarded[0] || 'unknown';
@@ -24,4 +24,5 @@ export const quoteSubmissionLimiter = rateLimit({
     },
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    validate: { ip: false }, // Suppress ERR_ERL_KEY_GEN_IPV6 warning/error
 });
