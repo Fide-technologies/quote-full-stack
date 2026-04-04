@@ -1,0 +1,67 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main] # Trigger only on pushes to the main branch
+  pull_request:
+    branches: [main] # Also run quality checks on PRs
+
+jobs:
+  quality:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Backend Analysis (Lint & Build)
+        run: |
+          cd backend-express
+          bun run check
+          bun run build
+        
+      - name: Frontend Analysis (Lint)
+        run: |
+          cd frontend
+          bun run lint
+
+  deploy:
+    name: Deploy to Production
+    needs: quality
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Step 1: Deploy Express Backend + React Frontend to Fly.io
+      # This uses the Dockerfile in the root which handles both builds
+      - name: Setup Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy to Fly.io
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      # Step 2: Deploy Shopify Extensions (Theme App Extension, etc)
+      # This updates the extensions in the Shopify Partners Dashboard
+      - name: Deploy Extensions to Shopify
+        run: bun run deploy -- --force
+        env:
+          SHOPIFY_CLI_PARTNERS_TOKEN: ${{ secrets.SHOPIFY_CLI_PARTNERS_TOKEN }}
+          SHOPIFY_FLAG_FORCE: '1'

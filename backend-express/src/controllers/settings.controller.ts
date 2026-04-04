@@ -22,14 +22,19 @@ export class SettingsController extends BaseController {
 
             const settings = await this.settingsService.getSettings(session);
             const plan = await this.planService.getMerchantPlan(session.shop);
+            const themeAudit = await this.settingsService.checkAppEmbedStatus(session);
 
-            // Append plan information to settings response
-            const settingsWithPlan = {
+            // Append plan and connectivity information to settings response
+            const settingsExtended = {
                 ...settings,
-                plan: plan?.name
+                plan: plan?.name,
+                isAppEmbedded: themeAudit.isEmbedded,
+                deepLinkUrl: themeAudit.themeId 
+                    ? `https://admin.shopify.com/store/${session.shop.split(".")[0]}/themes/${themeAudit.themeId}/editor?context=apps`
+                    : `shopify:admin/themes/current/editor?context=apps`
             };
 
-            return this.ok(res, settingsWithPlan, API_MESSAGES.SETTINGS.RETRIEVED);
+            return this.ok(res, settingsExtended, API_MESSAGES.SETTINGS.RETRIEVED);
         } catch (error) {
             return this.handleError(res, error, API_MESSAGES.SETTINGS.FAILED_RETRIEVE);
         }
@@ -38,10 +43,9 @@ export class SettingsController extends BaseController {
     public updateSettings = async (req: Request, res: Response) => {
         try {
             const session = res.locals.shopify.session;
-            const { showOnAll } = req.body;
-            console.log("[SettingsController] updateSettings body:", req.body, "showOnAll:", showOnAll, "Type:", typeof showOnAll);
+            console.log("[SettingsController] updateSettings body:", req.body);
 
-            await this.settingsService.updateSettings(session, { showOnAll });
+            await this.settingsService.updateSettings(session, req.body);
 
             return this.ok(res, { success: true }, API_MESSAGES.SETTINGS.UPDATED);
         } catch (error) {

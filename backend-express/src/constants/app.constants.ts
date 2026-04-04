@@ -71,10 +71,38 @@ export const QUOTE_ATTRIBUTES = {
 };
 
 export const SETTINGS_DEFAULTS = {
-    NAMESPACE: "request_q",
-    KEY_SHOW_ON_ALL: "show_on_all",
-    TYPE_BOOLEAN: "boolean",
-    OWNER_TYPE_SHOP: "SHOP"
+    NAMESPACE: "merchant_quote",
+    KEY: "config",
+    TYPE: "json",
+    OWNER_TYPE_SHOP: "SHOP",
+    DEFAULTS: {
+        appEnabled: true,
+        buttonText: "Request Quote",
+        hideAddToCart: true,
+        buttonPosition: 'all',
+        showOnSelectedProducts: false,
+        hidePriceGlobal: false,
+        loginToSeePrice: false,
+        hidePriceByTags: [],
+        hidePriceByCollections: [],
+        allowPriceSuggestion: false,
+        allowMultipleProducts: true,
+        cartToQuote: true,
+        redirectAfterSubmit: '',
+        autoCreateDraftOrder: false,
+        visibility: 'all',
+        customerTags: [],
+        showOnProductPage: true,
+        showOnCollectionPage: true,
+        showOnHomePage: false,
+        showOnCartPage: true,
+        formType: 'popup',
+        replacePrice: true,
+        adminEmailEnabled: true,
+        adminEmail: '',
+        customerEmailEnabled: true,
+        emailTemplate: 'Thank you for your quote request! We will get back to you soon.',
+    }
 };
 
 export const SHOPIFY_DEFAULTS = {
@@ -117,7 +145,6 @@ export const ERROR_MESSAGES = {
         NOT_FOUND: "Plan not found"
     },
     SETTINGS: {
-        INVALID_TYPE: "showOnAll must be a boolean",
         NO_SHOP_ID: "Could not retrieve Shop ID for metafield update",
         UPDATE_ERROR: "Shopify API Error: "
     }

@@ -5,6 +5,6 @@ export function useDashboardStats() {
     return useQuery<DashboardStats>({
         queryKey: ['dashboard-stats'],
         queryFn: getDashboardStats,
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true,
     });
 }

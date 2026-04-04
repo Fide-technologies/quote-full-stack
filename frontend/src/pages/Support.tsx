@@ -59,7 +59,7 @@ export const Support: React.FC = () => {
                                         </Text>
                                         <List>
                                             <List.Item>
-                                                Go to your <Link url="shopify:admin/themes/current/editor" external>theme editor</Link>.
+                                                Go to your <Link url="shopify:admin/themes/current/editor" external><InlineStack gap="100" blockAlign="center">theme editor<Icon source={ExternalIcon} tone="base" /></InlineStack></Link>.
                                             </List.Item>
                                             <List.Item>
                                                 Select the <strong>App embeds</strong> tab on the left sidebar.

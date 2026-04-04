@@ -9,7 +9,6 @@ import { PlusIcon, SaveIcon } from '@shopify/polaris-icons';
 import { useFormBuilder } from '../hooks/useFormBuilder';
 import { PageLoader } from '../components/loaders/PageLoader';
 import { BuilderTab } from '../components/FormBuilder/tabs/BuilderTab';
-import { SettingsTab } from '../components/FormBuilder/tabs/SettingsTab';
 import { PreviewTab } from '../components/FormBuilder/tabs/PreviewTab';
 
 export const FormBuilder: React.FC = () => {
@@ -60,13 +59,7 @@ export const FormBuilder: React.FC = () => {
             content: 'Preview',
             accessibilityLabel: 'View full form preview',
             panelID: 'preview-panel',
-        },
-        {
-            id: 'settings-tab',
-            content: 'Settings',
-            accessibilityLabel: 'Edit form settings',
-            panelID: 'settings-panel',
-        },
+        }
     ];
 
     return (
@@ -94,7 +87,7 @@ export const FormBuilder: React.FC = () => {
                         {formState && (
                             <>
                                 {selectedTab === 0 && (
-                                    <BuilderTab 
+                                    <BuilderTab
                                         formState={formState}
                                         setFormState={setFormState}
                                         expandedStep={expandedStep}
@@ -104,17 +97,11 @@ export const FormBuilder: React.FC = () => {
                                     />
                                 )}
                                 {selectedTab === 1 && (
-                                    <PreviewTab 
+                                    <PreviewTab
                                         formState={formState}
                                         previewStepIndex={previewStepIndex}
                                         setPreviewStepIndex={setPreviewStepIndex}
                                         stepsCount={stepsCount}
-                                    />
-                                )}
-                                {selectedTab === 2 && (
-                                    <SettingsTab 
-                                        formState={formState}
-                                        setFormState={setFormState}
                                     />
                                 )}
                             </>

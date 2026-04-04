@@ -6,68 +6,106 @@
 }
 {% endschema %}
 
-{% assign show_quote_globally = shop.metafields.request_q.show_on_all.value %}
+{% assign config = shop.metafields.merchant_quote.config.value %}
+{% assign app_enabled = config.appEnabled | default: false %}
 
-{% if show_quote_globally == true %}
-  <style id="rq-instant-hide">
-    .product-form__buttons, .shopify-payment-button, .price, .product-price, .product__price,
-    .product-single__price, .product-form__item--quantity, .quantity,
-    [name="add"], .product-form__submit, .payment-buttons,
-    .shopify-payment-button__button--unbranded, .product-form__payment-container,
-    .price-item, .product__tax, form[action*="/cart/add"], .cart-submit, .add-to-cart, .btn--add-to-cart,
-    a[href="{{ routes.cart_url }}"], a[href*="/cart"], a[href="#cart-drawer"],
-    .header__icon--cart, #cart-icon-bubble, .site-header__cart, .cart-link, form[action="/cart"], .cart-count-bubble,
-    [id*="cart-icon"], [class*="cart-icon"], [class*="icon-cart"], [class*="header__cart"] {
-      display: none !important; margin: 0 !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important;
+{% if app_enabled %}
+  {% comment %} 1. Initial Visibility Check (Customer) {% endcomment %}
+  {% assign show_by_visibility = true %}
+  {% if config.visibility == 'logged_in' and customer == null %}
+    {% assign show_by_visibility = false %}
+  {% endif %}
+
+  {% comment %} 2. Product Targeting Logic {% endcomment %}
+  {% if show_by_visibility and product %}
+    {% if config.displayCondition == 'products' %}
+      {% assign product_id_str = product.id | append: "" %}
+      {% assign found = false %}
+      {% for pid in config.selectedProducts %}
+         {% if pid contains product_id_str %}
+            {% assign found = true %}
+         {% endif %}
+      {% endfor %}
+      {% unless found %}{% assign show_by_visibility = false %}{% endunless %}
+      
+    {% elsif config.displayCondition == 'collections' %}
+      {% assign found = false %}
+      {% if product.collections.size > 0 %}
+        {% for collection in product.collections %}
+          {% assign current_coll_gid = 'gid://shopify/Collection/' | append: collection.id %}
+          {% for scid in config.selectedCollections %}
+            {% if scid == current_coll_gid %}
+              {% assign found = true %}
+              {% break %}
+            {% endif %}
+          {% endfor %}
+          {% if found %}{% break %}{% endif %}
+        {% endfor %}
+      {% endif %}
+      {% unless found %}{% assign show_by_visibility = false %}{% endunless %}
+
+    {% elsif config.displayCondition == 'custom' %}
+      {% assign found = false %}
+      {% for tag in product.tags %}
+         {% for target_tag in config.productTags %}
+            {% if tag == target_tag %}
+               {% assign found = true %}
+            {% endif %}
+         {% endfor %}
+      {% endfor %}
+      {% unless found %}{% assign show_by_visibility = false %}{% endunless %}
+    {% endif %}
+  {% endif %}
+
+  {% comment %} 2. Global Configuration Bridge {% endcomment %}
+  <script id="mq-global-config">
+    window.rqGlobalSettings = {
+      appEnabled: {{ config.appEnabled | default: false | json }},
+      shouldShow: {{ show_by_visibility | json }},
+      displayCondition: {{ config.displayCondition | default: "all" | json }},
+      selectedCollections: {{ config.selectedCollections | default: "[]" | json }},
+      productCollectionGids: [{% for c in product.collections %}"gid://shopify/Collection/{{c.id}}"{% unless forloop.last %},{% endunless %}{% endfor %}],
+      buttonText: {{ config.buttonText | default: "Request Quote" | json }},
+      buttonColor: {{ config.buttonColor | default: "#008060" | json }},
+      buttonTextColor: {{ config.buttonTextColor | default: "#FFFFFF" | json }},
+      hideAddToCart: {{ config.hideAddToCart | default: false | json }},
+      hideBuyNow: {{ config.hideBuyNow | default: false | json }},
+      placementLocation: {{ config.placementLocation | default: "above" | json }},
+      visibility: {{ config.visibility | default: "all" | json }}
+    };
+  </script>
+
+  {% comment %} 3. Conditional Hiding Styles {% endcomment %}
+  {% if show_by_visibility %}
+    <style id="mq-hiding-logic">
+      {% if config.hideAddToCart %}
+        [name="add"], .product-form__submit, .add-to-cart, .btn--add-to-cart, .purchase-details__buttons button,
+        .quantity, .product-form__input--quantity, .product-form__item--quantity, [name="quantity"], .qty-wrapper, .product-form__quantity,
+        .quantity-selector-wrapper, quantity-selector-component, .quantity-selector, .quantity__input {
+          display: none !important; margin: 0 !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; padding: 0 !important;
+        }
+      {% endif %}
+      {% if config.hideBuyNow %}
+        .shopify-payment-button, .payment-buttons, .shopify-payment-button__button--unbranded, .dynamic-checkout__buttons {
+          display: none !important; margin: 0 !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important;
+        }
+      {% endif %}
+      {% if config.hidePriceGlobal %}
+        .price, .product-price, .product__price, .product-single__price, .price-item, .product__tax {
+          display: none !important; margin: 0 !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important;
+        }
+      {% endif %}
+    </style>
+  {% endif %}
+
+  {% comment %} 3. Custom CSS Overrides (if any) {% endcomment %}
+  <style id="mq-custom-colors">
+    /* Global variables for consistent styling across blocks */
+    :root {
+      --mq-primary-color: {{ config.buttonColor | default: "#008060" }};
+      --mq-text-color: {{ config.buttonTextColor | default: "#FFFFFF" }};
     }
   </style>
-
-  <script>
-    // Redirect away from the cart page if the settings are set to hide prices globally
-    if (window.location.pathname.toLowerCase() === '{{ routes.cart_url }}' || window.location.pathname.toLowerCase().startsWith('{{ routes.cart_url }}/')) {
-        window.location.replace('/');
-    }
-
-    // Forcefully remove cart icons from the DOM dynamically
-    document.addEventListener("DOMContentLoaded", function() {
-        const hideCartElements = () => {
-            const selectors = [
-                'a[href="{{ routes.cart_url }}"]', 'a[href*="/cart"]', 'a[href="#cart-drawer"]', 
-                '#cart-icon-bubble', '.header__icon--cart', 'cart-drawer', 'cart-notification',
-                '[id*="cart-icon"]', '[class*="cart-icon"]', '[class*="icon-cart"]', '[class*="header__cart"]'
-            ];
-            
-            document.querySelectorAll(selectors.join(', ')).forEach(el => {
-                if (el) {
-                    el.style.setProperty('display', 'none', 'important');
-                    el.style.setProperty('visibility', 'hidden', 'important');
-                    el.style.setProperty('opacity', '0', 'important');
-                    el.style.setProperty('width', '0', 'important');
-                    el.style.setProperty('height', '0', 'important');
-                    el.style.setProperty('margin', '0', 'important');
-                    el.style.setProperty('padding', '0', 'important');
-                    el.style.setProperty('overflow', 'hidden', 'important');
-                    el.style.setProperty('pointer-events', 'none', 'important');
-                    el.style.setProperty('position', 'absolute', 'important');
-                }
-            });
-        };
-        
-        // Run immediately
-        hideCartElements();
-        
-        // Also run on a slight delay to catch any late rendering (like React/Web Components)
-        setTimeout(hideCartElements, 500);
-        setTimeout(hideCartElements, 1000);
-        setTimeout(hideCartElements, 2000);
-        
-        // Observe body for changes
-        const observer = new MutationObserver(hideCartElements);
-        if (document.body) {
-            observer.observe(document.body, { childList: true, subtree: true });
-        }
-    });
-  </script>
 
   {{ 'request-quote.css' | asset_url | stylesheet_tag }}
   <script src="{{ 'rq-validation.js' | asset_url }}" defer="defer"></script>
@@ -78,7 +116,4 @@
 
   {% render 'request-quote-form-ui', block_id: 'global' %}
   {% render 'quote-cart-drawer' %}
-
 {% endif %}
-
-

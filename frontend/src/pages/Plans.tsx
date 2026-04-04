@@ -16,7 +16,7 @@ import {
     InlineGrid, 
     FooterHelp
 } from '@shopify/polaris';
-import { CheckIcon, XIcon } from "@shopify/polaris-icons";
+import { CheckIcon, XIcon, EmailIcon } from "@shopify/polaris-icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCurrentPlan, upgradePlan } from "../api/plans";
 import { TitleBar } from '@shopify/app-bridge-react';
@@ -238,7 +238,10 @@ export const Plans: React.FC = () => {
                 </Layout>
             </Box>
             <FooterHelp>
-                Have questions about our plans? <Link url="/support">Contact Support</Link>
+                <InlineStack gap="100" align="center" blockAlign="center">
+                    <Icon source={EmailIcon} tone="base" />
+                    <span>Have questions about our plans? <Link url="/support">Contact Support</Link></span>
+                </InlineStack>
             </FooterHelp>
         </Page>
     );
