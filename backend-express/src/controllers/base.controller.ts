@@ -1,6 +1,6 @@
-import { injectable } from "inversify";
-import type { Response } from "express";
 import { API_MESSAGES, HTTP_STATUS } from "@/constants";
+import type { Response } from "express";
+import { injectable } from "inversify";
 
 @injectable()
 export abstract class BaseController {
@@ -12,7 +12,12 @@ export abstract class BaseController {
      * @returns {Response<T>}
      * Send a success response (200 OK)
      */
-    protected ok<T>(res: Response, data: T, message: string = API_MESSAGES.SUCCESS, extras: Record<string, unknown> = {}) {
+    protected ok<T>(
+        res: Response,
+        data: T,
+        message: string = API_MESSAGES.SUCCESS,
+        extras: Record<string, unknown> = {},
+    ) {
         return res.status(HTTP_STATUS.OK).json({
             success: true,
             message,
@@ -44,7 +49,12 @@ export abstract class BaseController {
      * @returns {Response<T>}
      * Send an error response
      */
-    protected fail(res: Response, message: string, statusCode: number = HTTP_STATUS.INTERNAL_SERVER_ERROR, errors?: unknown[]) {
+    protected fail(
+        res: Response,
+        message: string,
+        statusCode: number = HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        errors?: unknown[],
+    ) {
         return res.status(statusCode).json({
             success: false,
             message,
@@ -61,7 +71,12 @@ export abstract class BaseController {
      * @returns {Response<T>}
      * Handle common error scenarios
      */
-    protected handleError(res: Response, error: unknown, defaultMessage: string = API_MESSAGES.ERROR_DEFAULT, statusCode: number = HTTP_STATUS.INTERNAL_SERVER_ERROR) {
+    protected handleError(
+        res: Response,
+        error: unknown,
+        defaultMessage: string = API_MESSAGES.ERROR_DEFAULT,
+        statusCode: number = HTTP_STATUS.INTERNAL_SERVER_ERROR,
+    ) {
         const message = error instanceof Error ? error.message : defaultMessage;
         return this.fail(res, message, statusCode);
     }
