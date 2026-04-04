@@ -1,4 +1,4 @@
-import { Session } from "@shopify/shopify-api";
+import type { Session } from "@shopify/shopify-api";
 
 declare global {
     namespace Express {
@@ -15,5 +15,3 @@ declare global {
         }
     }
 }
-
-export { };
