@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, BlockStack, Text, Divider, Box, Tabs } from '@shopify/polaris';
-import type { IForm } from '../../../api/forms';
+import { BlockStack, Text, Box, Grid } from '@shopify/polaris';
+import type { IForm } from '@/api/forms';
 import { FormSettings } from '../FormSettings';
 import { SuccessPreview } from './SuccessPreview';
 
@@ -13,45 +13,28 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
     formState,
     setFormState
 }) => {
-    const [selectedSubTab, setSelectedSubTab] = React.useState(0);
-
-    const subTabs = [
-        {
-            id: 'settings-form-sub',
-            content: 'Settings Form',
-            accessibilityLabel: 'Edit form settings fields',
-            panelID: 'settings-form-panel',
-        },
-        {
-            id: 'settings-preview-sub',
-            content: 'Preview Success Popup',
-            accessibilityLabel: 'View the success popup preview',
-            panelID: 'settings-preview-panel',
-        },
-    ];
-
     return (
-        <Card padding="0">
-            <Tabs tabs={subTabs} selected={selectedSubTab} onSelect={setSelectedSubTab}>
-                <Box padding="400">
-                    {selectedSubTab === 0 ? (
-                        <div className="max-w-[800px] mx-auto">
-                            <FormSettings formState={formState} setFormState={setFormState} />
-                        </div>
-                    ) : (
+        <Box padding="500">
+            <Grid>
+                <Grid.Cell columnSpan={{ xs: 6, lg: 7 }}>
+                    <FormSettings formState={formState} setFormState={setFormState} />
+                </Grid.Cell>
+                <Grid.Cell columnSpan={{ xs: 6, lg: 5 }}>
+                    <div style={{ position: 'sticky', top: 'var(--p-space-400)', alignSelf: 'start' }}>
                         <BlockStack gap="400">
-                            <div className="text-center mb-4">
-                                <Text variant="headingMd" as="h2">Success State Preview</Text>
-                                <Text variant="bodySm" tone="subdued" as="p">This is how your customers will see the final confirmation message.</Text>
-                            </div>
-                            <Divider />
-                            <Box paddingBlockStart="600">
-                                <SuccessPreview formState={formState} />
+                            <Box padding="400" background="bg-surface-secondary" borderRadius="200" borderWidth="025" borderColor="border">
+                                <BlockStack gap="400">
+                                    <div className="text-center">
+                                        <Text variant="headingMd" as="h2">Success State Preview</Text>
+                                        <Text variant="bodySm" tone="subdued" as="p">This is how your customers will see the final confirmation message.</Text>
+                                    </div>
+                                    <SuccessPreview formState={formState} />
+                                </BlockStack>
                             </Box>
                         </BlockStack>
-                    ) }
-                </Box>
-            </Tabs>
-        </Card>
+                    </div>
+                </Grid.Cell>
+            </Grid>
+        </Box>
     );
 };
