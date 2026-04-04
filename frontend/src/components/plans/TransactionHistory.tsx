@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Card, IndexTable, Text, BlockStack, Badge, Box, EmptyState, Pagination, InlineStack, Button } from '@shopify/polaris';
+import { ExternalIcon } from '@shopify/polaris-icons';
 import { useQuery } from '@tanstack/react-query';
 import { getChargeHistory } from '../../api/plans';
 import { formatPricingDetails, formatChargeDate, getChargeStatusTone } from '../../utils/billingFormatters';
@@ -112,6 +113,7 @@ export const TransactionHistory: React.FC = () => {
                         variant="tertiary"
                         url={`https://${new URLSearchParams(window.location.search).get('shop')}/admin/settings/billing/charges`}
                         external
+                        icon={ExternalIcon}
                     >
                         View in Shopify admin
                     </Button>
