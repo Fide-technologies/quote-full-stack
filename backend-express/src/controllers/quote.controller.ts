@@ -1,7 +1,7 @@
 import { API_MESSAGES, CONTROLLER, HTTP_STATUS } from "@/constants";
 import type { IQuoteService } from "@/interfaces";
 import { QuoteMapper } from "@/mappers/quote.mapper";
-import { TYPES, type IQuote, type QuoteDocument } from "@/types";
+import { type IQuote, type QuoteDocument, TYPES } from "@/types";
 import { logger } from "@/utils/logger";
 import type { Request, Response } from "express";
 import { inject, injectable } from "inversify";
