@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [master] # Trigger only on pushes to the master branch
+    branches: [master, dev] # Trigger on pushed to master or dev
   pull_request:
-    branches: [master] # Also run quality checks on PRs
+    branches: [master, dev]
 
 jobs:
   quality:
@@ -35,7 +35,7 @@ jobs:
   deploy:
     name: Deploy to Production
     needs: quality
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev') && github.event_name == 'push'
     runs-on: ubuntu-latest
     
     steps:
