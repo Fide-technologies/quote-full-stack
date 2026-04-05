@@ -14,9 +14,19 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -37,14 +47,25 @@ jobs:
     needs: quality
     if: (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev') && github.event_name == 'push'
     runs-on: ubuntu-latest
+    continue-on-error: false
     
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -52,7 +73,7 @@ jobs:
       # Step 1: Deploy Express Backend + React Frontend to Fly.io
       # This uses the Dockerfile in the root which handles both builds
       - name: Setup Flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
+        uses: superfly/flyctl-actions/setup-flyctl@v1
       - name: Deploy to Fly.io
         run: flyctl deploy --remote-only
         env:
