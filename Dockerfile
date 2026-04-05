@@ -2,50 +2,29 @@
 FROM oven/bun:latest AS base
 WORKDIR /app
 
-# Stage 1: Install Dependencies (All)
-FROM base AS install
-# Copy root manifests and lockfile (wildcard handles .lockb or .lock)
-COPY package.json bun.lock* ./
-# IMPORTANT: Copy all workspace manifests to satisfy Bun's strict workspace validation
-COPY frontend/package.json ./frontend/
-COPY backend-express/package.json ./backend-express/
-
-# Install root & workspace dependencies
+# --- Step 1: Build Frontend ---
+FROM base AS frontend-builder
+COPY . .
 RUN bun install --frozen-lockfile
+RUN cd frontend && bun run build
 
-# Stage 2: Build App
-FROM base AS build
-# Copy node_modules from the install stage
-COPY --from=install /app/node_modules ./node_modules
-# Copy all source files
+# --- Step 2: Runner ---
+FROM base AS runner
+# Copy everything correctly to satisfy Bun workspaces
 COPY . .
 
-# Build the frontend and backend workspaces
-RUN cd frontend && bun run build
+# Install all dependencies (production + dev if needed for build, but here just everything to keep it simple and fix workspace resolution)
+RUN bun install --frozen-lockfile
+
+# Copy the built frontend artifacts from the frontend-builder stage
+COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
+
+# Build the backend source code
 RUN cd backend-express && bun run build
 
-# Stage 3: Runner (Production)
-FROM base AS runner
-# Copy only the necessary manifests for production filtering
-COPY package.json bun.lock* ./
-COPY backend-express/package.json ./backend-express/
-# Note: We do NOT copy frontend folder into the FINAL runner if it's only serving the dist
-# However, to satisfy Bun's workspaces array in root package.json if it's present, 
-# we might need to create an empty directory or strip the workspace field.
-RUN mkdir -p frontend
-
-# Install only production dependencies for the target workspace
-RUN bun install --frozen-lockfile --production --filter backend-express
-
-# Copy the built artifacts from the build stage
-COPY --from=build /app/frontend/dist /app/frontend/dist
-COPY --from=build /app/backend-express/dist /app/backend-express/dist
-# Copy the built backend source
-COPY --from=build /app/backend-express /app/backend-express
-
-# Set environment
+# Set environment variables
 ENV NODE_ENV=production
 EXPOSE 3001
 
-# Execute the backend
+# Start the application using Bun workspaces filter
 CMD ["bun", "run", "--filter", "backend-express", "start"]

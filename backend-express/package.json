@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "bun --watch ./src/index.ts",
     "build": "tsc -b",
-    "start": "bun run ./dist/index.js",
+    "start": "bun run ./src/index.ts",
     "prebuild": "cd ../frontend && bun run build",
     "postinstall": "bun run build",
     "test": "NODE_ENV=development vitest run",
