@@ -17,6 +17,6 @@ PORT = "3001"
 HOST_SCHEMA = "https"
 
 [[vm]]
-memory = "512mb"
+memory = "2gb"
 cpu_kind = "shared"
-cpus = 1
+cpus = 2
