@@ -4,35 +4,27 @@ WORKDIR /app
 
 # --- Step 1: Build Frontend ---
 FROM base AS frontend-builder
-# Copy only necessary files for frontend build to leverage Docker caching
-COPY frontend/package.json frontend/bun.lock ./frontend/
-RUN cd frontend && bun install --frozen-lockfile
-COPY frontend/ ./frontend/
+COPY . .
+RUN bun install --frozen-lockfile
 RUN cd frontend && bun run build
 
-# --- Step 2: Prepare Runner ---
+# --- Step 2: Runner ---
 FROM base AS runner
-# Copy root package files
-COPY package.json bun.lock ./
-# Copy backend workspace package files
-COPY backend-express/package.json backend-express/bun.lock ./backend-express/
+# Copy everything correctly to satisfy Bun workspaces
+COPY . .
+
+# Install all dependencies (production + dev if needed for build, but here just everything to keep it simple and fix workspace resolution)
 RUN bun install --frozen-lockfile
 
-# Copy backend source
-COPY backend-express/ ./backend-express/
-# Copy the BUILT frontend to the path expected by the backend
-# Your app.ts uses: path.join(__dirname, "..", "..", "frontend", "dist")
-# In the runner, we'll place it in /app/frontend/dist so that if the backend
-# is in /app/backend-express, the relative path works.
+# Copy the built frontend artifacts from the frontend-builder stage
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 
-# Build backend (TypeScript)
+# Build the backend source code
 RUN cd backend-express && bun run build
 
-# Set environment to production
+# Set environment variables
 ENV NODE_ENV=production
-# Expose the internal port (Matches your fly.toml internal_port)
 EXPOSE 3001
 
-# Run the backend using the --filter to target the workspace
+# Start the application using Bun workspaces filter
 CMD ["bun", "run", "--filter", "backend-express", "start"]

@@ -19,7 +19,6 @@ const envSchema = z.object({
     HOST_NAME: z.string().min(4),
     HOST_SCHEMA: z.enum(["http", "https"]),
     IS_PAID_APP: z.enum(["true", "false"]).optional().default("false"),
-    NGROK_AUTHTOKEN: z.string().min(1),
 
     NGROK_DOMAIN: z.string().min(1).optional(),
 
