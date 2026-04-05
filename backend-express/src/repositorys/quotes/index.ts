@@ -57,7 +57,12 @@ export class QuoteRepository extends MongooseBaseRepository<IQuote> implements I
         }
 
         const [data, total] = await Promise.all([
-            this.model.find(query as QueryFilter<IQuote>).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+            this.model
+                .find(query as QueryFilter<IQuote>)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .exec(),
             this.model.countDocuments(query as QueryFilter<IQuote>).exec(),
         ]);
 

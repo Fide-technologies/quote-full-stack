@@ -14,7 +14,7 @@ import { logger } from "@/utils/logger";
 import { env } from "@/validations/env.validation";
 import type { Session } from "@shopify/shopify-api";
 import { inject, injectable } from "inversify";
-import mongoose from "mongoose";
+import type mongoose from "mongoose";
 
 @injectable()
 export class PlanService implements IPlanService {
@@ -33,7 +33,7 @@ export class PlanService implements IPlanService {
     constructor(
         @inject(TYPES.IPlanRepository) private planRepository: IPlanRepository,
         @inject(TYPES.IMerchantService) private merchantService: IMerchantService,
-    ) { }
+    ) {}
 
     async getPlanByName(name: string): Promise<PlanDocument | null> {
         return await this.planRepository.findByName(name);
@@ -143,7 +143,10 @@ export class PlanService implements IPlanService {
             if (status === "ACTIVE" || (status === "CANCELLED" && periodEnd && now < periodEnd)) {
                 const planDoc = await this.planRepository.findByName(lastSub.name);
                 if (planDoc) {
-                    return { planId: (planDoc._id as mongoose.Types.ObjectId), subscriptionStatus: SubscriptionStatus.ACTIVE };
+                    return {
+                        planId: planDoc._id as mongoose.Types.ObjectId,
+                        subscriptionStatus: SubscriptionStatus.ACTIVE,
+                    };
                 }
             }
 
@@ -152,7 +155,10 @@ export class PlanService implements IPlanService {
             }
 
             const freePlan = await this.planRepository.findByName(PlanType.FREE);
-            return { planId: (freePlan?._id as mongoose.Types.ObjectId), subscriptionStatus: SubscriptionStatus.CANCELLED };
+            return {
+                planId: freePlan?._id as mongoose.Types.ObjectId,
+                subscriptionStatus: SubscriptionStatus.CANCELLED,
+            };
         } catch (billingErr: unknown) {
             const message = billingErr instanceof Error ? billingErr.message : String(billingErr);
             logger.warn(`PlanService: Failed verifyReinstallationBilling for ${session.shop}: ${message}`);
@@ -283,7 +289,11 @@ export class PlanService implements IPlanService {
     private async cancelAllActiveSubscriptions(session: Session, shop: string) {
         const client = new shopify.api.clients.Graphql({ session });
         const allSubsRes = await client.request<unknown>(GET_ALL_SUBSCRIPTIONS_QUERY);
-        const data = allSubsRes.data as { currentAppInstallation?: { allSubscriptions?: { edges?: Array<{ node: { id: string, name: string, status: string } }> } } };
+        const data = allSubsRes.data as {
+            currentAppInstallation?: {
+                allSubscriptions?: { edges?: Array<{ node: { id: string; name: string; status: string } }> };
+            };
+        };
         const activeSub = data?.currentAppInstallation?.allSubscriptions?.edges?.[0]?.node;
 
         if (activeSub?.status?.toUpperCase() === "ACTIVE") {
@@ -312,7 +322,12 @@ export class PlanService implements IPlanService {
             const client = new shopify.api.clients.Graphql({ session });
             const response = await client.request<unknown>(GET_CHARGE_HISTORY_QUERY);
 
-            const data = response.data as { currentAppInstallation?: { allSubscriptions?: { edges?: Array<{ node: unknown }> }, oneTimePurchases?: { edges?: Array<{ node: unknown }> } } };
+            const data = response.data as {
+                currentAppInstallation?: {
+                    allSubscriptions?: { edges?: Array<{ node: unknown }> };
+                    oneTimePurchases?: { edges?: Array<{ node: unknown }> };
+                };
+            };
             const subscriptions = data?.currentAppInstallation?.allSubscriptions?.edges || [];
             const oneTimePurchases = data?.currentAppInstallation?.oneTimePurchases?.edges || [];
 
