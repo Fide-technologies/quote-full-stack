@@ -136,7 +136,13 @@ export class SettingsService implements ISettingsService {
     }
     async checkAppEmbedStatus(session: Session): Promise<{ isEmbedded: boolean; themeId: string }> {
         try {
-            const themes = await (shopify.api.rest as unknown as { Theme: { all: (params: { session: Session }) => Promise<{ data: Array<{ role: string; id: number }> }> } }).Theme.all({
+            const themes = await (
+                shopify.api.rest as unknown as {
+                    Theme: {
+                        all: (params: { session: Session }) => Promise<{ data: Array<{ role: string; id: number }> }>;
+                    };
+                }
+            ).Theme.all({
                 session: session,
             });
 
@@ -146,7 +152,15 @@ export class SettingsService implements ISettingsService {
                 return { isEmbedded: false, themeId: "" };
             }
 
-            const assets = await (shopify.api.rest as unknown as { Asset: { all: (params: { session: Session; theme_id: number }) => Promise<{ data: Array<{ key: string }> }> } }).Asset.all({
+            const assets = await (
+                shopify.api.rest as unknown as {
+                    Asset: {
+                        all: (params: { session: Session; theme_id: number }) => Promise<{
+                            data: Array<{ key: string }>;
+                        }>;
+                    };
+                }
+            ).Asset.all({
                 session,
                 theme_id: mainTheme.id,
             });
@@ -155,7 +169,15 @@ export class SettingsService implements ISettingsService {
             if (!settingsAsset) return { isEmbedded: false, themeId: String(mainTheme.id) };
 
             // Fetch the full content of settings_data.json
-            const fullAsset = await (shopify.api.rest as unknown as { Asset: { all: (params: { session: Session; theme_id: number; asset: { key: string } }) => Promise<{ data: Array<{ value: string }> }> } }).Asset.all({
+            const fullAsset = await (
+                shopify.api.rest as unknown as {
+                    Asset: {
+                        all: (params: { session: Session; theme_id: number; asset: { key: string } }) => Promise<{
+                            data: Array<{ value: string }>;
+                        }>;
+                    };
+                }
+            ).Asset.all({
                 session,
                 theme_id: mainTheme.id,
                 asset: { key: "config/settings_data.json" },
@@ -168,12 +190,10 @@ export class SettingsService implements ISettingsService {
             const blocks = settingsData.current?.blocks || {};
 
             // Accurate identification of the app embed block
-            const isEmbedded = Object.values(blocks).some(
-                (block: unknown) => {
-                    const b = block as { type?: string; disabled?: boolean };
-                    return b.type?.includes("merchant-quote") && b.type?.includes("quote") && b.disabled === false;
-                }
-            );
+            const isEmbedded = Object.values(blocks).some((block: unknown) => {
+                const b = block as { type?: string; disabled?: boolean };
+                return b.type?.includes("merchant-quote") && b.type?.includes("quote") && b.disabled === false;
+            });
 
             return { isEmbedded, themeId: String(mainTheme.id) };
         } catch (error) {

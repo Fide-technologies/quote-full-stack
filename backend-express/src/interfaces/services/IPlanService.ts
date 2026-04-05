@@ -1,4 +1,4 @@
-import { SubscriptionStatus } from "@/constants";
+import type { SubscriptionStatus } from "@/constants";
 import type { IPlan, IPlanFeatures, PlanDocument } from "@/types";
 import type { Session } from "@shopify/shopify-api";
 import type { Types } from "mongoose";

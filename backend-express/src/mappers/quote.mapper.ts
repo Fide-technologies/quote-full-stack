@@ -38,11 +38,11 @@ export const QuoteMapper = {
                 quote.productDetails ||
                 (quote.productImage
                     ? {
-                        featuredImage: {
-                            url: quote.productImage,
-                            altText: quote.productTitle || "Product Image",
-                        },
-                    }
+                          featuredImage: {
+                              url: quote.productImage,
+                              altText: quote.productTitle || "Product Image",
+                          },
+                      }
                     : undefined),
             createdAt: quote.createdAt,
             updatedAt: quote.updatedAt,
