@@ -1,23 +1,33 @@
 {
-    "name": "merchant-full-stack",
-    "devDependencies": {
-        "@playwright/test": "^1.58.2",
-        "@shopify/cli": "^3.0.0"
-    },
-    "license": "UNLICENSED",
-    "private": true,
-    "scripts": {
-        "build:frontend": "cd frontend && bun run build",
-        "shopify": "shopify",
-        "dev": "shopify app dev --tunnel-url https://dev.request-quote.online:3001",
-        "dev:backend": "bun run --filter backend-express dev",
-        "dev:frontend": "cd frontend && bun run dev",
-        "test": "bun run --filter backend-express test",
-        "build": "bun run build:frontend && shopify app build",
-        "deploy": "bun run build:frontend && shopify app deploy"
-    },
-    "workspaces": [
-        "backend-express",
-        "frontend"
+  "name": "merchant-full-stack",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@shopify/cli": "^3.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "build:frontend": "cd frontend && bun run build",
+    "shopify": "shopify",
+    "dev": "shopify app dev --tunnel-url https://dev.request-quote.online:3001",
+    "dev:backend": "bun run --filter backend-express dev",
+    "dev:frontend": "cd frontend && bun run dev",
+    "test": "bun run --filter backend-express test",
+    "build": "bun run build:frontend && shopify app build",
+    "deploy": "bun run build:frontend && shopify app deploy",
+    "prepare": "husky",
+    "lint": "bun run --filter \"*\" lint",
+    "lint:fix": "bun run --filter \"*\" check"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "biome check --write"
     ]
+  },
+  "workspaces": [
+    "backend-express",
+    "frontend"
+  ]
 }
