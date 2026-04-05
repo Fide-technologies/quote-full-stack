@@ -2,37 +2,50 @@
 FROM oven/bun:latest AS base
 WORKDIR /app
 
-# --- Step 1: Build Frontend ---
-FROM base AS frontend-builder
-# Copy only necessary files for frontend build
-COPY package.json bun.lock ./
-COPY frontend/package.json frontend/bun.lock ./frontend/
-COPY backend-express/package.json backend-express/bun.lock ./backend-express/
+# Stage 1: Install Dependencies (All)
+FROM base AS install
+# Copy root manifests and lockfile (wildcard handles .lockb or .lock)
+COPY package.json bun.lock* ./
+# IMPORTANT: Copy all workspace manifests to satisfy Bun's strict workspace validation
+COPY frontend/package.json ./frontend/
+COPY backend-express/package.json ./backend-express/
+
+# Install root & workspace dependencies
 RUN bun install --frozen-lockfile
-COPY frontend/ ./frontend/
+
+# Stage 2: Build App
+FROM base AS build
+# Copy node_modules from the install stage
+COPY --from=install /app/node_modules ./node_modules
+# Copy all source files
+COPY . .
+
+# Build the frontend and backend workspaces
 RUN cd frontend && bun run build
-
-# --- Step 2: Prepare Runner ---
-FROM base AS runner
-# Copy root package files
-COPY package.json bun.lock ./
-# Copy workspace package files
-COPY backend-express/package.json backend-express/bun.lock ./backend-express/
-COPY frontend/package.json frontend/bun.lock ./frontend/
-RUN bun install --frozen-lockfile
-
-# Copy backend source
-COPY backend-express/ ./backend-express/
-# Copy the BUILT frontend
-COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
-
-# Build backend (TypeScript)
 RUN cd backend-express && bun run build
 
-# Set environment to production
+# Stage 3: Runner (Production)
+FROM base AS runner
+# Copy only the necessary manifests for production filtering
+COPY package.json bun.lock* ./
+COPY backend-express/package.json ./backend-express/
+# Note: We do NOT copy frontend folder into the FINAL runner if it's only serving the dist
+# However, to satisfy Bun's workspaces array in root package.json if it's present, 
+# we might need to create an empty directory or strip the workspace field.
+RUN mkdir -p frontend
+
+# Install only production dependencies for the target workspace
+RUN bun install --frozen-lockfile --production --filter backend-express
+
+# Copy the built artifacts from the build stage
+COPY --from=build /app/frontend/dist /app/frontend/dist
+COPY --from=build /app/backend-express/dist /app/backend-express/dist
+# Copy the built backend source
+COPY --from=build /app/backend-express /app/backend-express
+
+# Set environment
 ENV NODE_ENV=production
-# Expose the internal port (Matches your fly.toml internal_port)
 EXPOSE 3001
 
-# Run the backend using the --filter to target the workspace
+# Execute the backend
 CMD ["bun", "run", "--filter", "backend-express", "start"]
