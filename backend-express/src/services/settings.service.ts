@@ -136,8 +136,7 @@ export class SettingsService implements ISettingsService {
     }
     async checkAppEmbedStatus(session: Session): Promise<{ isEmbedded: boolean; themeId: string }> {
         try {
-            // biome-ignore lint/suspicious/noExplicitAny: Use any for Theme REST API
-            const themes = await (shopify.api.rest as any).Theme.all({
+            const themes = await (shopify.api.rest as unknown as { Theme: { all: (params: { session: Session }) => Promise<{ data: Array<{ role: string; id: number | string }> }> } }).Theme.all({
                 session: session,
             });
 

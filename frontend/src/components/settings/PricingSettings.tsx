@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, BlockStack, Text, Checkbox, TextField } from '@shopify/polaris';
 import type { ISettings } from '../../types/settings';
 
@@ -12,23 +12,19 @@ export const PricingSettings: React.FC<Props> = ({ settings, onChange }) => {
   const [tagsInput, setTagsInput] = useState(settings.hidePriceByTags.join(", "));
   const [collectionsInput, setCollectionsInput] = useState(settings.hidePriceByCollections.join(", "));
 
-  // Initialize and sync only if external settings change (e.g. on mount or server refresh)
-  useEffect(() => {
-    const newVal = settings.hidePriceByTags.join(", ");
-    // Only update if the meaningful content is different to avoid interrupting typing
-    if (newVal !== tagsInput.split(",").map(t => t.trim()).filter(Boolean).join(", ")) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setTagsInput(newVal);
-    }
-  }, [settings.hidePriceByTags]);
+  // State-in-render pattern to sync with props without causing extra effect cycles
+  const [prevTags, setPrevTags] = useState(settings.hidePriceByTags);
+  const [prevCollections, setPrevCollections] = useState(settings.hidePriceByCollections);
 
-  useEffect(() => {
-    const newVal = settings.hidePriceByCollections.join(", ");
-    if (newVal !== collectionsInput.split(",").map(t => t.trim()).filter(Boolean).join(", ")) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setCollectionsInput(newVal);
-    }
-  }, [settings.hidePriceByCollections]);
+  if (settings.hidePriceByTags !== prevTags) {
+    setTagsInput(settings.hidePriceByTags.join(", "));
+    setPrevTags(settings.hidePriceByTags);
+  }
+
+  if (settings.hidePriceByCollections !== prevCollections) {
+    setCollectionsInput(settings.hidePriceByCollections.join(", "));
+    setPrevCollections(settings.hidePriceByCollections);
+  }
 
   // Sync to parent settings only on blur (when the user finishes typing)
   const handleTagsBlur = () => {
