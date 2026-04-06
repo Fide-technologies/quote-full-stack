@@ -140,7 +140,7 @@ export class SettingsService implements ISettingsService {
                 session: session,
             });
 
-            const mainTheme = themes.data.find((theme: any) => theme.role === "main");
+            const mainTheme = themes.data.find((theme: { role: string; id: string | number }) => theme.role === "main");
             if (!mainTheme) {
                 logger.warn("[SettingsService] No main theme found for shop:", session.shop);
                 return { isEmbedded: false, themeId: "" };

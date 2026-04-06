@@ -5,7 +5,7 @@ export interface ExtensionActivation {
     handle: string;
     name: string;
     status: 'active' | 'available' | 'unavailable';
-    activations?: any[];
+    activations?: unknown[];
 }
 
 export interface ExtensionInfo {
@@ -22,6 +22,7 @@ export const useAppExtensions = () => {
     const checkExtensions = useCallback(async (showLoading = true) => {
         if (showLoading) setIsLoading(true);
         try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const shopify = (window as any).shopify;
 
             if (!shopify || !shopify.app || !shopify.app.extensions) {
