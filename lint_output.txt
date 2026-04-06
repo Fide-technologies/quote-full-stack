@@ -1,0 +1,58 @@
+
+/home/uday/Documents/merchant-full-stack/frontend/src/components/settings/PricingSettings.tsx
+  20:9  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/uday/Documents/merchant-full-stack/frontend/src/components/settings/PricingSettings.tsx:20:9
+  18 |     // Only update if the meaningful content is different to avoid interrupting typing
+  19 |     if (newVal !== tagsInput.split(",").map(t => t.trim()).filter(Boolean).join(", ")) {
+> 20 |         setTagsInput(newVal);
+     |         ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  21 |     }
+  22 |   }, [settings.hidePriceByTags]);
+  23 |      react-hooks/set-state-in-effect
+  22:6  warning  React Hook useEffect has a missing dependency: 'tagsInput'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/exhaustive-deps
+  27:9  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/uday/Documents/merchant-full-stack/frontend/src/components/settings/PricingSettings.tsx:27:9
+  25 |     const newVal = settings.hidePriceByCollections.join(", ");
+  26 |     if (newVal !== collectionsInput.split(",").map(t => t.trim()).filter(Boolean).join(", ")) {
+> 27 |         setCollectionsInput(newVal);
+     |         ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  28 |     }
+  29 |   }, [settings.hidePriceByCollections]);
+  30 |  react-hooks/set-state-in-effect
+  29:6  warning  React Hook useEffect has a missing dependency: 'collectionsInput'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+
+/home/uday/Documents/merchant-full-stack/frontend/src/components/settings/QuoteButtonSettings.tsx
+  20:9  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/home/uday/Documents/merchant-full-stack/frontend/src/components/settings/QuoteButtonSettings.tsx:20:9
+  18 |   useEffect(() => {
+  19 |     if (settings.buttonText !== buttonText) {
+> 20 |         setButtonText(settings.buttonText ?? "");
+     |         ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  21 |     }
+  22 |   }, [settings.buttonText]);
+  23 |  react-hooks/set-state-in-effect
+  22:6  warning  React Hook useEffect has a missing dependency: 'buttonText'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/exhaustive-deps
+
+✖ 6 problems (3 errors, 3 warnings)
+

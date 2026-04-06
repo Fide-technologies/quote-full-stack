@@ -17,6 +17,7 @@ export const PricingSettings: React.FC<Props> = ({ settings, onChange }) => {
     const newVal = settings.hidePriceByTags.join(", ");
     // Only update if the meaningful content is different to avoid interrupting typing
     if (newVal !== tagsInput.split(",").map(t => t.trim()).filter(Boolean).join(", ")) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setTagsInput(newVal);
     }
   }, [settings.hidePriceByTags]);
@@ -24,6 +25,7 @@ export const PricingSettings: React.FC<Props> = ({ settings, onChange }) => {
   useEffect(() => {
     const newVal = settings.hidePriceByCollections.join(", ");
     if (newVal !== collectionsInput.split(",").map(t => t.trim()).filter(Boolean).join(", ")) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCollectionsInput(newVal);
     }
   }, [settings.hidePriceByCollections]);

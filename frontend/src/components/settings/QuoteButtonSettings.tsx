@@ -17,6 +17,7 @@ export const QuoteButtonSettings: React.FC<Props> = ({ settings, onChange }) => 
   // Sync with props only when they change from the outside (e.g. after a save or fetch)
   useEffect(() => {
     if (settings.buttonText !== buttonText) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setButtonText(settings.buttonText ?? "");
     }
   }, [settings.buttonText]);
