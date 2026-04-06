@@ -14,6 +14,12 @@ export interface ExtensionInfo {
     activations: ExtensionActivation[];
 }
 
+interface ShopifyAppBridge {
+    app?: {
+        extensions: () => Promise<ExtensionInfo[]>;
+    };
+}
+
 export const useAppExtensions = () => {
     const [isEmbedded, setIsEmbedded] = useState<boolean | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -22,8 +28,7 @@ export const useAppExtensions = () => {
     const checkExtensions = useCallback(async (showLoading = true) => {
         if (showLoading) setIsLoading(true);
         try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const shopify = (window as any).shopify;
+            const shopify = (window as unknown as Window & { shopify?: ShopifyAppBridge }).shopify;
 
             if (!shopify || !shopify.app || !shopify.app.extensions) {
                 if (showLoading) {
