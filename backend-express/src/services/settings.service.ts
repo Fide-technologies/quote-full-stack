@@ -136,68 +136,22 @@ export class SettingsService implements ISettingsService {
     }
     async checkAppEmbedStatus(session: Session): Promise<{ isEmbedded: boolean; themeId: string }> {
         try {
-            const themes = await (
-                shopify.api.rest as unknown as {
-                    Theme: {
-                        all: (params: { session: Session }) => Promise<{ data: Array<{ role: string; id: number }> }>;
-                    };
-                }
-            ).Theme.all({
+            const themes = await (shopify.api.rest as any).Theme.all({
                 session: session,
             });
 
-            const mainTheme = themes.data.find((theme: { role: string }) => theme.role === "main");
+            const mainTheme = themes.data.find((theme: any) => theme.role === "main");
             if (!mainTheme) {
                 logger.warn("[SettingsService] No main theme found for shop:", session.shop);
                 return { isEmbedded: false, themeId: "" };
             }
 
-            const assets = await (
-                shopify.api.rest as unknown as {
-                    Asset: {
-                        all: (params: { session: Session; theme_id: number }) => Promise<{
-                            data: Array<{ key: string }>;
-                        }>;
-                    };
-                }
-            ).Asset.all({
-                session,
-                theme_id: mainTheme.id,
-            });
-
-            const settingsAsset = assets.data.find((a: { key: string }) => a.key === "config/settings_data.json");
-            if (!settingsAsset) return { isEmbedded: false, themeId: String(mainTheme.id) };
-
-            // Fetch the full content of settings_data.json
-            const fullAsset = await (
-                shopify.api.rest as unknown as {
-                    Asset: {
-                        all: (params: { session: Session; theme_id: number; asset: { key: string } }) => Promise<{
-                            data: Array<{ value: string }>;
-                        }>;
-                    };
-                }
-            ).Asset.all({
-                session,
-                theme_id: mainTheme.id,
-                asset: { key: "config/settings_data.json" },
-            });
-
-            const content = fullAsset.data?.[0]?.value;
-            if (!content) return { isEmbedded: false, themeId: String(mainTheme.id) };
-
-            const settingsData = JSON.parse(content);
-            const blocks = settingsData.current?.blocks || {};
-
-            // Accurate identification of the app embed block
-            const isEmbedded = Object.values(blocks).some((block: unknown) => {
-                const b = block as { type?: string; disabled?: boolean };
-                return b.type?.includes("merchant-quote") && b.type?.includes("quote") && b.disabled === false;
-            });
-
-            return { isEmbedded, themeId: String(mainTheme.id) };
+            return {
+                isEmbedded: false, // Default to false, frontend will override via App Bridge
+                themeId: String(mainTheme.id)
+            };
         } catch (error) {
-            logger.error("[SettingsService] Failed to accurately audit theme embed status:", error);
+            logger.error("[SettingsService] Error finding main theme:", error);
             return { isEmbedded: false, themeId: "" };
         }
     }

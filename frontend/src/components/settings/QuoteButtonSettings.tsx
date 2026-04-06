@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BlockStack, Text, Checkbox, Select, RadioButton, Box, Button, TextField } from '@shopify/polaris';
 import { useAppBridge } from '@shopify/app-bridge-react';
 import type { ISettings } from '../../types/settings';
@@ -10,6 +10,21 @@ interface Props {
 
 export const QuoteButtonSettings: React.FC<Props> = ({ settings, onChange }) => {
   const shopify = useAppBridge();
+  
+  // Local state for immediate typing feedback to prevent snap-back bugs
+  const [buttonText, setButtonText] = useState(settings.buttonText ?? "");
+
+  // Sync with props only when they change from the outside (e.g. after a save or fetch)
+  useEffect(() => {
+    if (settings.buttonText !== buttonText) {
+        setButtonText(settings.buttonText ?? "");
+    }
+  }, [settings.buttonText]);
+
+  const handleButtonTextChange = (val: string) => {
+    setButtonText(val); // Immediate UI update
+    onChange('buttonText', val); // Notify parent (updates PreviewCard)
+  };
 
   const handleSelectProducts = async () => {
     const selectedProducts = settings.selectedProducts || [];
@@ -44,8 +59,8 @@ export const QuoteButtonSettings: React.FC<Props> = ({ settings, onChange }) => 
         <Text as="h3" variant="headingSm" fontWeight="semibold">Appearance</Text>
         <TextField 
             label="Button text"
-            value={settings.buttonText || "Request Quote"}
-            onChange={(v) => onChange('buttonText', v)}
+            value={buttonText}
+            onChange={handleButtonTextChange}
             autoComplete="off"
             placeholder="e.g. Request Quote"
         />
@@ -104,14 +119,14 @@ export const QuoteButtonSettings: React.FC<Props> = ({ settings, onChange }) => 
       {/* Position Section */}
       <BlockStack gap="400">
         <BlockStack gap="200">
-            <Text as="h3" variant="headingSm" fontWeight="semibold">Display button on what position?</Text>
+            <Text as="h3" variant="headingSm" fontWeight="semibold">Where should the button be displayed?</Text>
             <Checkbox
             label="Product page"
             checked={!!settings.showOnProductPage}
             onChange={(v) => onChange('showOnProductPage', v)}
             />
             <Checkbox
-            label="Catalog/collection page"
+            label="Catalog / Collection page"
             checked={!!settings.showOnCollectionPage}
             onChange={(v) => onChange('showOnCollectionPage', v)}
             />
@@ -154,7 +169,7 @@ export const QuoteButtonSettings: React.FC<Props> = ({ settings, onChange }) => 
 
       {/* Filter Section */}
       <BlockStack gap="200">
-        <Text as="h3" variant="headingSm" fontWeight="semibold">Display button for what products?</Text>
+        <Text as="h3" variant="headingSm" fontWeight="semibold">Which products should display the quote button?</Text>
         <RadioButton
             label="All products"
             checked={(settings.displayCondition || 'all') === 'all'}
@@ -218,7 +233,7 @@ export const QuoteButtonSettings: React.FC<Props> = ({ settings, onChange }) => 
       <BlockStack gap="200">
         <Text as="h3" variant="headingSm" fontWeight="semibold">Who will see this button?</Text>
         <RadioButton
-            label="All customer"
+            label="All customers"
             checked={(settings.visibility || 'all') === 'all'}
             onChange={() => onChange('visibility', 'all')}
         />

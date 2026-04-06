@@ -18,12 +18,13 @@ import {
     Page,
     ProgressBar,
     SkeletonBodyText,
-    SkeletonDisplayText,
     SkeletonPage,
 } from "@shopify/polaris";
 import { useNavigate } from "react-router-dom";
 import { StatsLoader } from "../components/loaders/StatsLoader";
 import { useDashboardStats } from "../hooks/useDashboardStats";
+import { AppConnectivityCard } from "../components/settings/AppConnectivityCard";
+import { useAppExtensions } from "../hooks/useAppExtensions";
 
 // Helper component for the Direct Session Link Button
 const ThemeEditorLink = ({
@@ -61,22 +62,24 @@ export const Dashboard: React.FC = () => {
         error,
     } = useDashboardStats() as {
         data:
-            | (import("../api/dashboard").DashboardStats & {
-                  isAppEmbedded: boolean;
-                  deepLinkUrl: string;
-                  activeThemeId: string;
-              })
-            | undefined;
+        | (import("../api/dashboard").DashboardStats & {
+            isAppEmbedded: boolean;
+            deepLinkUrl: string;
+            activeThemeId: string;
+        })
+        | undefined;
         isLoading: boolean;
         error: Error | null;
     };
 
     const navigate = useNavigate();
-    const loading = statsLoading;
-
-    // Core Status: Physical check from theme assets
-    const isAppEnabled = stats?.isAppEmbedded ?? false;
+    const { isEmbedded, isLoading: extensionsLoading } = useAppExtensions();
+    
+    // Core Status: Physical check from theme assets (now via App Bridge in 2026)
+    const isAppEnabled = isEmbedded ?? false;
     const deepLinkUrl = stats?.deepLinkUrl || "shopify:admin/themes/current/editor?context=apps";
+    const loading = statsLoading || extensionsLoading;
+
 
     // Calculate progress based on dynamic stats and real-time status
     const steps = [
@@ -278,45 +281,11 @@ export const Dashboard: React.FC = () => {
 
                 <Layout.Section variant="oneThird">
                     <BlockStack gap="400">
-                        <Card
-                            background={
-                                !loading && isAppEnabled === false ? "bg-surface-secondary-active" : "bg-surface"
-                            }
-                        >
-                            <BlockStack gap="300">
-                                {loading ? (
-                                    <BlockStack gap="200">
-                                        <SkeletonDisplayText size="small" />
-                                        <SkeletonBodyText lines={2} />
-                                    </BlockStack>
-                                ) : (
-                                    <>
-                                        <BlockStack gap="100">
-                                            <InlineStack align="space-between" blockAlign="center">
-                                                <Text variant="headingSm" as="h3">
-                                                    App Connectivity
-                                                </Text>
-                                                <Badge tone={isAppEnabled ? "success" : "critical"}>
-                                                    {isAppEnabled ? "Active" : "Disabled"}
-                                                </Badge>
-                                            </InlineStack>
-                                            <Text as="p" variant="bodySm" tone="subdued">
-                                                {isAppEnabled
-                                                    ? "Your app is currently live and visible on your storefront."
-                                                    : "The app is not visible to customers. Enable it to start receiving quotes."}
-                                            </Text>
-                                        </BlockStack>
-                                        <ThemeEditorLink
-                                            primary={true}
-                                            deepLinkUrl={deepLinkUrl}
-                                            isAppEnabled={isAppEnabled}
-                                        >
-                                            {isAppEnabled ? "Manage in Theme" : "Enable App Embed"}
-                                        </ThemeEditorLink>
-                                    </>
-                                )}
-                            </BlockStack>
-                        </Card>
+                        <AppConnectivityCard
+                            isAppEnabled={isAppEnabled}
+                            deepLinkUrl={deepLinkUrl}
+                            loading={loading}
+                        />
 
                         <Card>
                             <BlockStack gap="300">
