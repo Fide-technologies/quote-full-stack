@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppLayout } from './components/AppLayout';
+import { AppLayoutWrapper } from './components/AppLayoutWrapper';
 import { AppRoutes } from './routes/AppRoutes';
 
 import { ErrorBoundary } from './components/guards/ErrorBoundary';
@@ -7,9 +7,9 @@ import { ErrorBoundary } from './components/guards/ErrorBoundary';
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <AppLayout>
+      <AppLayoutWrapper>
         <AppRoutes />
-      </AppLayout>
+      </AppLayoutWrapper>
     </ErrorBoundary>
   );
 };

@@ -1,4 +1,5 @@
 export interface Quote {
+    shop: string;
     id: string;
     firstName: string;
     lastName: string;
@@ -18,11 +19,23 @@ export interface Quote {
     createdAt: string;
     productId?: string;
     productDetails?: {
+        vendor?: string;
+        productType?: string;
         featuredImage?: {
             url: string;
             altText: string;
-        }
+        };
+        variants?: {
+            nodes: Array<{
+                id: string;
+                title: string;
+                sku: string;
+                price: string;
+                inventoryQuantity: number;
+            }>;
+        };
     }
+
     draftOrderId?: string;
     draftOrderUrl?: string;
     customData?: Record<string, unknown>;

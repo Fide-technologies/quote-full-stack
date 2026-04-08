@@ -62,11 +62,14 @@ export interface IQuote {
 
     // Additional UI Data
     productDetails?: {
+        vendor?: string;
+        productType?: string;
         featuredImage?: {
             url: string;
             altText?: string;
         };
     };
+
 
     // Custom Form Data
     customData?: Record<string, unknown>;

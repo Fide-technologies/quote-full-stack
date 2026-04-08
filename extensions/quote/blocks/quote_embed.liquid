@@ -65,9 +65,15 @@
       displayCondition: {{ config.displayCondition | default: "all" | json }},
       selectedCollections: {{ config.selectedCollections | default: "[]" | json }},
       productCollectionGids: [{% for c in product.collections %}"gid://shopify/Collection/{{c.id}}"{% unless forloop.last %},{% endunless %}{% endfor %}],
-      buttonText: {{ config.buttonText | default: "Request Quote" | json }},
-      buttonColor: {{ config.buttonColor | default: "#008060" | json }},
-      buttonTextColor: {{ config.buttonTextColor | default: "#FFFFFF" | json }},
+      {% assign current_btn_text = config.buttonText %}
+      {% if config.buttonText == nil %}{% assign current_btn_text = "Request Quote" %}{% endif %}
+      buttonText: {{ current_btn_text | json }},
+      {% assign current_btn_color = config.buttonColor %}
+      {% if config.buttonColor == nil %}{% assign current_btn_color = "#008060" %}{% endif %}
+      buttonColor: {{ current_btn_color | json }},
+      {% assign current_text_color = config.buttonTextColor %}
+      {% if config.buttonTextColor == nil %}{% assign current_text_color = "#FFFFFF" %}{% endif %}
+      buttonTextColor: {{ current_text_color | json }},
       hideAddToCart: {{ config.hideAddToCart | default: false | json }},
       hideBuyNow: {{ config.hideBuyNow | default: false | json }},
       placementLocation: {{ config.placementLocation | default: "above" | json }},

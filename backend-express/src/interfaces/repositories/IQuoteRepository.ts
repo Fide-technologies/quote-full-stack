@@ -14,4 +14,5 @@ export interface IQuoteRepository {
     countConvertedByMerchant(shop: string): Promise<number>;
     deleteByShop(shop: string): Promise<unknown>;
     redactByCustomerEmail(email: string): Promise<unknown>;
+    findByCustomerEmail(shop: string, email: string): Promise<QuoteDocument[]>;
 }

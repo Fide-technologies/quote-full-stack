@@ -5,6 +5,8 @@ export const GET_PRODUCTS_BY_IDS_QUERY = `#graphql
         id
         title
         handle
+        vendor
+        productType
         featuredMedia {
           preview {
             image {
@@ -15,10 +17,20 @@ export const GET_PRODUCTS_BY_IDS_QUERY = `#graphql
         }
         status
         totalInventory
+        variants(first: 100) {
+          nodes {
+            id
+            title
+            sku
+            price
+            inventoryQuantity
+          }
+        }
       }
     }
   }
 `;
+
 
 export const GET_SHOP_CURRENCY_QUERY = `#graphql
   query {

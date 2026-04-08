@@ -1,9 +1,10 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 application_url = "https://dev.request-quote.online"
-client_id = "b6c35f1f28ca75c5a862b0a79daaaddd"
+client_id = "0c2e1131d9c2cd7a64dda76dedd42e00"
 embedded = true
-name = "Quote form & price hiding"
+name = "merchant-quote"
+
 
 [build]
 automatically_update_urls_on_dev = false
@@ -12,22 +13,20 @@ dev_store_url = "shopnest-10051.myshopify.com"
 [webhooks]
 api_version = "2026-01"
 
+# Mandatory App Lifecycle webhook
 [[webhooks.subscriptions]]
 topics = ["app/uninstalled"]
 uri = "/api/webhooks"
 
 
-
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 optional_scopes = []
-scopes = "write_app_proxy,read_customers,write_draft_orders,write_products,read_themes"
+scopes = "read_customers,write_draft_orders,write_products,read_themes"
 use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [
-  "https://dev.request-quote.online/api/auth/callback",
-]
+redirect_urls = ["https://dev.request-quote.online/api/auth/callback"]
 
 [app_proxy]
 prefix = "apps"
