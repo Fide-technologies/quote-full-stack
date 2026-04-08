@@ -18,18 +18,6 @@ api_version = "2026-01"
 topics = ["app/uninstalled"]
 uri = "/api/webhooks"
 
-# Mandatory GDPR webhooks - Required for App Store submission
-[[webhooks.subscriptions]]
-topics = ["customers/data_request"]
-uri = "/api/webhooks"
-
-[[webhooks.subscriptions]]
-topics = ["customers/redact"]
-uri = "/api/webhooks"
-
-[[webhooks.subscriptions]]
-topics = ["shop/redact"]
-uri = "/api/webhooks"
 
 
 [access_scopes]
