@@ -121,4 +121,14 @@ export class QuoteRepository extends MongooseBaseRepository<IQuote> implements I
             },
         );
     }
+
+    async findByCustomerEmail(shop: string, email: string): Promise<QuoteDocument[]> {
+        return await this.model
+            .find({
+                shop,
+                $or: [{ email }, { customerEmail: email }],
+            })
+            .select("_id status createdAt productTitle customerEmail customerName")
+            .exec();
+    }
 }

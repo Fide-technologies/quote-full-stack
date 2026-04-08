@@ -4,6 +4,9 @@ application_url = "https://dev.request-quote.online"
 client_id = "0c2e1131d9c2cd7a64dda76dedd42e00"
 embedded = true
 name = "merchant-quote"
+support_url = "https://dev.request-quote.online/support"
+privacy_policy_url = "https://dev.request-quote.online/legal"
+
 
 [build]
 automatically_update_urls_on_dev = false
@@ -12,15 +15,29 @@ dev_store_url = "shopnest-10051.myshopify.com"
 [webhooks]
 api_version = "2026-01"
 
+# Mandatory App Lifecycle webhook
 [[webhooks.subscriptions]]
 topics = ["app/uninstalled"]
+uri = "/api/webhooks"
+
+# Mandatory GDPR webhooks - Required for App Store submission
+[[webhooks.subscriptions]]
+topics = ["customers/data_request"]
+uri = "/api/webhooks"
+
+[[webhooks.subscriptions]]
+topics = ["customers/redact"]
+uri = "/api/webhooks"
+
+[[webhooks.subscriptions]]
+topics = ["shop/redact"]
 uri = "/api/webhooks"
 
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 optional_scopes = []
-scopes = "write_app_proxy,read_customers,write_draft_orders,write_products,read_themes"
+scopes = "read_customers,write_draft_orders,write_products,read_themes"
 use_legacy_install_flow = false
 
 [auth]
