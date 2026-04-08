@@ -1,7 +1,10 @@
 import { shopify } from "@/config/shopify.config";
 import type { IMerchantService, IPlanService } from "@/interfaces";
 import { type ShopifyShopResponse, TYPES } from "@/types";
+import { SubscriptionStatus } from "@/constants";
+import { env } from "@/validations/env.validation";
 import { logger } from "@/utils/logger";
+import type { Types } from "mongoose";
 import type { NextFunction, Request, Response } from "express";
 import { inject, injectable } from "inversify";
 
@@ -10,7 +13,7 @@ export class AuthController {
     constructor(
         @inject(TYPES.IMerchantService) private merchantService: IMerchantService,
         @inject(TYPES.IPlanService) private planService: IPlanService,
-    ) {}
+    ) { }
 
     callbackStore = async (req: Request, res: Response, next: NextFunction) => {
         try {
@@ -34,8 +37,15 @@ export class AuthController {
             const shopInfo = shopData.body.shop;
 
             // 3. Fetch current billing status from Shopify (Managed Billing)
-            // This is handled in the PlanService following our service-layer rules.
-            const billingState = await this.planService.verifyReinstallationBilling(session);
+            // We only do this if the app is configured as a paid app to avoid 403 errors on the Free tier.
+            let billingState: { planId?: Types.ObjectId; subscriptionStatus?: SubscriptionStatus } = {
+                subscriptionStatus: SubscriptionStatus.ACTIVE // Default for free app
+            };
+
+            if (env.IS_PAID_APP === "true") {
+                const fetchedBilling = await this.planService.verifyReinstallationBilling(session);
+                billingState = { ...billingState, ...fetchedBilling };
+            }
 
             await this.merchantService.createOrUpdateMerchant({
                 shop: session.shop,
