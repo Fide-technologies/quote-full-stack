@@ -55,7 +55,7 @@ export interface ISettings {
 
 export const DEFAULT_SETTINGS: ISettings = {
     appEnabled: true,
-    buttonText: "Request Quote",
+    buttonText: "",
     buttonColor: "#008060",
     buttonTextColor: "#FFFFFF",
     hideAddToCart: true,
