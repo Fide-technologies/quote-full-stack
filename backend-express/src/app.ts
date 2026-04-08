@@ -3,12 +3,10 @@ import { fileURLToPath } from "node:url";
 import { shopify } from "@/config/shopify.config";
 import { API_MESSAGES, HTTP_STATUS } from "@/constants/app.constants";
 import { logger } from "@/utils/logger";
-import { env } from "@/validations/env.validation";
 import express from "express";
 
-import rateLimit from "express-rate-limit";
 import mongoose from "mongoose";
-// Routes
+
 import authRouter from "./routes/auth.routes";
 import dashboardRouter from "./routes/dashboard.routes";
 import draftOrderRouter from "./routes/draft-order.routes";
@@ -19,7 +17,8 @@ import quotesRouter from "./routes/quotes.routes";
 import settingsRouter from "./routes/settings.routes";
 import uploadRouter from "./routes/upload.routes";
 import webhooksRouter from "./routes/webhooks.routes";
-import type { ShopifyError } from "./interfaces/shopify-error";
+import { globalLimiter } from "./config/rate-limit.config";
+import { globalErrorHandler } from "./middlewares/error.middleware";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,17 +37,6 @@ export class App {
 
     private securityConfig(): void {
         this.app.set("trust proxy", 1);
-
-        const globalLimiter = rateLimit({
-            windowMs: 15 * 60 * 1000,
-            max: 1000,
-            message: {
-                success: false,
-                message: "Too many requests from this IP, please try again later.",
-            },
-            standardHeaders: true,
-            legacyHeaders: false,
-        });
 
         this.app.use(globalLimiter);
     }
@@ -97,29 +85,6 @@ export class App {
     }
 
     private errorHandling(): void {
-
-        this.app.use(
-            (err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
-                const error = err as ShopifyError;
-                const errorMessage = err instanceof Error ? err.stack || err.message : String(err);
-                logger.error(`[GlobalErrorHandler] ${errorMessage}`);
-
-                // Extract Shopify specific error details if available
-                const statusCode = error?.response?.status || error?.networkStatusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
-
-                // Don't leak stack traces in production
-                const responseMessage =
-                    process.env.NODE_ENV === "production"
-                        ? (error?.message || API_MESSAGES.ERROR_DEFAULT)
-                        : errorMessage;
-
-                res.status(statusCode).json({
-                    success: false,
-                    message: responseMessage,
-                    error: process.env.NODE_ENV !== "production" ? err : undefined,
-                    shopifyDetails: error?.response || undefined
-                });
-            },
-        );
+        this.app.use(globalErrorHandler);
     }
 }
