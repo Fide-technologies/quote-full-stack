@@ -167,8 +167,6 @@ export const Settings: React.FC = () => {
         );
     }
 
-    const showEmbedBanner = currentSettings.isAppEmbedded === false;
-
     return (
         <Page title="Request a Quote" subtitle="Manage your quote request configuration and appearance.">
             <SaveBar id="settings-save-bar">
@@ -185,25 +183,6 @@ export const Settings: React.FC = () => {
                     <Layout.Section>
                         <Banner tone="critical" title="Error loading settings">
                             <p>{(error as Error)?.message || "Something went wrong while fetching your settings."}</p>
-                        </Banner>
-                    </Layout.Section>
-                )}
-
-                {showEmbedBanner && (
-                    <Layout.Section>
-                        <Banner
-                            tone="warning"
-                            title="Action required"
-                            action={{
-                                content: "Activate now",
-                                url: currentSettings.deepLinkUrl,
-                                external: true,
-                            }}
-                        >
-                            <p>
-                                In order for <b>Merchant Quote</b> to work on your storefront, go to your online store
-                                editor and activate the <b>Merchant Quote</b> app embed.
-                            </p>
                         </Banner>
                     </Layout.Section>
                 )}

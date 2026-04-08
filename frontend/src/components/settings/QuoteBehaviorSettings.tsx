@@ -14,7 +14,7 @@ export const QuoteBehaviorSettings: React.FC<Props> = ({ settings, onChange }) =
         <BlockStack gap="400">
           <Text as="h2" variant="headingMd">Submission Logic</Text>
           <Checkbox
-            label="Allow customer to suggests prices"
+            label="Allow customers to suggest prices"
             checked={settings.allowPriceSuggestion}
             onChange={(v) => onChange('allowPriceSuggestion', v)}
             helpText="Add a field where customers can propose their own value."
@@ -28,7 +28,7 @@ export const QuoteBehaviorSettings: React.FC<Props> = ({ settings, onChange }) =
             label="Enable Cart-to-Quote converter"
             checked={settings.cartToQuote}
             onChange={(v) => onChange('cartToQuote', v)}
-            helpText="Shows a 'Request Quote' buttoon on the cart page instead of checkout."
+            helpText="Shows a 'Request Quote' button on the cart page instead of checkout."
           />
           <TextField
               label="Redirect after quote submission"

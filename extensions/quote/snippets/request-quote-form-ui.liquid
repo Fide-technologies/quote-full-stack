@@ -1,3 +1,4 @@
+{%- assign block_id = block_id | default: 'global' -%}
 <div id="rqModal-{{ block_id }}" class="rq-modal" aria-hidden="true" role="dialog">
   <div id="rq-app-root-{{ block_id }}" data-shop="{{ shop.permanent_domain }}" style="display:none;"></div>
   <div class="rq-modal-overlay" onclick="rqCloseModal('{{ block_id }}')"></div>

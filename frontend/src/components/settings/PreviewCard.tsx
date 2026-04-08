@@ -63,7 +63,7 @@ export const PreviewCard: React.FC<Props> = ({ settings }) => {
                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                             transition: 'all 0.2s ease'
                         }}>
-                             {settings.buttonText || "Request Quote"}
+                             {settings.buttonText || 'Request Quote'}
                         </div>
                     )}
                     
@@ -111,7 +111,7 @@ export const PreviewCard: React.FC<Props> = ({ settings }) => {
                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                             transition: 'all 0.2s ease'
                         }}>
-                             {settings.buttonText || "Request Quote"}
+                             {settings.buttonText || 'Request Quote'}
                         </div>
                     )}
                 </BlockStack>

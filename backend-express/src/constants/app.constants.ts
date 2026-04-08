@@ -77,7 +77,7 @@ export const SETTINGS_DEFAULTS = {
     OWNER_TYPE_SHOP: "SHOP",
     DEFAULTS: {
         appEnabled: true,
-        buttonText: "Request Quote",
+        buttonText: "",
         hideAddToCart: true,
         buttonPosition: "all",
         showOnSelectedProducts: false,
