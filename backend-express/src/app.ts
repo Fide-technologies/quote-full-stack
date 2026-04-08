@@ -36,7 +36,7 @@ export class App {
     }
 
     private securityConfig(): void {
-        this.app.set("trust proxy", true);
+        this.app.set("trust proxy", 1);
 
         const globalLimiter = rateLimit({
             windowMs: 15 * 60 * 1000,
@@ -97,21 +97,25 @@ export class App {
 
     private errorHandling(): void {
         this.app.use(
-            (err: Error | unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
+            (err: Error | any, req: express.Request, res: express.Response, next: express.NextFunction) => {
                 const errorMessage = err instanceof Error ? err.stack || err.message : String(err);
                 logger.error(`[GlobalErrorHandler] ${errorMessage}`);
+
+                // Extract Shopify specific error details if available
+                const shopifyError = err?.response?.errors || err?.message;
+                const statusCode = err?.response?.status || err?.networkStatusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
 
                 // Don't leak stack traces in production
                 const responseMessage =
                     process.env.NODE_ENV === "production"
-                        ? API_MESSAGES.ERROR_DEFAULT
-                        : err instanceof Error
-                          ? err.message
-                          : String(err);
+                        ? (err?.message || API_MESSAGES.ERROR_DEFAULT)
+                        : errorMessage;
 
-                res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+                res.status(statusCode).json({
                     success: false,
                     message: responseMessage,
+                    error: process.env.NODE_ENV !== "production" ? err : undefined,
+                    shopifyDetails: err?.response || undefined
                 });
             },
         );
