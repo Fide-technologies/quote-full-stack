@@ -36,16 +36,9 @@ export class AuthController {
 
             const shopInfo = shopData.body.shop;
 
-            // 3. Fetch current billing status from Shopify (Managed Billing)
-            // We only do this if the app is configured as a paid app to avoid 403 errors on the Free tier.
-            let billingState: { planId?: Types.ObjectId; subscriptionStatus?: SubscriptionStatus } = {
-                subscriptionStatus: SubscriptionStatus.ACTIVE // Default for free app
-            };
-
-            if (env.IS_PAID_APP === "true") {
-                const fetchedBilling = await this.planService.verifyReinstallationBilling(session);
-                billingState = { ...billingState, ...fetchedBilling };
-            }
+            // Setting default ACTIVE status for the free version.
+            // This bypasses the billing API check and prevents 403 Forbidden errors.
+            const subscriptionStatus = SubscriptionStatus.ACTIVE;
 
             await this.merchantService.createOrUpdateMerchant({
                 shop: session.shop,
@@ -56,7 +49,7 @@ export class AuthController {
                 currency: shopInfo.currency,
                 isActive: true,
                 installedAt: new Date(),
-                ...billingState,
+                subscriptionStatus,
             });
 
             await shopify.api.webhooks.register({ session });
