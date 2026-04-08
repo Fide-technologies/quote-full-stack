@@ -19,6 +19,7 @@ import quotesRouter from "./routes/quotes.routes";
 import settingsRouter from "./routes/settings.routes";
 import uploadRouter from "./routes/upload.routes";
 import webhooksRouter from "./routes/webhooks.routes";
+import type { ShopifyError } from "./interfaces/shopify-error";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -96,26 +97,27 @@ export class App {
     }
 
     private errorHandling(): void {
+
         this.app.use(
-            (err: Error | any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+            (err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
+                const error = err as ShopifyError;
                 const errorMessage = err instanceof Error ? err.stack || err.message : String(err);
                 logger.error(`[GlobalErrorHandler] ${errorMessage}`);
 
                 // Extract Shopify specific error details if available
-                const shopifyError = err?.response?.errors || err?.message;
-                const statusCode = err?.response?.status || err?.networkStatusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+                const statusCode = error?.response?.status || error?.networkStatusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
 
                 // Don't leak stack traces in production
                 const responseMessage =
                     process.env.NODE_ENV === "production"
-                        ? (err?.message || API_MESSAGES.ERROR_DEFAULT)
+                        ? (error?.message || API_MESSAGES.ERROR_DEFAULT)
                         : errorMessage;
 
                 res.status(statusCode).json({
                     success: false,
                     message: responseMessage,
                     error: process.env.NODE_ENV !== "production" ? err : undefined,
-                    shopifyDetails: err?.response || undefined
+                    shopifyDetails: error?.response || undefined
                 });
             },
         );
