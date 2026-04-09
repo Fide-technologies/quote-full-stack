@@ -11,7 +11,8 @@
   "scripts": {
     "build:frontend": "cd frontend && bun run build",
     "shopify": "shopify",
-    "dev": "shopify app dev",
+    "dev:all": "shopify app dev",
+    "dev": "shopify app dev --tunnel-url https://dev.request-quote.online:3001",
     "dev:backend": "bun run --filter backend-express dev",
     "dev:frontend": "cd frontend && bun run dev",
     "test": "bun run --filter backend-express test",

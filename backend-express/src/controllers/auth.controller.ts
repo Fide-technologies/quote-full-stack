@@ -20,12 +20,22 @@ export class AuthController {
             const callbackResponse = await shopify.api.auth.callback({
                 rawRequest: req,
                 rawResponse: res,
+                expiring: true
             });
 
             const { session } = callbackResponse;
+
             if (!session || !session.accessToken) {
                 return res.status(500).send("No session found in callback");
             }
+
+            // Manually store the session since we took over the callback logic
+            await shopify.config.sessionStorage.storeSession(session);
+
+            res.locals.shopify = {
+                ...res.locals.shopify,
+                session,
+            };
 
             const client = new shopify.api.clients.Rest({ session });
             const shopData = (await client.get({ path: "shop" })) as unknown as { body: ShopifyShopResponse };
@@ -54,7 +64,8 @@ export class AuthController {
 
             await shopify.api.webhooks.register({ session });
 
-            return res.redirect(`/api/auth?shop=${session.shop}&host=${req.query.host}`);
+            // Pass control to the next middleware (shopify.redirectToShopifyOrAppRoot)
+            next();
         } catch (error) {
             logger.error(`Error in callbackStore: ${error}`);
             next(error);
