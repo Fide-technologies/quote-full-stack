@@ -20,12 +20,22 @@ export class AuthController {
             const callbackResponse = await shopify.api.auth.callback({
                 rawRequest: req,
                 rawResponse: res,
+                expiring: true
             });
 
             const { session } = callbackResponse;
+
             if (!session || !session.accessToken) {
                 return res.status(500).send("No session found in callback");
             }
+
+            // Manually store the session since we took over the callback logic
+            await shopify.config.sessionStorage.storeSession(session);
+
+            res.locals.shopify = {
+                ...res.locals.shopify,
+                session,
+            };
 
             const client = new shopify.api.clients.Rest({ session });
             const shopData = (await client.get({ path: "shop" })) as unknown as { body: ShopifyShopResponse };
@@ -36,16 +46,9 @@ export class AuthController {
 
             const shopInfo = shopData.body.shop;
 
-            // 3. Fetch current billing status from Shopify (Managed Billing)
-            // We only do this if the app is configured as a paid app to avoid 403 errors on the Free tier.
-            let billingState: { planId?: Types.ObjectId; subscriptionStatus?: SubscriptionStatus } = {
-                subscriptionStatus: SubscriptionStatus.ACTIVE // Default for free app
-            };
-
-            if (env.IS_PAID_APP === "true") {
-                const fetchedBilling = await this.planService.verifyReinstallationBilling(session);
-                billingState = { ...billingState, ...fetchedBilling };
-            }
+            // Setting default ACTIVE status for the free version.
+            // This bypasses the billing API check and prevents 403 Forbidden errors.
+            const subscriptionStatus = SubscriptionStatus.ACTIVE;
 
             await this.merchantService.createOrUpdateMerchant({
                 shop: session.shop,
@@ -56,12 +59,13 @@ export class AuthController {
                 currency: shopInfo.currency,
                 isActive: true,
                 installedAt: new Date(),
-                ...billingState,
+                subscriptionStatus,
             });
 
             await shopify.api.webhooks.register({ session });
 
-            return res.redirect(`/api/auth?shop=${session.shop}&host=${req.query.host}`);
+            // Pass control to the next middleware (shopify.redirectToShopifyOrAppRoot)
+            next();
         } catch (error) {
             logger.error(`Error in callbackStore: ${error}`);
             next(error);

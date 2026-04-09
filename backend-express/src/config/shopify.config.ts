@@ -17,9 +17,9 @@ const shopify = shopifyApp({
         scopes: env.SHOPIFY_SCOPES,
         restResources,
         logger: {
-            level: env.NODE_ENV === "development" ? LogSeverity.Debug : LogSeverity.Error,
+            level: LogSeverity.Debug,
         },
-        isTesting: env.NODE_ENV !== "production",
+        isTesting: false,
         isCustomStoreApp: false,
     },
     auth: {

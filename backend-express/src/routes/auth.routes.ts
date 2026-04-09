@@ -8,6 +8,6 @@ const router = Router();
 const authController = container.get<AuthController>(TYPES.AuthController);
 
 router.get("/", shopify.auth.begin());
-router.get("/callback", shopify.auth.callback(), authController.callbackStore, shopify.redirectToShopifyOrAppRoot());
+router.get("/callback", authController.callbackStore, shopify.redirectToShopifyOrAppRoot());
 
 export default router;

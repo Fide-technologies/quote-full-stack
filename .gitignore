@@ -26,3 +26,4 @@ dist-ssr
 .shopify
 .agent
 github.sh
+shopify.app.dev.toml
