@@ -15,7 +15,7 @@
             const customData = {};
 
             const systemFields = [
-                'shop', 'productId', 'productTitle', 'variantId', 'variantTitle',
+                'shop', 'productId', 'handle', 'productTitle', 'variantId', 'variantTitle',
                 'productImage', 'productUrl', 'price', 'quantity',
                 'firstName', 'lastName', 'fname', 'lname', 'email', 'phone',
                 'address1', 'address2', 'city', 'district', 'state', 'pincode', 'message'
