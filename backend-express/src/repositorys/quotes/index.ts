@@ -188,7 +188,7 @@ export class QuoteRepository extends MongooseBaseRepository<IQuote> implements I
             },
         ]);
 
-        const formatResult = (facetResult: any[]) => ({
+        const formatResult = (facetResult: Array<{ total?: number; converted?: number; amount?: number }>) => ({
             total: facetResult[0]?.total || 0,
             converted: facetResult[0]?.converted || 0,
             amount: Number(facetResult[0]?.amount || 0),

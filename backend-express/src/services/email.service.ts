@@ -106,7 +106,7 @@ export class EmailService implements IEmailService {
             await this.transporter.sendMail(mailOptions);
             logger.info(`[EmailService] Acceptance email sent to ${quote.customerEmail} for quote ${quote._id}`);
         } catch (error) {
-            logger.error(`[EmailService] Failed to send quote acceptance email:`, error);
+            logger.error("[EmailService] Failed to send quote acceptance email:", error);
         }
     }
 
@@ -153,7 +153,7 @@ export class EmailService implements IEmailService {
             await this.transporter.sendMail(mailOptions);
             logger.info(`[EmailService] Rejection email sent to ${quote.customerEmail} for quote ${quote._id}`);
         } catch (error) {
-            logger.error(`[EmailService] Failed to send quote rejection email:`, error);
+            logger.error("[EmailService] Failed to send quote rejection email:", error);
         }
     }
 
