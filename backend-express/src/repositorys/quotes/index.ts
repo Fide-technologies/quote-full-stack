@@ -83,6 +83,10 @@ export class QuoteRepository extends MongooseBaseRepository<IQuote> implements I
         return await Quote.findByIdAndUpdate(id, { status }, { new: true });
     }
 
+    async deleteById(id: string): Promise<DeleteResult> {
+        return await Quote.deleteOne({ _id: id });
+    }
+
     async countByMerchant(shop: string): Promise<number> {
         return await Quote.countDocuments({ shop });
     }
@@ -130,5 +134,74 @@ export class QuoteRepository extends MongooseBaseRepository<IQuote> implements I
             })
             .select("_id status createdAt productTitle customerEmail customerName")
             .exec();
+    }
+
+    async getAnalyticsByMerchant(shop: string): Promise<{
+        today: { total: number; converted: number; amount: number };
+        thisWeek: { total: number; converted: number; amount: number };
+        last30Days: { total: number; converted: number; amount: number };
+        thisMonth: { total: number; converted: number; amount: number };
+        thisYear: { total: number; converted: number; amount: number };
+    }> {
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfYear = new Date(now.getFullYear(), 0, 1);
+        const last30Days = new Date(now);
+        last30Days.setDate(now.getDate() - 30);
+
+        const getFacetPipeline = (dateLimit: Date) => [
+            { $match: { shop, createdAt: { $gte: dateLimit } } },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: 1 },
+                    converted: {
+                        $sum: {
+                            $cond: [{ $and: [{ $gt: ["$draftOrderId", null] }, { $ne: ["$draftOrderId", ""] }] }, 1, 0],
+                        },
+                    },
+                    amount: {
+                        $sum: {
+                            $cond: [
+                                { $and: [{ $gt: ["$draftOrderId", null] }, { $ne: ["$draftOrderId", ""] }] },
+                                "$totalPrice",
+                                0,
+                            ],
+                        },
+                    },
+                },
+            },
+        ];
+
+        const results = await this.model.aggregate([
+            {
+                $facet: {
+                    today: getFacetPipeline(startOfToday),
+                    thisWeek: getFacetPipeline(startOfWeek),
+                    thisMonth: getFacetPipeline(startOfMonth),
+                    thisYear: getFacetPipeline(startOfYear),
+                    last30Days: getFacetPipeline(last30Days),
+                },
+            },
+        ]);
+
+        const formatResult = (facetResult: any[]) => ({
+            total: facetResult[0]?.total || 0,
+            converted: facetResult[0]?.converted || 0,
+            amount: Number(facetResult[0]?.amount || 0),
+        });
+
+        const facetData = results[0];
+
+        return {
+            today: formatResult(facetData.today),
+            thisWeek: formatResult(facetData.thisWeek),
+            last30Days: formatResult(facetData.last30Days),
+            thisMonth: formatResult(facetData.thisMonth),
+            thisYear: formatResult(facetData.thisYear),
+        };
     }
 }
