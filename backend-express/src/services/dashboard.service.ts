@@ -27,11 +27,12 @@ export class DashboardService implements IDashboardService {
             throw new Error("Merchant not found");
         }
 
-        const [totalQuotes, convertedQuotes, plan, themeAudit] = await Promise.all([
+        const [totalQuotes, convertedQuotes, plan, themeAudit, analytics] = await Promise.all([
             this.quoteRepository.countByMerchant(shop),
             this.quoteRepository.countConvertedByMerchant(shop),
             this.planService.getMerchantPlan(shop),
             this.settingsService.checkAppEmbedStatus(session),
+            this.quoteRepository.getAnalyticsByMerchant(shop),
         ]);
 
         const currentPlan = plan?.name || PlanType.FREE;
@@ -60,6 +61,7 @@ export class DashboardService implements IDashboardService {
             isAppEmbedded: themeAudit.isEmbedded,
             activeThemeId: themeAudit.themeId,
             deepLinkUrl,
+            analytics,
         };
     }
 }

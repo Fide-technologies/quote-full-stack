@@ -1,4 +1,5 @@
 export interface Quote {
+    shop: string;
     id: string;
     firstName: string;
     lastName: string;
@@ -7,22 +8,37 @@ export interface Quote {
     productTitle: string;
     variantTitle?: string;
     quantity: number;
+    originalPrice: string;
+    totalPrice: number;
     address1?: string;
     address2?: string;
     city?: string;
     district?: string;
     state?: string;
     pincode?: string;
+    country?: string;
     customerMessage?: string;
     status: 'NEW' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEGOTIATION';
     createdAt: string;
     productId?: string;
     productDetails?: {
+        vendor?: string;
+        productType?: string;
         featuredImage?: {
             url: string;
             altText: string;
-        }
+        };
+        variants?: {
+            nodes: Array<{
+                id: string;
+                title: string;
+                sku: string;
+                price: string;
+                inventoryQuantity: number;
+            }>;
+        };
     }
+
     draftOrderId?: string;
     draftOrderUrl?: string;
     customData?: Record<string, unknown>;
@@ -110,4 +126,63 @@ export async function exportQuotesCSV(filters: QuoteFilters = {}): Promise<void>
     a.click();
     a.remove();
     window.URL.revokeObjectURL(url);
+}
+
+export async function acceptQuote(id: string, data: { price: number; quantity: number; message: string }): Promise<void> {
+    const res = await fetch(`/api/quotes/${id}/accept`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to accept quote");
+    }
+}
+
+export async function updateQuoteStatus(id: string, status: Quote['status']): Promise<Quote> {
+    const res = await fetch(`/api/quotes/${id}/status`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+    });
+
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to update status");
+    }
+
+    const json = await res.json();
+    return json.data;
+}
+
+export async function deleteQuote(id: string): Promise<void> {
+    const res = await fetch(`/api/quotes/${id}`, {
+        method: "DELETE",
+    });
+
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to delete quote");
+    }
+}
+
+export async function rejectQuote(id: string, data: { message: string }): Promise<void> {
+    const res = await fetch(`/api/quotes/${id}/reject`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
+
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to reject quote");
+    }
 }

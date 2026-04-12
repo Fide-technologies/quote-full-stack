@@ -126,17 +126,17 @@
         {%- assign config = shop.metafields.merchant_quote.config.value -%}
 
         {%- assign rq_btn_text = config.buttonText -%}
-        {%- if rq_btn_text == blank -%}
-          {%- assign rq_btn_text = block.settings.button_text | default: 'Request Quote' -%}
+        {%- if config.buttonText == nil -%}
+          {%- assign rq_btn_text = block.settings.button_text -%}
         {%- endif -%}
 
         {%- assign rq_btn_color = config.buttonColor -%}
-        {%- if rq_btn_color == blank -%}
+        {%- if config.buttonColor == nil -%}
           {%- assign rq_btn_color = block.settings.button_color | default: '#008060' -%}
         {%- endif -%}
 
         {%- assign rq_text_color = config.buttonTextColor -%}
-        {%- if rq_text_color == blank -%}
+        {%- if config.buttonTextColor == nil -%}
           {%- assign rq_text_color = '#FFFFFF' -%}
         {%- endif -%}
 
@@ -164,7 +164,7 @@
       "type": "text",
       "id": "button_text",
       "label": "Button text",
-      "default": "Add to Quote"
+      "default": "Request Quote"
     },
     {
       "type": "color",

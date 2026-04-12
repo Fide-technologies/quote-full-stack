@@ -10,9 +10,11 @@ import {
 import { ExportIcon } from '@shopify/polaris-icons';
 
 import { useQuotes } from '../hooks/quotes/useQuotes';
-import { QuoteFilters } from '../components/quotes/QuoteFilters';
-import { QuoteTable } from '../components/quotes/QuoteTable';
+import { PageLoader } from '../components/loaders/PageLoader';
+import { ErrorState } from '../components/common/ErrorState';
 import { useNavigate } from 'react-router-dom';
+import { QuoteTable } from '@/components/quotes/QuoteTable';
+import { QuoteFilters } from '@/components/quotes/QuoteFilters';
 
 export const DraftOrders: React.FC = () => {
     const navigate = useNavigate();
@@ -21,6 +23,9 @@ export const DraftOrders: React.FC = () => {
         totalCount,
         totalPages,
         isLoading,
+        isError,
+        error,
+        refetch,
         queryValue,
         statusFilter,
         dateFilter,
@@ -34,6 +39,20 @@ export const DraftOrders: React.FC = () => {
         handlePrevPage,
         handleSearchBlur,
     } = useQuotes({ hasDraftOrder: true });
+
+    if (isLoading) {
+        return <PageLoader title="Draft Orders" />;
+    }
+
+    if (isError) {
+        return (
+            <ErrorState
+                title="Draft Orders"
+                message={(error as Error)?.message || "Something went wrong while fetching your draft orders."}
+                onRetry={() => refetch()}
+            />
+        );
+    }
 
 
 

@@ -4,7 +4,6 @@ import http from "node:http";
 import { connectDB, disconnectDB } from "@/config/mongo-db.config";
 import { logger } from "@/utils/logger";
 import { env } from "@/validations/env.validation";
-import ngrok from "@ngrok/ngrok";
 import { App } from "./app";
 
 import "./inversify.config";
@@ -44,7 +43,7 @@ async function bootstrap() {
 
         logger.info("port is: ", env.PORT);
 
-        // 4. Start Server
+        // 4. Start Server 
         server.listen(env.PORT, async () => {
             const actualPort = env.PORT;
 
@@ -68,12 +67,6 @@ async function bootstrap() {
 
                 // Close database connection
                 await disconnectDB();
-
-                // Disconnect Ngrok if in dev
-                if (env.NODE_ENV === "development") {
-                    await ngrok.disconnect();
-                    logger.info("Ngrok disconnected.");
-                }
 
                 logger.info("Shutdown complete. Exiting process.");
                 process.exit(0);

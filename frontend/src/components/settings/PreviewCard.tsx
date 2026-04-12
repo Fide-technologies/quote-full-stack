@@ -1,12 +1,9 @@
 import React from 'react';
 import { Card, BlockStack, Text, Box, InlineStack, Badge } from '@shopify/polaris';
-import type { ISettings } from '../../types/settings';
 
-interface Props {
-  settings: ISettings;
-}
+import type { PreviewCardProps } from '../../types/settings_components';
 
-export const PreviewCard: React.FC<Props> = ({ settings }) => {
+export const PreviewCard: React.FC<PreviewCardProps> = ({ settings }) => {
   return (
     <Card>
       <BlockStack gap="400">
@@ -63,7 +60,7 @@ export const PreviewCard: React.FC<Props> = ({ settings }) => {
                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                             transition: 'all 0.2s ease'
                         }}>
-                             {settings.buttonText || "Request Quote"}
+                             {settings.buttonText || 'Request Quote'}
                         </div>
                     )}
                     
@@ -111,7 +108,7 @@ export const PreviewCard: React.FC<Props> = ({ settings }) => {
                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                             transition: 'all 0.2s ease'
                         }}>
-                             {settings.buttonText || "Request Quote"}
+                             {settings.buttonText || 'Request Quote'}
                         </div>
                     )}
                 </BlockStack>

@@ -6,17 +6,7 @@ import {
     TextField,
 } from '@shopify/polaris';
 
-interface QuoteFiltersProps {
-    queryValue: string;
-    statusFilter: string[];
-    dateFilter: string;
-    onQueryChange: (value: string) => void;
-    onQueryClear: () => void;
-    onStatusChange: (value: string[]) => void;
-    onDateChange: (value: string) => void;
-    onClearAll: () => void;
-    onSearch?: () => void;
-}
+import type { QuoteFiltersProps } from '../../types/quotes';
 
 export function QuoteFilters({
     queryValue,
@@ -39,7 +29,6 @@ export function QuoteFilters({
                     title="Status"
                     titleHidden
                     choices={[
-                        { label: 'New', value: 'NEW' },
                         { label: 'Pending', value: 'PENDING' },
                         { label: 'Approved', value: 'APPROVED' },
                         { label: 'Rejected', value: 'REJECTED' },

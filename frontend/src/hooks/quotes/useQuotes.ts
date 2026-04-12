@@ -10,7 +10,7 @@ export function useQuotes(config: { hasDraftOrder?: boolean } = {}) {
     const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const { data, isLoading } = useQuery({
+    const { data, isLoading, isError, error, refetch } = useQuery({
         queryKey: ['quotes', page, queryValue, statusFilter, dateFilter, config.hasDraftOrder],
         queryFn: () => getQuotes({
             page,
@@ -79,6 +79,9 @@ export function useQuotes(config: { hasDraftOrder?: boolean } = {}) {
         totalCount,
         totalPages,
         isLoading,
+        isError,
+        error,
+        refetch,
 
         // Filters State
         queryValue,

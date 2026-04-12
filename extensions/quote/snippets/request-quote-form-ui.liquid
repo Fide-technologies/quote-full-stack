@@ -1,3 +1,4 @@
+{%- assign block_id = block_id | default: 'global' -%}
 <div id="rqModal-{{ block_id }}" class="rq-modal" aria-hidden="true" role="dialog">
   <div id="rq-app-root-{{ block_id }}" data-shop="{{ shop.permanent_domain }}" style="display:none;"></div>
   <div class="rq-modal-overlay" onclick="rqCloseModal('{{ block_id }}')"></div>
@@ -61,6 +62,7 @@
 
       <form id="rq-form-{{ block_id }}" onsubmit="event.preventDefault();" class="rq-form">
         <input type="hidden" name="productId" value="{{ product.id }}">
+        <input type="hidden" name="handle" value="{{ product.handle }}">
         <input type="hidden" name="variantId" value="{{ product.selected_or_first_available_variant.id }}">
         <input type="hidden" name="productTitle" value="{{ product.title }}">
         <input type="hidden" name="variantTitle" value="{{ product.selected_or_first_available_variant.title }}">
