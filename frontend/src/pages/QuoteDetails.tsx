@@ -36,6 +36,8 @@ import { useQuoteAccept } from '../hooks/useQuoteAccept';
 import { useQuoteManagement } from '../hooks/useQuoteManagement';
 import { useQuoteReject, REJECTION_REASONS } from '../hooks/useQuoteReject';
 
+import { ErrorState } from '../components/common/ErrorState';
+
 export const QuoteDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -110,11 +112,12 @@ export const QuoteDetails: React.FC = () => {
 
     if (queryError || !quote) {
         return (
-            <Page backAction={{ content: 'Quotes', onAction: () => navigate('/quotes') }} title="Quote Not Found">
-                <Banner tone="critical">
-                    <p>The quote you are looking for does not exist or could not be loaded.</p>
-                </Banner>
-            </Page>
+            <ErrorState 
+                title="Quote Not Found"
+                message="The quote you are looking for does not exist or could not be loaded."
+                backAction={{ content: 'Quotes', onAction: () => navigate('/quotes') }}
+                onRetry={queryError ? () => window.location.reload() : undefined}
+            />
         );
     }
 
