@@ -5,6 +5,7 @@ import type { IQuoteService } from '@/interfaces';
 import { Quote } from '@/models/quote.model';
 import { Merchant } from '@/models/merchant.model';
 import mongoose from 'mongoose';
+import { QuoteStatus } from '@/constants';
 
 describe('QuoteService Unit Tests', () => {
     let quoteService: IQuoteService;
@@ -62,10 +63,10 @@ describe('QuoteService Unit Tests', () => {
             totalPrice: 10,
             quantity: 1,
             items: [],
-            status: 'PENDING'
+            status: QuoteStatus.PENDING
         });
 
-        const updated = await quoteService.updateQuoteStatus(quote._id.toString(), 'APPROVED' as any);
+        const updated = await quoteService.updateQuoteStatus({ shop: 'test.shop' } as any, quote._id.toString(), QuoteStatus.APPROVED);
         expect(updated?.status).toBe('APPROVED');
     });
 
@@ -80,7 +81,7 @@ describe('QuoteService Unit Tests', () => {
             totalPrice: 10,
             quantity: 1,
             items: [],
-            status: 'PENDING'
+            status: QuoteStatus.PENDING
         };
 
         await Quote.create([

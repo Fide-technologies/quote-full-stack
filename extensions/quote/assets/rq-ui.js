@@ -90,6 +90,7 @@
                     if (inp) inp.value = val;
                 };
                 setVal('productId', product.id);
+                setVal('handle', product.handle);
                 setVal('variantId', product.variants[0]?.id || '');
                 setVal('productTitle', product.title);
                 setVal('productUrl', window.location.origin + product.url);

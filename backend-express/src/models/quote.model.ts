@@ -16,6 +16,7 @@ const quoteSchema = new Schema<IQuote>(
 
         productId: String,
         productTitle: String,
+        productHandle: String,
         variantId: String,
         variantTitle: String,
         productImage: String,

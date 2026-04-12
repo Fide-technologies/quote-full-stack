@@ -11,18 +11,7 @@ import {
     useIndexResourceState,
 } from "@shopify/polaris";
 import { ImageIcon, ViewIcon } from "@shopify/polaris-icons";
-import type { Quote } from "../../api/quotes";
-
-interface QuoteTableProps {
-    quotes: Quote[];
-    isLoading: boolean;
-    page: number;
-    totalPages: number;
-    totalCount: number;
-    onNextPage: () => void;
-    onPrevPage: () => void;
-    onViewDetails: (quote: Quote) => void;
-}
+import type { QuoteTableProps } from '../../types/quotes';
 
 export function QuoteTable({
     quotes,

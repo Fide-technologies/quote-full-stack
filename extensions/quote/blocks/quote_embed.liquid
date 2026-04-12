@@ -57,7 +57,11 @@
     {% endif %}
   {% endif %}
 
-  {% comment %} 2. Global Configuration Bridge {% endcomment %}
+  {% assign hide_content_for_guests = false %}
+  {% if customer == null %}
+    {% assign hide_content_for_guests = true %}
+  {% endif %}
+
   <script id="mq-global-config">
     window.rqGlobalSettings = {
       appEnabled: {{ config.appEnabled | default: false | json }},
@@ -76,6 +80,8 @@
       buttonTextColor: {{ current_text_color | json }},
       hideAddToCart: {{ config.hideAddToCart | default: false | json }},
       hideBuyNow: {{ config.hideBuyNow | default: false | json }},
+      hidePriceGlobal: {% if config.hidePriceGlobal and hide_content_for_guests %}true{% else %}false{% endif %},
+      loginToSeePrice: {% if config.loginToSeePrice and hide_content_for_guests %}true{% else %}false{% endif %},
       placementLocation: {{ config.placementLocation | default: "above" | json }},
       visibility: {{ config.visibility | default: "all" | json }}
     };
@@ -96,10 +102,12 @@
           display: none !important; margin: 0 !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important;
         }
       {% endif %}
-      {% if config.hidePriceGlobal %}
-        .price, .product-price, .product__price, .product-single__price, .price-item, .product__tax {
-          display: none !important; margin: 0 !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important;
-        }
+      {% if config.hidePriceGlobal or config.loginToSeePrice %}
+        {% if customer == null %}
+          .price, .product-price, .product__price, .product-single__price, .price-item, .product__tax {
+            display: none !important; margin: 0 !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; padding: 0 !important;
+          }
+        {% endif %}
       {% endif %}
     </style>
   {% endif %}

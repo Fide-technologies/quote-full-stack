@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { QuoteFilters } from '../components/quotes/QuoteFilters';
 import { QuoteTable } from '../components/quotes/QuoteTable';
 import { PageLoader } from '../components/loaders/PageLoader';
+import { ErrorState } from '../components/common/ErrorState';
 
 export const Quotes: React.FC = () => {
     const {
@@ -23,6 +24,9 @@ export const Quotes: React.FC = () => {
         totalCount,
         totalPages,
         isLoading,
+        isError,
+        error,
+        refetch,
         queryValue,
         statusFilter,
         dateFilter,
@@ -47,6 +51,16 @@ export const Quotes: React.FC = () => {
 
     if (!isClient || isLoading) {
         return <PageLoader title="Quote Requests" primaryAction />;
+    }
+
+    if (isError) {
+        return (
+            <ErrorState 
+                title="Quote Requests"
+                message={(error as Error)?.message || "Something went wrong while fetching your quotes."}
+                onRetry={() => refetch()}
+            />
+        );
     }
 
     return (
@@ -95,7 +109,7 @@ export const Quotes: React.FC = () => {
                                 <Card>
                                     <BlockStack gap="200">
                                         <Text as="h2" variant="headingSm" tone="subdued">Pending Quotes</Text>
-                                        <Text as="p" variant="headingLg">{quotes.filter(q => q.status === 'NEW' || q.status === 'PENDING').length}</Text>
+                                        <Text as="p" variant="headingLg">{quotes.filter(q => q.status === 'PENDING').length}</Text>
                                     </BlockStack>
                                 </Card>
                             </InlineGrid>

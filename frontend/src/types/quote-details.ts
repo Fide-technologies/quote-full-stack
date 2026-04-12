@@ -7,13 +7,13 @@ export interface QuoteCustomerDetailsProps {
 }
 
 export interface QuoteAddressDetailsProps {
-    address1: string | null | undefined;
-    address2: string | null | undefined;
-    city: string | null | undefined;
-    district: string | null | undefined;
-    state: string | null | undefined;
-    pincode: string | null | undefined;
-    country: string | null | undefined;
+    address1?: string | null | undefined;
+    address2?: string | null | undefined;
+    city?: string | null | undefined;
+    district?: string | null | undefined;
+    state?: string | null | undefined;
+    pincode?: string | null | undefined;
+    country?: string | null | undefined;
 }
 
 export interface QuoteProductDetailsProps {

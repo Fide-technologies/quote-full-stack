@@ -31,7 +31,7 @@ export class QuoteService implements IQuoteService {
         @inject(TYPES.IEmailService) private readonly emailService: IEmailService,
         @inject(TYPES.IDraftOrderService) private readonly draftOrderService: IDraftOrderService,
         @inject(TYPES.IUsageService) private readonly usageService: IUsageService,
-    ) {}
+    ) { }
 
     async createQuote(shop: string, quoteDataInput: Record<string, unknown>): Promise<QuoteDocument> {
         const merchant = await this.merchantService.getMerchantByShop(shop);
@@ -74,6 +74,7 @@ export class QuoteService implements IQuoteService {
                 // Product & Pricing
                 productId: String(quoteDataInput.productId || ""),
                 productTitle: String(quoteDataInput.productTitle || ""),
+                productHandle: String(quoteDataInput.handle || ""),
                 variantId: quoteDataInput.variantId ? String(quoteDataInput.variantId) : undefined,
                 originalPrice: mongoose.Types.Decimal128.fromString(price.toString()),
                 quantity: quantity,
@@ -182,8 +183,31 @@ export class QuoteService implements IQuoteService {
         };
     }
 
-    async updateQuoteStatus(id: string, status: IQuote["status"]): Promise<QuoteDocument | null> {
-        return await this.quoteRepository.updateStatus(id, status);
+    async updateQuoteStatus(session: Session, id: string, status: IQuote["status"]): Promise<QuoteDocument | null> {
+        const quote = await this.quoteRepository.findById(id);
+        if (!quote) {
+            throw new Error(ERROR_MESSAGES.QUOTE.NOT_FOUND);
+        }
+
+        if (quote.shop !== session.shop) {
+            throw new Error(ERROR_MESSAGES.QUOTE.UNAUTHORIZED);
+        }
+
+        quote.status = status;
+        return await quote.save();
+    }
+
+    async deleteQuote(session: Session, id: string): Promise<void> {
+        const quote = await this.quoteRepository.findById(id);
+        if (!quote) {
+            throw new Error(ERROR_MESSAGES.QUOTE.NOT_FOUND);
+        }
+
+        if (quote.shop !== session.shop) {
+            throw new Error(ERROR_MESSAGES.QUOTE.UNAUTHORIZED);
+        }
+
+        await this.quoteRepository.deleteById(id);
     }
 
     async createDraftOrder(session: Session, quoteId: string): Promise<{ draftOrderId: string; invoiceUrl: string }> {
@@ -284,6 +308,43 @@ export class QuoteService implements IQuoteService {
             ...quoteObj,
             productDetails,
         } as QuoteDocument & { productDetails?: unknown };
+    }
+
+    async acceptQuote(session: Session, quoteId: string, price: number, quantity: number, message: string): Promise<void> {
+        const quote = await this.quoteRepository.findById(quoteId);
+        if (!quote) {
+            throw new Error(ERROR_MESSAGES.QUOTE.NOT_FOUND);
+        }
+
+        if (quote.shop !== session.shop) {
+            throw new Error(ERROR_MESSAGES.QUOTE.UNAUTHORIZED);
+        }
+
+        quote.status = QuoteStatus.APPROVED;
+        await quote.save();
+
+        await this.emailService.sendQuoteAcceptance(quote, price, quantity, message);
+
+    }
+
+    async rejectQuote(session: Session, quoteId: string, message: string): Promise<void> {
+        const quote = await this.quoteRepository.findById(quoteId);
+
+        if (!quote) {
+            throw new Error(ERROR_MESSAGES.QUOTE.NOT_FOUND);
+        }
+
+        if (quote.shop !== session.shop) {
+            throw new Error(ERROR_MESSAGES.QUOTE.UNAUTHORIZED);
+        }
+
+        // Update status and send rejection email
+        quote.status = QuoteStatus.REJECTED;
+        await quote.save();
+
+        await this.emailService.sendQuoteRejection(quote, message);
+
+        logger.info(`[QuoteService] Merchant rejected quote ${quoteId}. Reason: ${message.slice(0, 50)}...`);
     }
 
     async redactCustomerData(email: string): Promise<void> {
