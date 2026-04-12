@@ -43,7 +43,7 @@ export const usePlansLogic = () => {
                 queryClient.invalidateQueries({ queryKey: ['planUsage'] });
             }
         },
-        onError: (err: any) => {
+        onError: (err: Error) => {
             setUpgradeError(err.message || 'Failed to initiate upgrade');
             setShowErrorBanner(true);
         }
