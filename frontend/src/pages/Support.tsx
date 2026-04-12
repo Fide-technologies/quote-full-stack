@@ -39,7 +39,7 @@ export const Support: React.FC = () => {
                                     <Box paddingBlockStart="200">
                                         <Button
                                             icon={EmailIcon}
-                                            url="https://mail.google.com/mail/?view=cm&fs=1&to=krishnauday320@gmail.com&su=Support%20Request%20-%20Merchant%20Quote&body=Hello%20Support%20Team,%0A%0AI%20need%20help%20with..."
+                                            url="https://mail.google.com/mail/?view=cm&fs=1&to=fidetechonologies@gmail.com&su=Support%20Request%20-%20Merchant%20Quote&body=Hello%20Support%20Team,%0A%0AI%20need%20help%20with..."
                                             variant="primary"
                                             external
                                         >
@@ -121,9 +121,9 @@ export const Support: React.FC = () => {
                                                     <Text as="p" variant="bodySm" fontWeight="medium" tone="subdued">
                                                         FOR QUESTIONS OR ASSISTANCE
                                                     </Text>
-                                                    <Link url="https://mail.google.com/mail/?view=cm&fs=1&to=krishnauday320@gmail.com&su=Support%20Request%20-%20Merchant%20Quote&body=Hello%20Support%20Team,%0A%0AI%20need%20help%20with..." external>
+                                                    <Link url="https://mail.google.com/mail/?view=cm&fs=1&to=fidetechonologies@gmail.com&su=Support%20Request%20-%20Merchant%20Quote&body=Hello%20Support%20Team,%0A%0AI%20need%20help%20with..." external>
                                                         <Text as="span" variant="bodyMd" fontWeight="semibold">
-                                                            krishnauday320@gmail.com
+                                                            fidetechonologies@gmail.com
                                                         </Text>
                                                     </Link>
                                                 </BlockStack>

@@ -1,8 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { shopify } from "@/config/shopify.config";
-import { API_MESSAGES, HTTP_STATUS } from "@/constants/app.constants";
-import { logger } from "@/utils/logger";
+import { HTTP_STATUS } from "@/constants/app.constants";
 import express from "express";
 
 import mongoose from "mongoose";
@@ -17,6 +16,7 @@ import quotesRouter from "./routes/quotes.routes";
 import settingsRouter from "./routes/settings.routes";
 import uploadRouter from "./routes/upload.routes";
 import webhooksRouter from "./routes/webhooks.routes";
+import legalRouter from "./routes/legal.routes";
 import { globalLimiter } from "./config/rate-limit.config";
 import { globalErrorHandler } from "./middlewares/error.middleware";
 
@@ -62,6 +62,7 @@ export class App {
         });
 
         this.app.use("/api/webhooks", webhooksRouter);
+        this.app.use("/api/legal", legalRouter);
 
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
