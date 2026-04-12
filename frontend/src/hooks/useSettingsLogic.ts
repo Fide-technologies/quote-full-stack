@@ -67,11 +67,7 @@ export function useSettingsLogic() {
 
     const handleSave = useCallback(() => {
         if (localSettings) {
-            const settingsToSave = { ...currentSettings };
-            delete settingsToSave.plan;
-            delete settingsToSave.isAppEmbedded;
-            delete settingsToSave.deepLinkUrl;
-            mutation.mutate(settingsToSave as ISettings);
+            mutation.mutate(currentSettings);
         }
     }, [localSettings, currentSettings, mutation]);
 
