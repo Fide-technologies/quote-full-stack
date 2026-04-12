@@ -2,10 +2,7 @@ import React from 'react';
 import { Card, BlockStack, Text, InlineStack, Box, Icon } from '@shopify/polaris';
 import { PersonIcon, CheckIcon } from '@shopify/polaris-icons';
 
-interface QuickStatsCardProps {
-    totalQuotes: number;
-    convertedQuotes: number;
-}
+import type { QuickStatsCardProps } from '../../types/dashboard';
 
 export const QuickStatsCard: React.FC<QuickStatsCardProps> = ({ totalQuotes, convertedQuotes }) => {
     return (

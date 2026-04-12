@@ -1,12 +1,7 @@
 import React from 'react';
 import { Box, BlockStack, Text } from '@shopify/polaris';
 
-interface AnalyticsCardProps {
-    title: string;
-    value: string | number;
-    subtitle: string;
-    tone?: 'success' | 'subdued' | 'critical';
-}
+import type { AnalyticsCardProps } from '../../types/dashboard';
 
 export const AnalyticsCard: React.FC<AnalyticsCardProps> = ({ title, value, subtitle, tone = 'subdued' }) => {
     return (

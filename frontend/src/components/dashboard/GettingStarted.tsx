@@ -3,20 +3,7 @@ import { Card, BlockStack, InlineStack, Text, Badge, ProgressBar, Box, Icon, But
 import { CheckIcon } from '@shopify/polaris-icons';
 import { useNavigate } from 'react-router-dom';
 
-interface OnboardingStep {
-    label: string;
-    completed: boolean;
-    description: string;
-}
-
-interface GettingStartedProps {
-    steps: OnboardingStep[];
-    progress: number;
-    completedCount: number;
-    totalCount: number;
-    deepLinkUrl: string;
-    isAppEnabled: boolean;
-}
+import type { GettingStartedProps } from '../../types/dashboard';
 
 const ThemeEditorLink: React.FC<{ children: string; deepLinkUrl: string }> = ({ children, deepLinkUrl }) => (
     <a href={deepLinkUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>

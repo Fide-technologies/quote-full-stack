@@ -2,13 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Card, Box, BlockStack, InlineStack, Text, Button, Popover, ActionList } from '@shopify/polaris';
 import { AnalyticsCard } from './AnalyticsCard';
 
-interface AnalyticsSectionProps {
-    periodOptions: { label: string; value: string }[];
-    selectedPeriod: string;
-    onPeriodChange: (value: string) => void;
-    currentStats: { total: number; converted: number; amount: number };
-    allTimeStats: { totalQuotes: number; convertedQuotes: number; yearAmount: number };
-}
+import type { AnalyticsSectionProps } from '../../types/dashboard';
 
 export const AnalyticsSection: React.FC<AnalyticsSectionProps> = ({
     periodOptions,

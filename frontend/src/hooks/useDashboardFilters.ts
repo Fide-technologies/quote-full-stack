@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import type { DashboardStats } from '../api/dashboard';
+import type { OnboardingStep } from '../types/dashboard';
 
 export const useDashboardFilters = (stats: (DashboardStats & { deepLinkUrl?: string }) | undefined) => {
     const [selectedPeriod, setSelectedPeriod] = useState<string>('thisMonth');
@@ -23,7 +24,7 @@ export const useDashboardFilters = (stats: (DashboardStats & { deepLinkUrl?: str
         return stats.analytics[selectedPeriod as keyof typeof stats.analytics] || { total: 0, converted: 0, amount: 0 };
     }, [stats, selectedPeriod]);
 
-    const steps = useMemo(() => {
+    const steps = useMemo((): OnboardingStep[] => {
         const isAppEnabled = stats?.isAppEmbedded ?? false;
 
         return [

@@ -1,17 +1,8 @@
-import React from "react";
-import { AlertCircleIcon } from "@shopify/polaris-icons";
 import {
     BlockStack,
-    Button,
-    Card,
-    Icon,
     Layout,
     Page,
-    SkeletonBodyText,
-    SkeletonPage,
-    Text,
 } from "@shopify/polaris";
-import { StatsLoader } from "../components/loaders/StatsLoader";
 import { useDashboardStats } from "../hooks/useDashboardStats";
 import { useAppExtensions } from "../hooks/useAppExtensions";
 import { useDashboardFilters } from "../hooks/useDashboardFilters";
@@ -21,6 +12,8 @@ import { AnalyticsSection } from "../components/dashboard/AnalyticsSection";
 import { GettingStarted } from "../components/dashboard/GettingStarted";
 import { QuickStatsCard } from "../components/dashboard/QuickStatsCard";
 import { AppConnectivityCard } from "../components/settings/AppConnectivityCard";
+import { DashboardLoader } from "../components/loaders/DashboardLoader";
+import { ErrorState } from "../components/common/ErrorState";
 
 export const Dashboard: React.FC = () => {
     // Fetch base data
@@ -29,13 +22,7 @@ export const Dashboard: React.FC = () => {
         isLoading: statsLoading,
         error,
     } = useDashboardStats() as {
-        data:
-        | (import("../api/dashboard").DashboardStats & {
-            isAppEmbedded: boolean;
-            deepLinkUrl: string;
-            activeThemeId: string;
-        })
-        | undefined;
+        data: import("../api/dashboard").DashboardStats | undefined;
         isLoading: boolean;
         error: Error | null;
     };
@@ -57,42 +44,16 @@ export const Dashboard: React.FC = () => {
     const deepLinkUrl = stats?.deepLinkUrl || "shopify:admin/themes/current/editor?context=apps";
 
     if (loading) {
-        return (
-            <SkeletonPage title="Dashboard">
-                <Layout>
-                    <Layout.Section>
-                        <Card>
-                            <SkeletonBodyText lines={3} />
-                        </Card>
-                        <StatsLoader columns={4} />
-                    </Layout.Section>
-                    <Layout.Section variant="oneThird">
-                        <Card padding="400">
-                            <SkeletonBodyText lines={5} />
-                        </Card>
-                    </Layout.Section>
-                </Layout>
-            </SkeletonPage>
-        );
+        return <DashboardLoader />;
     }
 
     if (error) {
         return (
-            <Page title="Dashboard">
-                <Layout>
-                    <Layout.Section>
-                        <Card padding="400">
-                            <BlockStack gap="400" align="center" inlineAlign="center">
-                                <Icon source={AlertCircleIcon} tone="critical" />
-                                <Text as="p" tone="critical">
-                                    Failed to load dashboard statistics. Please try again later.
-                                </Text>
-                                <Button onClick={() => window.location.reload()}>Retry</Button>
-                            </BlockStack>
-                        </Card>
-                    </Layout.Section>
-                </Layout>
-            </Page>
+            <ErrorState 
+                title="Dashboard"
+                message="Failed to load dashboard statistics. Please try again later."
+                onRetry={() => window.location.reload()}
+            />
         );
     }
 
