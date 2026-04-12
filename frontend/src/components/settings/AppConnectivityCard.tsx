@@ -11,11 +11,7 @@ import {
 import { RefreshIcon } from '@shopify/polaris-icons';
 import { useAppExtensions } from '../../hooks/useAppExtensions';
 
-interface AppConnectivityCardProps {
-  isAppEnabled: boolean;
-  deepLinkUrl: string;
-  loading?: boolean;
-}
+import type { AppConnectivityCardProps } from '../../types/dashboard';
 
 export const AppConnectivityCard: React.FC<AppConnectivityCardProps> = ({
     deepLinkUrl,

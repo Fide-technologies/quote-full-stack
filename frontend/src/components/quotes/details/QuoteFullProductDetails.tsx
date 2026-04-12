@@ -9,6 +9,7 @@ import {
     Badge,
 } from "@shopify/polaris";
 import { type Quote } from "@/api/quotes";
+import { formatCurrency } from '@/utils/currency';
 
 interface QuoteFullProductDetailsProps {
     productDetails: Quote['productDetails'];
@@ -61,7 +62,7 @@ export const QuoteFullProductDetails: React.FC<QuoteFullProductDetailsProps> = (
                                             </BlockStack>
                                             <BlockStack align="end" gap="100">
                                                 <Text as="p" variant="bodyMd" fontWeight="bold" tone="success">
-                                                    ${item.price}
+                                                    {formatCurrency(Number(item.price), 'USD')}
                                                 </Text>
                                                 <Badge tone={item.inventoryQuantity > 0 ? "success" : "warning"}>
                                                     {item.inventoryQuantity ? `${item.inventoryQuantity} in stock` : 'Out of stock'}

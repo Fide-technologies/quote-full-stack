@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
 import { Card, BlockStack, Text, Checkbox, TextField } from '@shopify/polaris';
-import type { ISettings } from '../../types/settings';
 
-interface Props {
-  settings: ISettings;
-  onChange: (key: keyof ISettings, value: unknown) => void;
-}
+import type { SettingsComponentProps } from '../../types/settings_components';
 
-export const PricingSettings: React.FC<Props> = ({ settings, onChange }) => {
+export const PricingSettings: React.FC<SettingsComponentProps> = ({ settings, onChange }) => {
   // Local state for free typing
   const [tagsInput, setTagsInput] = useState(settings.hidePriceByTags.join(", "));
   const [collectionsInput, setCollectionsInput] = useState(settings.hidePriceByCollections.join(", "));

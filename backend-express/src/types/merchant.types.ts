@@ -9,6 +9,7 @@ export interface IMerchantUsage {
 export interface IMerchant {
     shop: string;
     accessToken: string;
+    name?: string;
     scopes?: string;
     email?: string;
     shopOwner?: string;

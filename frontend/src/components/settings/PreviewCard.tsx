@@ -1,12 +1,9 @@
 import React from 'react';
 import { Card, BlockStack, Text, Box, InlineStack, Badge } from '@shopify/polaris';
-import type { ISettings } from '../../types/settings';
 
-interface Props {
-  settings: ISettings;
-}
+import type { PreviewCardProps } from '../../types/settings_components';
 
-export const PreviewCard: React.FC<Props> = ({ settings }) => {
+export const PreviewCard: React.FC<PreviewCardProps> = ({ settings }) => {
   return (
     <Card>
       <BlockStack gap="400">

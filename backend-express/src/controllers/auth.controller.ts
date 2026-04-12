@@ -53,6 +53,7 @@ export class AuthController {
             await this.merchantService.createOrUpdateMerchant({
                 shop: session.shop,
                 accessToken: session.accessToken,
+                name: shopInfo.name,
                 scopes: session.scope,
                 email: shopInfo.email,
                 shopOwner: shopInfo.shop_owner,

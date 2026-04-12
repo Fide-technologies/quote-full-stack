@@ -1,5 +1,7 @@
 export enum QuoteStatus {
+    NEW = "NEW",
     PENDING = "PENDING",
+    NEGOTIATION = "NEGOTIATION",
     PROCESSED = "PROCESSED",
     CLOSED = "CLOSED",
     APPROVED = "APPROVED",

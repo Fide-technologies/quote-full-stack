@@ -2,8 +2,8 @@ import { BlockStack, InlineStack, Text, Box, Icon } from "@shopify/polaris";
 import { LocationIcon } from "@shopify/polaris-icons";
 import { type QuoteAddressDetailsProps } from "@/types/quote-details";
 
-export function QuoteAddressDetails({ address1, address2, city, state, pincode }: QuoteAddressDetailsProps) {
-    const hasAddress = address1 || city || state || pincode;
+export function QuoteAddressDetails({ address1, address2, city, district, state, pincode, country }: QuoteAddressDetailsProps) {
+    const hasAddress = address1 || city || district || state || pincode || country;
 
     return (
         <BlockStack gap="300">
@@ -17,14 +17,14 @@ export function QuoteAddressDetails({ address1, address2, city, state, pincode }
                         <>
                             {address1 && <Text variant="bodyMd" as="span" fontWeight="medium">{address1}</Text>}
                             {address2 && <Text variant="bodyMd" as="span" tone="subdued">{address2}</Text>}
-                            {(city || state) && (
+                            {(city || district || state) && (
                                 <Text variant="bodyMd" as="span" tone="subdued">
-                                    {city}{city && state ? ', ' : ''}{state}
+                                    {[city, district, state].filter(Boolean).join(', ')}
                                 </Text>
                             )}
-                            {pincode && (
+                            {(pincode || country) && (
                                 <Text variant="bodyMd" as="span" tone="subdued">
-                                    {pincode}
+                                    {[pincode, country].filter(Boolean).join(' ')}
                                 </Text>
                             )}
                         </>

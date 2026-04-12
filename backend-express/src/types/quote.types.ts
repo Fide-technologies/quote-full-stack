@@ -14,6 +14,7 @@ export interface IQuote {
 
     productId?: string;
     productTitle?: string;
+    productHandle?: string;
     variantId?: string;
     variantTitle?: string;
     productImage?: string;

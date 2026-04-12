@@ -85,6 +85,7 @@ export interface DraftOrderCreateResponse {
 
 // REST Shop Data
 export interface ShopifyShopData {
+    name: string;
     email: string;
     shop_owner: string;
     currency: string;

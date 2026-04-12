@@ -30,6 +30,10 @@ const shopify = shopifyApp({
         path: "/api/webhooks",
     },
     sessionStorage,
+    future: {
+        customerAddressDefaultFix: true,
+        unstable_managedPricingSupport: true,
+    },
 });
 
 export { shopify };

@@ -62,6 +62,7 @@
 
       <form id="rq-form-{{ block_id }}" onsubmit="event.preventDefault();" class="rq-form">
         <input type="hidden" name="productId" value="{{ product.id }}">
+        <input type="hidden" name="handle" value="{{ product.handle }}">
         <input type="hidden" name="variantId" value="{{ product.selected_or_first_available_variant.id }}">
         <input type="hidden" name="productTitle" value="{{ product.title }}">
         <input type="hidden" name="variantTitle" value="{{ product.selected_or_first_available_variant.title }}">
