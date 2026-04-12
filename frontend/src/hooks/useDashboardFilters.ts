@@ -20,16 +20,16 @@ export const useDashboardFilters = (stats: (DashboardStats & { deepLinkUrl?: str
         if (!stats?.analytics) {
             return { total: 0, converted: 0, amount: 0 };
         }
-        return (stats.analytics as any)[selectedPeriod] || { total: 0, converted: 0, amount: 0 };
+        return stats.analytics[selectedPeriod as keyof typeof stats.analytics] || { total: 0, converted: 0, amount: 0 };
     }, [stats, selectedPeriod]);
 
     const steps = useMemo(() => {
         const isAppEnabled = stats?.isAppEmbedded ?? false;
-        
+
         return [
             {
                 label: "Install and activate the app",
-                completed: true, // Installed implies this is true
+                completed: true,
                 description: "Successfully installed in your store",
             },
             {

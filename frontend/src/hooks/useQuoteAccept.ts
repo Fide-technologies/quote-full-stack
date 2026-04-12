@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { acceptQuote, type Quote } from '../api/quotes';
 import { formatCurrency } from '../utils/currency';
@@ -9,32 +9,36 @@ interface UseQuoteAcceptProps {
 
 export const useQuoteAccept = ({ quote }: UseQuoteAcceptProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [price, setPrice] = useState<string>(''); // Human readable price (dollars)
+    const [price, setPrice] = useState<string>('');
     const [quantity, setQuantity] = useState<number>(1);
     const [currency, setCurrency] = useState('USD');
-    const [message, setMessage] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
     const queryClient = useQueryClient();
 
-    // Reset/Initialize values when modal opens or quote changes
-    useEffect(() => {
-        if (quote && isModalOpen) {
+    const openModal = () => {
+        if (quote) {
             const initialPrice = (Number(quote.originalPrice) / 100).toString();
             setPrice(initialPrice);
             setQuantity(quote.quantity || 1);
+            setUserMessage(null);
         }
-    }, [quote, isModalOpen]);
+        setIsModalOpen(true);
+    };
 
-    // Dynamically update message when values change
-    useEffect(() => {
-        if (!quote) return;
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setError(null);
+    };
+
+    const generatedMessage = useMemo(() => {
+        if (!quote) return '';
 
         const unitDisplay = formatCurrency(Number(price), currency);
         const totalDisplay = formatCurrency(Number(price) * quantity, currency);
 
-        const newMessage = `I've reviewed your request for ${quote.productTitle} and I'm happy to accept your proposed price.
+        return `I've reviewed your request for ${quote.productTitle} and I'm happy to accept your proposed price.
 
 Accepted Details:
 - Unit Price: ${unitDisplay}
@@ -42,18 +46,15 @@ Accepted Details:
 - Total Amount: ${totalDisplay}
 
 We will reach out soon with the next steps.`;
-        
-        setMessage(newMessage);
     }, [price, quantity, currency, quote]);
 
-    const openModal = () => setIsModalOpen(true);
-    const closeModal = () => {
-        setIsModalOpen(false);
-        setError(null);
-    };
+    // Use a separate state for user message if they manualy edit it
+    const [userMessage, setUserMessage] = useState<string | null>(null);
+    const displayMessage = userMessage ?? generatedMessage;
+
 
     const mutation = useMutation({
-        mutationFn: (data: { price: number; quantity: number; message: string }) => 
+        mutationFn: (data: { price: number; quantity: number; message: string }) =>
             acceptQuote(quote!.id, data),
         onSuccess: () => {
             setSuccess('Quote accepted and customer notified via email.');
@@ -75,7 +76,7 @@ We will reach out soon with the next steps.`;
         mutation.mutate({
             price: Math.round(numericPrice * 100), // Convert back to cents for backend
             quantity,
-            message: `${message}\n\n(Base: ${currency})`
+            message: `${displayMessage}\n\n(Base: ${currency})`
         });
     };
 
@@ -89,8 +90,8 @@ We will reach out soon with the next steps.`;
         setQuantity,
         currency,
         setCurrency,
-        message,
-        setMessage,
+        message: displayMessage,
+        setMessage: setUserMessage,
         handleAccept,
         formatCurrency, // Exporting for UI use
         isPending: mutation.isPending,
