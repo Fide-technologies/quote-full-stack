@@ -18,6 +18,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             case '/draft-orders': return 'Draft Orders';
             case '/plans': return 'Plans & Billing';
             case '/support': return 'Help & Support';
+            case '/legal': return 'Legal & Privacy';
             default: return 'My B2B App';
         }
     };
