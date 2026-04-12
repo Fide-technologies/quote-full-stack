@@ -495,8 +495,10 @@
                     selectors.forEach(selector => {
                         form.querySelectorAll(selector).forEach(hideElement);
                     });
+                }
 
-                    // Identify the best container to search for prices
+                // 2. Hide Prices based on settings
+                if (SETTINGS.hidePriceGlobal || SETTINGS.loginToSeePrice) {
                     const container = isProductPage
                         ? (form.closest('.shopify-section, section, .product-grid, main') || form.parentNode)
                         : (card || form.parentNode);

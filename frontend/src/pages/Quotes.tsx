@@ -95,7 +95,7 @@ export const Quotes: React.FC = () => {
                                 <Card>
                                     <BlockStack gap="200">
                                         <Text as="h2" variant="headingSm" tone="subdued">Pending Quotes</Text>
-                                        <Text as="p" variant="headingLg">{quotes.filter(q => q.status === 'NEW' || q.status === 'PENDING').length}</Text>
+                                        <Text as="p" variant="headingLg">{quotes.filter(q => q.status === 'PENDING').length}</Text>
                                     </BlockStack>
                                 </Card>
                             </InlineGrid>

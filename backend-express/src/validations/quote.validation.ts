@@ -25,6 +25,7 @@ export const createQuoteSchema = z.object({
             message: z.string().optional(),
             shop: z.string().min(1, "Shop is required"),
             productId: z.union([z.string(), z.number()]).transform((val) => String(val)),
+            handle: z.string().optional(),
             variantId: z
                 .union([z.string(), z.number()])
                 .transform((val) => String(val))

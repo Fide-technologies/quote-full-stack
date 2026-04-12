@@ -141,4 +141,80 @@ export class QuoteController extends BaseController {
             return this.handleError(res, error, "Failed to export CSV");
         }
     };
+
+    public acceptQuote = async (req: Request, res: Response) => {
+        try {
+            const session = res.locals.shopify.session;
+            const id = req.params.id as string;
+            const { price, quantity, message } = req.body;
+
+            if (!id || price === undefined || quantity === undefined) {
+                return this.handleError(
+                    res,
+                    new Error("ID, price and quantity are required"),
+                    "Missing required fields",
+                    HTTP_STATUS.BAD_REQUEST,
+                );
+            }
+
+            await this.quoteService.acceptQuote(session, id, Number(price), Number(quantity), message);
+
+            return this.ok(res, null, "Quote accepted and email sent to customer");
+        } catch (error) {
+            return this.handleError(res, error, "Failed to accept quote");
+        }
+    };
+
+    public rejectQuote = async (req: Request, res: Response) => {
+        try {
+            const session = res.locals.shopify.session;
+            const id = req.params.id as string;
+            const { message } = req.body;
+
+            if (!id) {
+                return this.handleError(res, new Error("Quote ID is required"), "Missing quote ID", HTTP_STATUS.BAD_REQUEST);
+            }
+
+            await this.quoteService.rejectQuote(session, id, message || "");
+
+            return this.ok(res, null, "Quote rejected and email sent to customer");
+        } catch (error) {
+            return this.handleError(res, error, "Failed to reject quote");
+        }
+    };
+
+    public updateStatus = async (req: Request, res: Response) => {
+        try {
+            const session = res.locals.shopify.session;
+            const id = req.params.id as string;
+            const { status } = req.body;
+
+            if (!id || !status) {
+                return this.handleError(res, new Error("ID and status are required"), "Missing fields", HTTP_STATUS.BAD_REQUEST);
+            }
+
+            const quote = await this.quoteService.updateQuoteStatus(session, id, status as IQuote["status"]);
+
+            return this.ok(res, QuoteMapper.toResponseDto(quote!), "Status updated successfully");
+        } catch (error) {
+            return this.handleError(res, error, "Failed to update status");
+        }
+    };
+
+    public deleteQuote = async (req: Request, res: Response) => {
+        try {
+            const session = res.locals.shopify.session;
+            const id = req.params.id as string;
+
+            if (!id) {
+                return this.handleError(res, new Error("ID is required"), "ID required", HTTP_STATUS.BAD_REQUEST);
+            }
+
+            await this.quoteService.deleteQuote(session, id);
+
+            return this.ok(res, null, "Quote deleted successfully");
+        } catch (error) {
+            return this.handleError(res, error, "Failed to delete quote");
+        }
+    };
 }

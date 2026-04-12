@@ -1,8 +1,24 @@
+export interface IAnalyticsGroup {
+    total: number;
+    converted: number;
+    amount: number;
+}
+
 export interface DashboardStats {
     totalQuotes: number;
     convertedQuotes: number;
     currentPlan: string;
     daysRemaining: number;
+    isAppEmbedded: boolean;
+    deepLinkUrl: string;
+    activeThemeId: string;
+    analytics: {
+        today: IAnalyticsGroup;
+        thisWeek: IAnalyticsGroup;
+        last30Days: IAnalyticsGroup;
+        thisMonth: IAnalyticsGroup;
+        thisYear: IAnalyticsGroup;
+    };
 }
 
 export const getDashboardStats = async (): Promise<DashboardStats> => {

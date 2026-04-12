@@ -39,7 +39,6 @@ export function QuoteFilters({
                     title="Status"
                     titleHidden
                     choices={[
-                        { label: 'New', value: 'NEW' },
                         { label: 'Pending', value: 'PENDING' },
                         { label: 'Approved', value: 'APPROVED' },
                         { label: 'Rejected', value: 'REJECTED' },

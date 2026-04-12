@@ -6,6 +6,7 @@ const merchantSchema = new Schema<IMerchant>(
     {
         shop: { type: String, required: true, unique: true },
         accessToken: { type: String, required: true },
+        name: { type: String },
         scopes: { type: String },
         email: { type: String },
         shopOwner: { type: String },
