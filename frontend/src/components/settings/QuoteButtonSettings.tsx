@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import { BlockStack, Text, Checkbox, Select, RadioButton, Box, Button, TextField } from '@shopify/polaris';
 import { useAppBridge } from '@shopify/app-bridge-react';
-import type { ISettings } from '../../types/settings';
 
-interface Props {
-    settings: ISettings;
-    onChange: (key: keyof ISettings, value: unknown) => void;
-}
+import type { SettingsComponentProps } from '../../types/settings_components';
 
-export const QuoteButtonSettings: React.FC<Props> = ({ settings, onChange }) => {
+export const QuoteButtonSettings: React.FC<SettingsComponentProps> = ({ settings, onChange }) => {
     const shopify = useAppBridge();
 
     // Local state for immediate typing feedback to prevent snap-back bugs
