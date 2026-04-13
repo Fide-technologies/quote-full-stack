@@ -1,15 +1,10 @@
 (function () {
-    // For development, we can still use BACKEND_URL if needed, 
-    // but the production-ready way is using App Proxy.
-    // The prefix and subpath are defined in shopify.app.toml
-    const PROXY_PATH = window.Shopify && window.Shopify.shop ? '/apps/request-quote' : 'https://tarpon-social-simply.ngrok-free.app/api';
-
+    const PROXY_PATH = '/apps/request-quote';
     window.RqApi = {
         submitQuote: async function (blockId, cartItems = null) {
             const form = document.getElementById('rq-form-' + blockId);
             if (!form) return { success: false, error: 'Form not found.' };
 
-            // ... (rest of data collection remains same)
             const formData = new FormData(form);
             const dataObj = {};
             const customData = {};
@@ -95,7 +90,6 @@
             const fetchWithRetry = async (url, options, retries = 2, delay = 1000) => {
                 try {
                     const response = await fetch(url, options);
-                    // If server is overwhelmed (429/5xx), retry
                     if ((response.status === 429 || response.status >= 500) && retries > 0) {
                         console.log(`Server busy (${response.status}), retrying in ${delay}ms...`);
                         await new Promise(resolve => setTimeout(resolve, delay));
@@ -143,7 +137,6 @@
 
         fetchFormConfig: async function (shop) {
             try {
-                // We use the proxy path + forms/proxy endpoint.
                 const response = await fetch(`${PROXY_PATH}/forms/proxy?shop=${encodeURIComponent(shop)}`, {
                     headers: {
                         'Accept': 'application/json'
@@ -153,7 +146,7 @@
                     throw new Error('Failed to fetch form configuration');
                 }
                 const data = await response.json();
-                return data.data; // The config is returned inside { data: ... } by backend BaseController.ok
+                return data.data;
             } catch (err) {
                 console.error('Failed fetching form config:', err);
                 return null;
@@ -172,5 +165,3 @@
         }
     };
 })();
-
-

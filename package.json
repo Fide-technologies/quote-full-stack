@@ -3,6 +3,8 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@shopify/cli": "^3.0.0",
+    "@types/node": "^25.6.0",
+    "bun-types": "^1.3.12",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0"
   },
@@ -10,14 +12,15 @@
   "private": true,
   "scripts": {
     "build:frontend": "cd frontend && bun run build",
+    "build:extension": "bun run scripts/build-theme-extension.ts",
     "shopify": "shopify",
     "dev:all": "shopify app dev",
     "dev": "shopify app dev --tunnel-url https://dev.request-quote.online:3001",
     "dev:backend": "bun run --filter backend-express dev",
     "dev:frontend": "cd frontend && bun run dev",
     "test": "bun run --filter backend-express test",
-    "build": "bun run build:frontend && shopify app build",
-    "deploy": "bun run build:frontend && shopify app deploy",
+    "build": "bun run build:extension && bun run build:frontend && shopify app build",
+    "deploy": "bun run build:extension && bun run build:frontend && shopify app deploy",
     "prepare": "husky",
     "lint": "bun run --filter \"*\" lint",
     "lint:fix": "bun run --filter \"*\" check"

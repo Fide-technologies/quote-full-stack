@@ -20,6 +20,8 @@ if (hostParam) {
     sessionStorage.setItem('shopify_host', hostParam);
 }
 
+import { NotificationProvider } from './hooks/useNotifications';
+
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
@@ -37,9 +39,11 @@ ReactDOM.createRoot(rootElement).render(
     <StrictMode>
         <QueryClientProvider client={queryClient}>
             <AppProvider i18n={enTranslations}>
-                <BrowserRouter>
-                    <App />
-                </BrowserRouter>
+                <NotificationProvider>
+                    <BrowserRouter>
+                        <App />
+                    </BrowserRouter>
+                </NotificationProvider>
             </AppProvider>
         </QueryClientProvider>
     </StrictMode>,
