@@ -2,8 +2,8 @@ export const APP_DEFAULTS = {
     CURRENCY_CODE: "USD",
     QUOTE_ITEM_TITLE: "Quote Item",
     QUOTE_AMOUNT: "0.00",
-    EMAIL_FROM: "quotes@example.com",
-    EMAIL_SENDER_NAME: "Quote App",
+    EMAIL_FROM: "fidetechonologies@gmail.com",
+    EMAIL_SENDER_NAME: "Fide Technologies",
 };
 
 export const API_MESSAGES = {

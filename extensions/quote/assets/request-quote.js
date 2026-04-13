@@ -13,13 +13,10 @@
         const modal = document.getElementById(`rqModal-${blockId}`);
         if (!modal) return;
 
-        // Default: not bulk unless specified (handled by opener, but just in case)
         if (!modal.dataset.isBulk || modal.dataset.isBulk === 'undefined') {
             modal.dataset.isBulk = 'false';
         }
 
-        // If it's a single product (not bulk) and we're on a product page, 
-        // try to populate it even if Liquid didn't (e.g., global embed on product page)
         if (modal.dataset.isBulk === 'false') {
             const handleMatch = window.location.pathname.match(/\/products\/([^\/\?]+)/);
             if (handleMatch) {
@@ -36,7 +33,6 @@
             }
         }
 
-        // Check if the form is already loaded so we don't fetch it every time
         if (modal.dataset.formLoaded !== 'true') {
             const dynamicContainer = document.getElementById(`rq-dynamic-form-${blockId}`);
             if (dynamicContainer) {
@@ -44,7 +40,6 @@
             }
 
             try {
-                // Determine the shop domain
                 const shop = window.Shopify ? window.Shopify.shop : window.location.hostname;
                 const formConfig = await window.RqApi.fetchFormConfig(shop);
                 if (formConfig && formConfig.steps) {
@@ -77,8 +72,9 @@
     };
 
     window.rqAddToQuoteCart = async function (handle, blockId, event) {
-        // Find the button that was clicked
         const btn = event ? event.currentTarget : null;
+        if (!btn) return;
+        
         const originalText = btn.innerHTML;
         btn.innerHTML = 'Adding...';
         btn.disabled = true;
@@ -86,13 +82,12 @@
         try {
             const product = await window.RqApi.fetchProduct(handle);
             if (product) {
-                // Get qty from the page input
-                const qty = parseInt(document.getElementById('rqPageQtyInput')?.value) || 1;
+                const qtyInput = document.getElementById('rqPageQtyInput-' + blockId) || document.getElementById('rqPageQtyInput');
+                const qty = parseInt(qtyInput?.value) || 1;
 
-                // Construct cart item
                 const item = {
                     productId: product.id,
-                    variantId: product.variants[0].id, // Default to first variant
+                    variantId: product.variants[0].id, 
                     title: product.title,
                     variantTitle: product.variants[0].title,
                     price: product.variants[0].price,
@@ -132,14 +127,8 @@
 
         window.RqCart.closeCart();
         window.RqUi.showBulkSummary(modal, cart);
-
-        // Mark as bulk BEFORE opening or right after
         modal.dataset.isBulk = 'true';
-
-        // This will also handle fetching/building the dynamic form if not loaded yet
         await window.rqOpenModal(blockId);
-
-        // Re-ensure bulk remains true after potential reset inside openModal (safety)
         modal.dataset.isBulk = 'true';
     };
 
@@ -159,7 +148,6 @@
             if (el) el.innerHTML = html;
         };
 
-        // 1. Items Review Section
         const isBulk = modal?.dataset.isBulk === 'true';
         if (isBulk && window.RqCart) {
             const cart = window.RqCart.getCart();
@@ -223,23 +211,17 @@
             }
         }
 
-        // 2. Dynamic Field Population
         const customFieldsContainer = document.getElementById(`rq-review-custom-fields-${blockId}`);
         if (customFieldsContainer && window._rqFormConfig) {
             let customHtml = '';
-
-            // Use for...of to handle await inside
             for (const step of window._rqFormConfig.steps) {
                 if (step.id === 'step-review') continue;
-
                 let stepFieldsHtml = '';
                 let hasValue = false;
-
                 for (const field of step.fields) {
                     const fieldName = field.id.replace('field-', '');
                     const inputEl = document.getElementById(`rq-${fieldName}-${blockId}`);
                     let displayValue = '';
-
                     if (field.type === 'file') {
                         const files = inputEl?._rq_files || (inputEl?.files ? Array.from(inputEl.files) : []);
                         if (files.length > 0) {
@@ -251,12 +233,9 @@
                                     reader.readAsDataURL(file);
                                 });
                             }));
-
                             displayValue = '<div class="rq-review-image-grid">';
                             fileDataUrls.forEach(url => {
-                                if (url) {
-                                    displayValue += `<div class="rq-review-image-item"><img src="${url}"></div>`;
-                                }
+                                if (url) displayValue += `<div class="rq-review-image-item"><img src="${url}"></div>`;
                             });
                             displayValue += '</div>';
                         }
@@ -268,9 +247,7 @@
                         hasValue = true;
                         stepFieldsHtml += `
                             <div class="rq-review-card">
-                                <div class="rq-card-header">
-                                    <h4>${field.label}</h4>
-                                </div>
+                                <div class="rq-card-header"><h4>${field.label}</h4></div>
                                 <div class="rq-card-content">
                                     <div class="${field.type === 'file' ? 'rq-review-files' : 'rq-review-text'}">${displayValue}</div>
                                 </div>
@@ -278,24 +255,11 @@
                         `;
                     }
                 }
-
                 if (hasValue) {
-                    customHtml += `
-                        <div class="rq-review-section-header">
-                            ${step.title}
-                        </div>
-                        <div class="rq-review-grid">${stepFieldsHtml}</div>
-                    `;
+                    customHtml += `<div class="rq-review-section-header">${step.title}</div><div class="rq-review-grid">${stepFieldsHtml}</div>`;
                 }
             }
-
             customFieldsContainer.innerHTML = customHtml;
-        }
-
-        // 3. Hide legacy fallback sections as they are now handled dynamically
-        const oldGrid = document.querySelector(`#rqModal-${blockId} .rq-review-grid`);
-        if (oldGrid && oldGrid.id !== 'dynamic-grid') { // safety
-            // oldGrid.style.display = 'none'; // We could hide them, but let's just leave the dynamic content to be the main source
         }
     }
 
@@ -307,12 +271,8 @@
 
         if (isValid) {
             const nextStepContainer = document.getElementById('rq-step-' + (currentStep + 1) + '-' + blockId);
-            if (!nextStepContainer) {
-                console.error("Next step container not found.");
-                return;
-            }
+            if (!nextStepContainer) return;
 
-            // If the next step is the last step (Review), populate it
             const isReviewStep = nextStepContainer.querySelector('.rq-review-container') !== null;
             if (isReviewStep) {
                 await rqPopulateReviewStep(blockId);
@@ -328,9 +288,10 @@
     };
 
     window.rqPrevStep = function (blockId, currentStep) {
+        const prev = document.getElementById('rq-step-' + (currentStep - 1) + '-' + blockId);
+        if(!prev) return;
         document.getElementById('rq-step-' + currentStep + '-' + blockId).classList.remove('active');
-        document.getElementById('rq-step-' + (currentStep - 1) + '-' + blockId).classList.add('active');
-
+        prev.classList.add('active');
         if (window.RqUi && window.RqUi.updateProgressIndicator) {
             window.RqUi.updateProgressIndicator(blockId, currentStep - 1);
         }
@@ -341,7 +302,7 @@
         const isBulk = modal?.dataset.isBulk === 'true';
         const cartItems = isBulk ? window.RqCart.getCart() : null;
 
-        const btn = document.querySelector(`#rq-step-4-${blockId} button.rq-submit-final`);
+        const btn = document.querySelector(`#rq-step-input-${blockId} button.rq-submit-final`);
         const originalText = btn ? btn.innerHTML : 'Submit Quote';
         if (btn) {
             btn.innerText = 'Requesting...';
@@ -350,11 +311,10 @@
 
         try {
             const result = await window.RqApi.submitQuote(blockId, cartItems);
-
             if (result.success) {
                 window.RqUi.showSuccess(blockId, result.data);
                 if (isBulk) {
-                    window.RqCart.saveCart([]); // Clear cart on success
+                    window.RqCart.saveCart([]); 
                     modal.dataset.isBulk = 'false';
                 }
             } else {
@@ -371,55 +331,12 @@
         }
     };
 
-    // Global function to update page qty from standard + - buttons if used
     window.rqUpdatePageQty = function (change) {
         const input = document.getElementById('rqPageQtyInput');
         if (!input) return;
         let newVal = (parseInt(input.value) || 1) + change;
         if (newVal < 1) newVal = 1;
         input.value = newVal;
-    };
-
-
-    /* --- Injection Logic --- */
-
-    window.rqOpenQuoteForProduct = async function (btn, handle) {
-        const originalText = btn.innerHTML;
-        btn.innerHTML = 'Adding...';
-        btn.disabled = true;
-
-        try {
-            const product = await window.RqApi.fetchProduct(handle);
-            if (product) {
-                // Get qty from the page input
-                const qtyInput = document.getElementById('rqPageQtyInput');
-                const qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
-
-                // Construct cart item
-                const item = {
-                    productId: product.id,
-                    variantId: product.variants[0].id,
-                    title: product.title,
-                    variantTitle: product.variants[0].title,
-                    price: product.variants[0].price,
-                    featured_image: product.featured_image,
-                    quantity: qty,
-                    handle: handle
-                };
-
-                window.RqCart.addItem(item);
-                btn.innerHTML = '✓ Added';
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                }, 2000);
-            }
-        } catch (error) {
-            console.error('Failed to add to cart:', error);
-            alert('Could not add product to quote cart.');
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
     };
 
     document.addEventListener('click', (e) => {
@@ -447,7 +364,7 @@
         btn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            window.rqOpenQuoteForProduct(btn, handle);
+            window.rqAddToQuoteCart(handle, 'global', e);
         };
         return btn;
     }
@@ -485,7 +402,6 @@
             }
 
             if (handle) {
-                // 1. Hide Standard Buttons and Quantity based on settings
                 if (SETTINGS.hideAddToCart) {
                     const selectors = [
                         '[name="add"]', '.product-form__submit', '.add-to-cart', '.btn--add-to-cart', '[data-add-to-cart]',
@@ -497,7 +413,6 @@
                     });
                 }
 
-                // 2. Hide Prices based on settings
                 if (SETTINGS.hidePriceGlobal || SETTINGS.loginToSeePrice) {
                     const container = isProductPage
                         ? (form.closest('.shopify-section, section, .product-grid, main') || form.parentNode)
@@ -509,20 +424,13 @@
                     }
                 }
 
-        // 2. Hide Buy It Now / Dynamic Checkout
-        if (SETTINGS.hideBuyNow) {
-            const buyNowSelectors = [
-                '.shopify-payment-button',
-                '.shopify-payment-button__button--unbranded',
-                '.payment-buttons',
-                '.product-form__payment-container'
-            ];
-            buyNowSelectors.forEach(selector => {
-                document.querySelectorAll(selector).forEach(hideElement);
-            });
-        }
+                if (SETTINGS.hideBuyNow) {
+                    const buyNowSelectors = ['.shopify-payment-button', '.shopify-payment-button__button--unbranded', '.payment-buttons', '.product-form__payment-container'];
+                    buyNowSelectors.forEach(selector => {
+                        document.querySelectorAll(selector).forEach(hideElement);
+                    });
+                }
 
-                // 3. Inject Quote Button with specific placement
                 const isRecommendation = form.closest('.product-recommendations, .related-products, .recommendations, .up-sell, .cross-sell, .complementary-products, .suggested-products, [class*="recommendation"], [class*="related-"]');
 
                 if (isProductPage && !isRecommendation) {
@@ -530,12 +438,9 @@
                     if (card && hasQuoteBtn(card)) return;
 
                     const btn = createQuoteButton(handle);
-                    
                     if (SETTINGS.placementLocation === 'below') {
-                        // After the form
                         form.parentNode.insertBefore(btn, form.nextSibling);
                     } else {
-                        // Before the form (default)
                         form.parentNode.insertBefore(btn, form);
                     }
                 }
@@ -548,7 +453,6 @@
     window.rqScanAndInject = scanAndInject;
     window.addEventListener('load', () => {
         scanAndInject();
-        // Dynamic Checkout Catch-up Polling
         if (SETTINGS.appEnabled && SETTINGS.shouldShow !== false && SETTINGS.hideBuyNow) {
             let count = 0;
             const interval = setInterval(() => {
@@ -558,13 +462,8 @@
         }
     });
 
-    const observer = new MutationObserver((mutations) => {
-        // Only run scan if children changed or dynamically injected buttons might be present
-        scanAndInject();
-    });
-
+    const observer = new MutationObserver(() => scanAndInject());
     observer.observe(document.body, { childList: true, subtree: true });
     scanAndInject();
     window.rqInitialized = true;
-
 })();

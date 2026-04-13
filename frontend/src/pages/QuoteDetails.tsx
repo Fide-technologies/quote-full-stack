@@ -86,10 +86,6 @@ export const QuoteDetails: React.FC = () => {
         handleDelete,
         handleStatusChange,
         isDeleting,
-        error: mgmtError,
-        setError: setMgmtError,
-        success: mgmtSuccess,
-        setSuccess: setMgmtSuccess
     } = useQuoteManagement();
 
     const {
@@ -122,8 +118,8 @@ export const QuoteDetails: React.FC = () => {
     }
 
     const clearStatus = () => {
-        setDraftError(null); setAcceptError(null); setMgmtError(null); setRejectError(null);
-        setDraftSuccess(null); setAcceptSuccess(null); setMgmtSuccess(null); setRejectSuccess(null);
+        setDraftError(null); setAcceptError(null); setRejectError(null);
+        setDraftSuccess(null); setAcceptSuccess(null); setRejectSuccess(null);
     };
 
     return (
@@ -164,11 +160,11 @@ export const QuoteDetails: React.FC = () => {
                 <Layout>
                     <Layout.Section>
                         <BlockStack gap="400">
-                            {(draftError || acceptError || mgmtError || rejectError) && (
-                                <Banner tone="critical" onDismiss={clearStatus}>{draftError || acceptError || mgmtError || rejectError}</Banner>
+                            {(draftError || acceptError || rejectError) && (
+                                <Banner tone="critical" onDismiss={clearStatus}>{draftError || acceptError || rejectError}</Banner>
                             )}
-                            {(draftSuccess || acceptSuccess || mgmtSuccess || rejectSuccess) && (
-                                <Banner tone="success" onDismiss={clearStatus}>{draftSuccess || acceptSuccess || mgmtSuccess || rejectSuccess}</Banner>
+                            {(draftSuccess || acceptSuccess || rejectSuccess) && (
+                                <Banner tone="success" onDismiss={clearStatus}>{draftSuccess || acceptSuccess || rejectSuccess}</Banner>
                             )}
 
                             <Card padding="600">

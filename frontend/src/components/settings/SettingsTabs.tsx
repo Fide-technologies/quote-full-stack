@@ -2,6 +2,7 @@ import React from "react";
 import { BlockStack, Checkbox, Text } from "@shopify/polaris";
 import { QuoteButtonSettings } from "./QuoteButtonSettings";
 import { PricingSettings } from "./PricingSettings";
+import { LegalContent } from "./LegalContent";
 import type { ISettings } from "../../types/settings";
 
 interface SettingsTabsProps {
@@ -39,6 +40,8 @@ export const SettingsTabs: React.FC<SettingsTabsProps> = ({ tabId, settings, onC
             return <Text as="p">Quote cart widget settings coming soon.</Text>;
         case "history-widget":
             return <Text as="p">Quote history widget settings coming soon.</Text>;
+        case "privacy":
+            return <LegalContent />;
         default:
             return null;
     }

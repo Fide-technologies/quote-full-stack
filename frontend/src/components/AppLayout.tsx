@@ -1,13 +1,15 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { TitleBar, NavMenu } from '@shopify/app-bridge-react';
-import { Frame, Loading } from '@shopify/polaris';
+import { Frame, Loading, Toast } from '@shopify/polaris';
 import { useIsFetching } from '@tanstack/react-query';
+import { useNotifications } from '../hooks/useNotifications';
 
 
 export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const location = useLocation();
     const isFetching = useIsFetching();
+    const { toast, hideToast } = useNotifications();
 
     const getTitle = (path: string) => {
         switch (path) {
@@ -18,6 +20,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             case '/draft-orders': return 'Draft Orders';
             case '/plans': return 'Plans & Billing';
             case '/support': return 'Help & Support';
+            case '/legal': return 'Legal & Privacy';
             default: return 'My B2B App';
         }
     };
@@ -33,6 +36,14 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
     return (
         <Frame logo={logo}>
             {isFetching > 0 && <Loading />}
+            {toast && (
+                <Toast
+                    content={toast.content}
+                    error={toast.error}
+                    onDismiss={hideToast}
+                    duration={toast.duration || 4000}
+                />
+            )}
             <NavMenu>
                 <a href="/" rel="home">Dashboard</a>
                 <a href="/settings">Settings</a>
@@ -48,3 +59,4 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
         </Frame>
     );
 };
+
