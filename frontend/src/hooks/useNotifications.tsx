@@ -1,6 +1,6 @@
-import { useState, useCallback, createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext } from 'react';
 
-interface ToastOptions {
+export interface ToastOptions {
     content: string;
     error?: boolean;
     duration?: number;
@@ -12,26 +12,9 @@ interface NotificationContextType {
     hideToast: () => void;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+export const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-export function NotificationProvider({ children }: { children: ReactNode }): JSX.Element {
-    const [toast, setToast] = useState<ToastOptions | null>(null);
 
-    const showToast = useCallback((options: ToastOptions) => {
-        setToast(options);
-    }, []);
-
-    const hideToast = useCallback(() => {
-        setToast(null);
-    }, []);
-
-    return (
-        <NotificationContext.Provider value={{ showToast, toast, hideToast }}>
-            {children}
-            {/* The actual Toast component is rendered in AppLayout */}
-        </NotificationContext.Provider>
-    );
-}
 
 export const useNotifications = () => {
     const context = useContext(NotificationContext);

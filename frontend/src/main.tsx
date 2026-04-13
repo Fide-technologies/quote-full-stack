@@ -20,21 +20,17 @@ if (hostParam) {
     sessionStorage.setItem('shopify_host', hostParam);
 }
 
-import { NotificationProvider } from './hooks/useNotifications';
+import { NotificationProvider } from './providers/NotificationProvider';
 
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            // Keep data fresh for 30s. Billing success uses invalidateQueries() to force refetch immediately.
             staleTime: 30_000,
             retry: 1,
         },
     },
 });
 
-// NOTE: App Bridge 4.x (the CDN version loaded in index.html) auto-initializes from the
-// <meta name="shopify-api-key"> tag. There is no React <Provider> needed —
-// useAppBridge() hooks connect automatically to the CDN-initialized App Bridge instance.
 ReactDOM.createRoot(rootElement).render(
     <StrictMode>
         <QueryClientProvider client={queryClient}>
