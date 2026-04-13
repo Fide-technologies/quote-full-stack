@@ -1,23 +1,24 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { deleteQuote, updateQuoteStatus, type Quote } from "@/api/quotes";
-import { useState } from "react";
+
+
+import { useNotifications } from "./useNotifications";
 
 export function useQuoteManagement() {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
+    const { showToast } = useNotifications();
 
     const deleteMutation = useMutation({
         mutationFn: (id: string) => deleteQuote(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['quotes'] });
-            setSuccess("Quote deleted successfully.");
+            showToast({ content: "Quote deleted successfully." });
             navigate('/quotes');
         },
         onError: (err: Error) => {
-            setError(err.message);
+            showToast({ content: err.message, error: true });
         }
     });
 
@@ -27,13 +28,13 @@ export function useQuoteManagement() {
         onSuccess: (updatedQuote) => {
             queryClient.invalidateQueries({ queryKey: ['quotes'] });
             queryClient.invalidateQueries({ queryKey: ['quote', updatedQuote.id] });
-            setSuccess(`Status updated to ${updatedQuote.status} successfully.`);
-            setError(null);
+            showToast({ content: `Status updated to ${updatedQuote.status} successfully.` });
         },
         onError: (err: Error) => {
-            setError(err.message);
+            showToast({ content: err.message, error: true });
         }
     });
+
 
     return {
         handleDelete: (id: string) => {
@@ -44,9 +45,6 @@ export function useQuoteManagement() {
         },
         isDeleting: deleteMutation.isPending,
         isUpdatingStatus: updateStatusMutation.isPending,
-        error,
-        setError,
-        success,
-        setSuccess
     };
 }
+

@@ -1352,6 +1352,32 @@
     color: var(--rq-accent);
 }
 
+.rq-cart-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.rq-cart-item-remove {
+    background: none;
+    border: none;
+    color: var(--rq-text-subdued);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: var(--rq-transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rq-cart-item-remove:hover {
+    color: #ef4444;
+    background: #fee2e2;
+}
+
+
 .rq-cart-footer {
     padding: 24px;
     border-top: 1px solid var(--rq-border);

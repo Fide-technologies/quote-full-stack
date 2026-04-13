@@ -3,9 +3,7 @@
         openModal: function (blockId) {
             const modal = document.getElementById(`rqModal-${blockId}`);
             if (modal) {
-                // Ensure form is reset whenever opened, just in case
                 this.resetForm(blockId);
-
                 document.body.style.overflow = 'hidden';
                 modal.classList.add('open');
                 modal.setAttribute('aria-hidden', 'false');
@@ -19,8 +17,6 @@
                 modal.setAttribute('aria-hidden', 'true');
             });
             document.body.style.overflow = '';
-
-            // Always reset the form when closing so it's fresh next time
             this.resetForm(blockId);
         },
 
@@ -34,7 +30,6 @@
                     form.insertBefore(hero, form.firstChild);
                 }
             }
-
             if (!hero) return;
 
             let summary = hero.querySelector('.rq-product-summary');
@@ -62,6 +57,10 @@
                         variantEl.style.display = 'none';
                     }
                 }
+                const priceEl = summary.querySelector('.rq-product-price');
+                if (priceEl && window.RqCart) {
+                    priceEl.innerText = window.RqCart.formatPrice((product.variants && product.variants[0]) ? product.variants[0].price : 0);
+                }
             } else {
                 summary = document.createElement('div');
                 summary.className = 'rq-product-summary';
@@ -69,13 +68,14 @@
                 const imgDisp = imgSrc ? 'block' : 'none';
                 const vTitle = (product.variants && product.variants[0]) ? product.variants[0].title : '';
                 const vDisp = (vTitle && vTitle !== 'Default Title') ? 'block' : 'none';
+                const priceText = window.RqCart ? window.RqCart.formatPrice((product.variants && product.variants[0]) ? product.variants[0].price : 0) : '';
 
                 summary.innerHTML = `
                       <img src="${imgSrc}" alt="${product.title}" style="display: ${imgDisp}; width: 64px; height: 64px; min-width: 64px; border-radius: 8px; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink: 0;">
                       <div class="rq-product-info" style="margin-left: 16px;">
                           <span class="rq-product-title" style="font-weight: 700; font-size: 16px;">${product.title}</span>
                           <span class="rq-product-variant" style="display: ${vDisp}; font-size: 13px; color: #6d7175;">${vTitle}</span>
-                          <span class="rq-product-price" style="display: block; font-size: 15px; color: var(--rq-accent); font-weight: 700; margin-top: 4px;">${window.RqCart.formatPrice((product.variants && product.variants[0]) ? product.variants[0].price : 0)}</span>
+                          <span class="rq-product-price" style="display: block; font-size: 15px; color: var(--rq-accent); font-weight: 700; margin-top: 4px;">${priceText}</span>
                       </div>
                   `;
                 hero.prepend(summary);
@@ -113,6 +113,8 @@
             if (!hero) return;
 
             const count = cart.reduce((acc, i) => acc + i.quantity, 0);
+            const totalText = window.RqCart ? window.RqCart.formatPrice(cart.reduce((acc, i) => acc + (i.price * i.quantity), 0)) : '';
+
             hero.innerHTML = `
                 <div class="rq-product-summary" style="display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 650px; margin: 0 auto 24px;">
                     <div style="display: flex; align-items: center; flex: 1;">
@@ -122,7 +124,7 @@
                         <div class="rq-product-info">
                             <span class="rq-product-title" style="font-size: 17px; font-weight: 800; color: #1a1a1b;">Bulk Quote Request</span>
                             <span class="rq-product-variant" style="font-size: 14px; margin-top: 1px;">${cart.length} products, ${count} total items</span>
-                            <span class="rq-product-price" style="display: block; font-size: 15px; color: var(--rq-accent); font-weight: 700; margin-top: 4px;">Total Estimate: ${window.RqCart.formatPrice(cart.reduce((acc, i) => acc + (i.price * i.quantity), 0))}</span>
+                            <span class="rq-product-price" style="display: block; font-size: 15px; color: var(--rq-accent); font-weight: 700; margin-top: 4px;">Total Estimate: ${totalText}</span>
                         </div>
                     </div>
                     <div style="margin-left: 20px;">
@@ -136,24 +138,20 @@
             const container = document.getElementById(`rq-dynamic-form-${blockId}`);
             if (!container || !formConfig || !formConfig.steps) return;
 
-            // Sort steps so that 'step-review' is always last
             const reviewStep = formConfig.steps.find(s => s.id === 'step-review');
             const otherSteps = formConfig.steps.filter(s => s.id !== 'step-review');
             if (reviewStep) {
                 formConfig.steps = [...otherSteps, reviewStep];
             } else {
-                // If it's missing for some reason, add a default review step
                 formConfig.steps.push({ id: 'step-review', title: 'Review', fields: [] });
             }
 
-            // Define icons used in the input fields
             const emailIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
             const phoneIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
             const backIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
             const nextIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
             const submitIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
             const fileIcon = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`;
-            const trashIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`;
 
             let html = '';
 
@@ -165,19 +163,16 @@
                 html += `<div id="rq-step-${stepNum}-${blockId}" class="rq-step ${isActive}">`;
                 html += `<div class="rq-step-content">`;
 
-                // Add fields
                 if (step.id !== "step-review") {
                     step.fields.forEach(field => {
                         const layoutClass = field.layoutWidth === 'half' ? ' rq-col-half' : '';
                         html += `<div class="rq-input-group${layoutClass}" data-field-id="${field.id}">`;
                         html += `<label>${field.label} ${field.required ? '<span class="rq-required">*</span>' : ''}</label>`;
 
-                        // We extract name from field ID, e.g. "field-fname" -> "fname"
                         const fieldName = field.id.replace('field-', '');
                         const fieldId = `rq-${fieldName}-${blockId}`;
                         const requiredAttr = field.required ? 'required' : '';
 
-                        // Build validation attributes
                         let attrs = requiredAttr;
                         if (field.minLength) attrs += ` minlength="${field.minLength}"`;
                         if (field.maxLength) attrs += ` maxlength="${field.maxLength}"`;
@@ -228,7 +223,6 @@
                         html += `</div>`;
                     });
                 } else {
-                    // It's the Review step, just generate the container for dynamic population
                     html += `
                         <div class="rq-review-container">
                             <h3 class="rq-review-main-title">Review Your Request</h3>
@@ -238,9 +232,8 @@
                     `;
                 }
 
-                html += `</div>`; // Close .rq-step-content
+                html += `</div>`; 
 
-                // Add button groups
                 html += `<div class="rq-btn-group" ${stepNum === 1 ? 'style="display: flex; justify-content: flex-end;"' : ''}>`;
                 if (stepNum > 1) {
                     html += `<button type="button" onclick="rqPrevStep('${blockId}', ${stepNum})" class="rq-submit-btn rq-back-btn">${backIcon}Back</button>`;
@@ -259,8 +252,6 @@
             });
 
             container.innerHTML = html;
-
-            // Rebuild progress steps
             this.buildProgressSteps(blockId, formConfig.steps);
         },
 
@@ -299,10 +290,6 @@
             const errorSpans = document.querySelectorAll(`#rq-form-${blockId} .rq-error`);
             errorSpans.forEach(el => el.innerText = '');
 
-            const modal = document.getElementById(`rqModal-${blockId}`);
-            // isBulk should be handled by the caller, not reset by general form reset
-            // if (modal) modal.dataset.isBulk = 'false';
-
             const steps = document.querySelectorAll(`#rq-step-input-${blockId} .rq-step`);
             steps.forEach(s => s.classList.remove('active'));
             const firstStep = document.getElementById(`rq-step-1-${blockId}`);
@@ -313,10 +300,11 @@
             const progressWrapper = document.querySelector(`#rqModal-${blockId} .rq-progress-wrapper`);
             if (progressWrapper) progressWrapper.style.display = 'block';
 
-            document.getElementById('rq-step-success-' + blockId).style.display = 'none';
-            document.getElementById('rq-step-input-' + blockId).style.display = 'block';
+            const successSection = document.getElementById('rq-step-success-' + blockId);
+            if (successSection) successSection.style.display = 'none';
+            const inputSection = document.getElementById('rq-step-input-' + blockId);
+            if (inputSection) inputSection.style.display = 'block';
 
-            // Clear any file uploads
             if (form) {
                 const fileInputs = form.querySelectorAll('input[type="file"]');
                 fileInputs.forEach(input => {
@@ -329,23 +317,6 @@
             const nextBtns = document.querySelectorAll(`#rq-step-input-${blockId} .rq-submit-btn`);
             nextBtns.forEach(b => {
                 b.disabled = false;
-                if (b.onclick.toString().includes('rqNextStep')) {
-                    const svg = b.querySelector('svg');
-                    b.innerHTML = '';
-
-                    let btnText = 'Continue';
-                    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(', 3)')) {
-                        btnText = 'Review Info';
-                    }
-
-                    b.appendChild(document.createTextNode(btnText));
-                    if (svg) b.appendChild(svg);
-                } else if (b.onclick.toString().includes('rqValidateAndSubmit')) {
-                    const svg = b.querySelector('svg');
-                    b.innerHTML = '';
-                    if (svg) b.appendChild(svg);
-                    b.appendChild(document.createTextNode('Submit Quote'));
-                }
             });
         },
 
@@ -358,9 +329,7 @@
 
             progressSteps.forEach((step, index) => {
                 const stepNumber = index + 1;
-
                 step.classList.remove('active', 'completed');
-
                 if (stepNumber < currentStep) {
                     step.classList.add('completed');
                 } else if (stepNumber === currentStep) {
@@ -392,14 +361,10 @@
                 const variantRow = document.getElementById(`rq-success-variant-row-${blockId}`);
                 if (variantRow) variantRow.style.display = 'none';
             } else {
-                const pTitle = formData.productTitle;
-                const vTitle = formData.variantTitle;
-
-                setSuccessText('product', pTitle);
-
+                setSuccessText('product', formData.productTitle);
                 const variantRow = document.getElementById(`rq-success-variant-row-${blockId}`);
-                if (vTitle && vTitle !== 'Default Title') {
-                    setSuccessText('variant', vTitle);
+                if (formData.variantTitle && formData.variantTitle !== 'Default Title') {
+                    setSuccessText('variant', formData.variantTitle);
                     if (variantRow) variantRow.style.display = 'block';
                 } else {
                     if (variantRow) variantRow.style.display = 'none';
@@ -415,9 +380,8 @@
 
             document.getElementById(`rq-step-input-${blockId}`).style.display = 'none';
             const successEl = document.getElementById(`rq-step-success-${blockId}`);
-            successEl.style.display = 'block';
+            if (successEl) successEl.style.display = 'block';
 
-            // Hide progress indicator on success
             const progressWrapper = document.querySelector(`#rqModal-${blockId} .rq-progress-wrapper`);
             if (progressWrapper) progressWrapper.style.display = 'none';
         },
@@ -426,18 +390,13 @@
             event.preventDefault();
             const dropzone = event.currentTarget;
             dropzone.classList.remove('dragover');
-
             const files = event.dataTransfer.files;
-            if (files.length) {
-                this.processFiles(files, fieldId, maxFiles);
-            }
+            if (files.length) this.processFiles(files, fieldId, maxFiles);
         },
 
         handleFileSelect: function (event, fieldId, maxFiles) {
             const files = event.target.files;
-            if (files.length) {
-                this.processFiles(files, fieldId, maxFiles);
-            }
+            if (files.length) this.processFiles(files, fieldId, maxFiles);
         },
 
         processFiles: function (fileList, fieldId, maxFiles) {
@@ -446,31 +405,21 @@
             if (!input || !previewContainer) return;
 
             const maxMb = parseFloat(input.dataset.maxMb) || 5;
-            const allowedTypesAttr = input.getAttribute('accept');
-
-            // Get existing files if any
             let existingFiles = input._rq_files || [];
 
             for (const file of fileList) {
-                // 1. Image Format Check
                 if (!file.type.startsWith('image/')) {
                     alert(`File "${file.name}" is not an image.`);
                     continue;
                 }
-
-                // 2. Size Validation
                 if (file.size > maxMb * 1024 * 1024) {
                     alert(`File "${file.name}" exceeds the ${maxMb}MB limit.`);
                     continue;
                 }
-
-                // 3. Logic for Single vs Multiple
                 if (maxFiles === 1) {
-                    existingFiles = [file]; // Overwrite for single mode
+                    existingFiles = [file];
                 } else {
-                    // Strictly cap at 3 for multiple mode (matching backend)
                     if (existingFiles.length < 3) {
-                        // Prevent duplicates by name and size
                         const isDup = existingFiles.some(f => f.name === file.name && f.size === file.size);
                         if (!isDup) existingFiles.push(file);
                     } else {
@@ -482,23 +431,12 @@
 
             input._rq_files = existingFiles;
             this.renderPreviews(fieldId, existingFiles);
-
-            // Clear errors if we have files
-            if (existingFiles.length > 0) {
-                const fieldName = input.name;
-                const blockId = fieldId.split('-').pop();
-                const errSpan = document.getElementById(`rq-error-${fieldName}-${blockId}`);
-                if (errSpan) errSpan.innerText = '';
-            }
-
-            // Clear input value to allow re-selecting the same file after removal
             input.value = '';
         },
 
         renderPreviews: function (fieldId, files) {
             const previewContainer = document.getElementById(`rq-previews-${fieldId}`);
             if (!previewContainer) return;
-
             previewContainer.innerHTML = '';
 
             files.forEach((file, index) => {
@@ -516,9 +454,7 @@
                 };
 
                 const img = document.createElement('img');
-                reader.onload = (e) => {
-                    img.src = e.target.result;
-                };
+                reader.onload = (e) => { img.src = e.target.result; };
                 reader.readAsDataURL(file);
 
                 const filename = document.createElement('div');
@@ -535,12 +471,8 @@
         removeFile: function (fieldId, index) {
             const input = document.getElementById(fieldId);
             if (!input || !input._rq_files) return;
-
             input._rq_files.splice(index, 1);
-
-            // CRITICAL: Clear input.value so re-selecting the SAME image file triggers onchange again
             input.value = '';
-
             this.renderPreviews(fieldId, input._rq_files);
         }
     };

@@ -90,10 +90,8 @@
       {% endif %}
 
       {{ 'request-quote.css' | asset_url | stylesheet_tag }}
-      <script src="{{ 'rq-validation.js' | asset_url }}" defer="defer"></script>
-      <script src="{{ 'rq-api.js' | asset_url }}" defer="defer"></script>
-      <script src="{{ 'rq-ui.js' | asset_url }}" defer="defer"></script>
-      <script src="{{ 'request-quote.js' | asset_url }}" defer="defer"></script>
+      <script src="{{ 'request-quote.bundle.js' | asset_url }}" defer="defer"></script>
+
 
       <div
         class="rq-product-page-form"
