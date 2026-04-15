@@ -23,7 +23,6 @@ describe('QuoteService Unit Tests', () => {
         const shop = 'test-shop.myshopify.com';
         const merchant = await Merchant.create({
             shop,
-            accessToken: 'token',
             email: 'test@shop.com'
         });
 
@@ -52,7 +51,7 @@ describe('QuoteService Unit Tests', () => {
     });
 
     it('should update quote status', async () => {
-        const merchant = await Merchant.create({ shop: 'test.shop', accessToken: 't' });
+        const merchant = await Merchant.create({ shop: 'test.shop' });
 
         // Correcting manually created quote with all required fields
         const quote = await Quote.create({
@@ -72,7 +71,7 @@ describe('QuoteService Unit Tests', () => {
 
     it('should retrieve quotes for a merchant', async () => {
         const shop = 'list.shop';
-        const merchant = await Merchant.create({ shop, accessToken: 't' });
+        const merchant = await Merchant.create({ shop });
 
         const baseQuote = {
             shop,

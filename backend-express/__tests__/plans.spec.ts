@@ -45,7 +45,6 @@ describe('Plans API Integration', () => {
 
         await Merchant.create({
             shop: 'test-shop.myshopify.com',
-            accessToken: 'test-token',
             planId: freePlan._id,
             isActive: true
         });

@@ -12,7 +12,6 @@ describe('Webhooks Integration', () => {
     beforeAll(async () => {
         await Merchant.create({
             shop: 'test-shop.myshopify.com',
-            accessToken: 'fake_token',
             isActive: true,
             installedAt: new Date()
         });

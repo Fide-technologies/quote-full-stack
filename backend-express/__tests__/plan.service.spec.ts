@@ -43,7 +43,6 @@ describe('PlanService Unit Tests', () => {
         const freePlan = await Plan.findOne({ name: "FREE" });
         await Merchant.create({
             shop: 'free-shop.myshopify.com',
-            accessToken: 't',
             planId: freePlan?._id
         });
 
@@ -55,7 +54,6 @@ describe('PlanService Unit Tests', () => {
         const freePlan = await Plan.findOne({ name: "FREE" });
         await Merchant.create({
             shop: 'ok.myshopify.com',
-            accessToken: 't',
             planId: freePlan?._id,
             usage: { quotesUsed: 2 }
         });
@@ -68,7 +66,6 @@ describe('PlanService Unit Tests', () => {
         const freePlan = await Plan.findOne({ name: "FREE" });
         await Merchant.create({
             shop: 'over.myshopify.com',
-            accessToken: 't',
             planId: freePlan?._id,
             usage: { quotesUsed: 5 }
         });
@@ -82,7 +79,6 @@ describe('PlanService Unit Tests', () => {
         const proPlan = await Plan.findOne({ name: "PRO" });
         await Merchant.create({
             shop: 'pro-shop.myshopify.com',
-            accessToken: 't',
             planId: proPlan?._id
         });
 
@@ -92,7 +88,6 @@ describe('PlanService Unit Tests', () => {
         const freePlan = await Plan.findOne({ name: "FREE" });
         await Merchant.create({
             shop: 'free-shop2.myshopify.com',
-            accessToken: 't',
             planId: freePlan?._id
         });
 

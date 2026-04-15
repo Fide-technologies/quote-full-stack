@@ -31,33 +31,30 @@ describe('MerchantService Unit Tests', () => {
     it('should create a new merchant with default FREE plan', async () => {
         const shop = 'test-merchant.myshopify.com';
         await merchantService.createOrUpdateMerchant({
-            shop,
-            accessToken: 'dummy_token_123'
+            shop
         });
 
         const saved = await Merchant.findOne({ shop }).populate('planId');
         expect(saved).not.toBeNull();
         expect(saved?.isActive).toBe(true);
-        expect(saved?.accessToken).toBe('dummy_token_123');
         expect((saved?.planId as any).name).toBe('FREE');
     });
 
     it('should update an existing merchant when shop matches', async () => {
         const shop = 'update-me.myshopify.com';
-        await Merchant.create({ shop, accessToken: 'old_token' });
+        await Merchant.create({ shop });
 
-        await merchantService.createOrUpdateMerchant({ shop, accessToken: 'new_token' });
+        await merchantService.createOrUpdateMerchant({ shop });
 
         const updated = await Merchant.findOne({ shop });
-        expect(updated?.accessToken).toBe('new_token');
+        expect(updated?.shop).toBe(shop);
     });
 
     it('should increment quote usage', async () => {
         const shop = 'usage.myshopify.com';
         await Merchant.create({
             shop,
-            usage: { quotesUsed: 5 },
-            accessToken: 'token'
+            usage: { quotesUsed: 5 }
         });
 
         const result = await merchantService.incrementQuoteUsage(shop, 10);
@@ -68,8 +65,7 @@ describe('MerchantService Unit Tests', () => {
         const shop = 'limit.myshopify.com';
         await Merchant.create({
             shop,
-            usage: { quotesUsed: 10 },
-            accessToken: 'token'
+            usage: { quotesUsed: 10 }
         });
 
         const result = await merchantService.incrementQuoteUsage(shop, 10);
