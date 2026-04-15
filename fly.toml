@@ -15,6 +15,7 @@ processes = ["app"]
 NODE_ENV = "production"
 PORT = "3001"
 HOST_SCHEMA = "https"
+HOST_NAME = "merchant-quote-app.fly.dev"
 
 [[vm]]
 memory = "2gb"
