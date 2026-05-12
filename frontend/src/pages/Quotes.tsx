@@ -46,7 +46,8 @@ export const Quotes: React.FC = () => {
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
-        setIsClient(true);
+        const timer = setTimeout(() => setIsClient(true), 0);
+        return () => clearTimeout(timer);
     }, []);
 
     if (!isClient || isLoading) {

@@ -1,4 +1,4 @@
-import { PlanType } from "@/constants";
+import type { PlanType } from "@/constants";
 import type { IPlanRepository } from "@/interfaces";
 import { Plan } from "@/models/plan.model";
 import type { IPlan, PlanDocument } from "@/types";

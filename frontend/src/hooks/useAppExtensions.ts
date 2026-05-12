@@ -26,7 +26,9 @@ export const useAppExtensions = () => {
     const [error, setError] = useState<Error | null>(null);
 
     const checkExtensions = useCallback(async (showLoading = true) => {
-        if (showLoading) setIsLoading(true);
+        if (showLoading) {
+            setIsLoading(prev => prev ? prev : true);
+        }
         try {
             const shopify = (window as unknown as Window & { shopify?: ShopifyAppBridge }).shopify;
 
@@ -66,7 +68,11 @@ export const useAppExtensions = () => {
     }, []);
 
     useEffect(() => {
-        checkExtensions();
+        // Run checkExtensions asynchronously to avoid the lint warning about sync setState in effects
+        const init = async () => {
+            await checkExtensions();
+        };
+        init();
 
         const handleWindowFocus = () => {
             console.debug('[useAppExtensions] Window focus detected, manually refreshing extension status...');

@@ -8,7 +8,7 @@ primary_region = "bom"
 internal_port = 3001
 force_https = true
 auto_stop_machines = "stop"
-min_machines_running = 0
+min_machines_running = 1
 processes = ["app"]
 
 [env]

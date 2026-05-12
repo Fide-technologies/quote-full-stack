@@ -9,7 +9,7 @@ export function useFormBuilder() {
     const [selectedTab, setSelectedTab] = useState(0);
 
     const { hasPermission, isLoading: isPlanLoading } = usePlanUsage();
-    const [canEdit, setCanEdit] = useState(true);
+    const canEdit = !isPlanLoading && hasPermission('form_builder');
 
     useEffect(() => {
         const fetchForm = async () => {
@@ -101,12 +101,6 @@ export function useFormBuilder() {
         };
         fetchForm();
     }, []);
-
-    useEffect(() => {
-        if (!isPlanLoading) {
-            setCanEdit(hasPermission('form_builder'));
-        }
-    }, [isPlanLoading, hasPermission]);
 
     const handleSave = async () => {
         if (!formState) return;
