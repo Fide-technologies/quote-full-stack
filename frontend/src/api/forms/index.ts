@@ -3,6 +3,7 @@ export interface IFormField {
     type: string;
     label: string;
     placeholder?: string;
+    helpText?: string;
     required: boolean;
     options?: string[];
     // Advanced validations
@@ -30,11 +31,17 @@ export interface IFormStep {
 export interface IFormSettings {
     successTitle?: string;
     successMessage?: string;
+    // Product display settings
+    showSku?: boolean;
+    showVendor?: boolean;
+    showProductNote?: boolean;
+    showQuantity?: boolean;
 }
 
 export interface IForm {
     shop: string;
     title: string;
+    description?: string;
     settings: IFormSettings;
     steps: IFormStep[];
 }

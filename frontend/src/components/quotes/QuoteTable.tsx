@@ -46,7 +46,7 @@ export function QuoteTable({
                     {quote.firstName} {quote.lastName}
                 </Text>
             </IndexTable.Cell>
-            <IndexTable.Cell>{quote.email}</IndexTable.Cell>
+            <IndexTable.Cell>{quote.customerEmail}</IndexTable.Cell>
             <IndexTable.Cell>
                 <InlineStack gap="300" align="start" blockAlign="center" wrap>
                     <Thumbnail

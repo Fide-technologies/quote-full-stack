@@ -23,6 +23,7 @@ const formFieldSchema = new Schema<IFormField>(
         maxFileSizeMB: { type: Number },
         allowMultiple: { type: Boolean, default: false },
         layoutWidth: { type: String, enum: ["full", "half"], default: "full" },
+        helpText: { type: String },
         isSystem: { type: Boolean, default: false },
     },
     { _id: false },
@@ -46,6 +47,10 @@ const formSettingsSchema = new Schema<IFormSettings>(
             type: String,
             default: "Thank you for your request. Our team will review your quote and get back to you shortly.",
         },
+        showSku: { type: Boolean, default: true },
+        showVendor: { type: Boolean, default: false },
+        showProductNote: { type: Boolean, default: true },
+        showQuantity: { type: Boolean, default: true },
     },
     { _id: false },
 );
@@ -63,6 +68,7 @@ const formSchema = new Schema<IForm>(
             required: true,
             default: "Request a Quote",
         },
+        description: { type: String },
         settings: {
             type: formSettingsSchema,
             default: () => ({}),

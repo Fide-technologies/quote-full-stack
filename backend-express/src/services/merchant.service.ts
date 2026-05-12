@@ -14,7 +14,7 @@ export class MerchantService implements IMerchantService {
         @inject(TYPES.IPlanRepository) private planRepository: IPlanRepository,
         @inject(TYPES.IQuoteRepository) private quoteRepository: IQuoteRepository,
         @inject(TYPES.IFormRepository) private formRepository: IFormRepository,
-    ) {}
+    ) { }
 
     async getMerchantByShop(shop: string): Promise<MerchantDocument | null> {
         return await this.merchantRepository.findMerchantByShop(shop);
@@ -47,11 +47,6 @@ export class MerchantService implements IMerchantService {
     }
 
     async uninstallMerchant(shop: string): Promise<void> {
-        // 1. Delete offline session
-        const offlineSessionId = `offline_${shop}`;
-        await shopify.config.sessionStorage.deleteSession(offlineSessionId);
-
-        // 2. Mark merchant as inactive
         const merchant = await this.merchantRepository.findMerchantByShop(shop);
         if (merchant) {
             await this.merchantRepository.updateMerchant({ shop, isActive: false });
@@ -59,7 +54,6 @@ export class MerchantService implements IMerchantService {
     }
 
     async redactMerchantData(shop: string): Promise<void> {
-        // GDPR Compliance: Delete all shop-related data
         await Promise.all([
             this.quoteRepository.deleteByShop(shop),
             this.formRepository.deleteByShop(shop),

@@ -224,6 +224,16 @@ export function SortableFieldItem({
                                     Advanced Settings
                                 </Text>
 
+                                <TextField
+                                    label="Field Description / Help Text"
+                                    value={field.helpText || ""}
+                                    onChange={(val) => updateFieldProperty("helpText", val)}
+                                    placeholder="Optional instructions for this field"
+                                    autoComplete="off"
+                                    multiline={2}
+                                    disabled={readOnly}
+                                />
+
                                 <InlineStack gap="400">
                                     {["text", "textarea", "number", "phone", "price", "email"].includes(field.type) && (
                                         <>

@@ -21,6 +21,11 @@ const shopify = shopifyApp({
         },
         isTesting: false,
         isCustomStoreApp: false,
+        future: {
+            customerAddressDefaultFix: true,
+            unstable_managedPricingSupport: true,
+            unstable_newEmbeddedAuthStrategy: true
+        },
     },
     auth: {
         path: "/api/auth",
@@ -30,10 +35,6 @@ const shopify = shopifyApp({
         path: "/api/webhooks",
     },
     sessionStorage,
-    future: {
-        customerAddressDefaultFix: true,
-        unstable_managedPricingSupport: true,
-    },
 });
 
 export { shopify };

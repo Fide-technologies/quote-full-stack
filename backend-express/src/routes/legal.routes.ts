@@ -34,8 +34,8 @@ const wrapInTailwindLayout = (title: string, content: string, tableOfContents: s
                     <span class="font-bold text-lg tracking-tight">Merchant Quote</span>
                 </div>
                 <div class="hidden sm:flex gap-6 items-center text-sm font-medium text-slate-600">
-                    <a href="/privacy" class="hover:text-emerald-600 transition-colors">Privacy</a>
-                    <a href="/terms" class="hover:text-emerald-600 transition-colors">Terms</a>
+                    <a href="https://merchant-quote-app.fly.dev/api/legal/privacy" class="hover:text-emerald-600 transition-colors">Privacy</a>
+                    <a href="https://merchant-quote-app.fly.dev/api/legal/terms" class="hover:text-emerald-600 transition-colors">Terms</a>
                     <a href="mailto:fidetechonologies@gmail.com" class="px-4 py-2 bg-slate-900 text-white rounded-full hover:bg-slate-800 transition-all">Support</a>
                 </div>
             </div>

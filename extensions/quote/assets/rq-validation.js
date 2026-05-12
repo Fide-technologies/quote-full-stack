@@ -6,11 +6,20 @@
         },
 
         validateStep: function (blockId, stepNum) {
-            let isValid = true;
             const stepContainer = document.getElementById(`rq-step-${stepNum}-${blockId}`);
-            if (!stepContainer) return isValid;
+            if (!stepContainer) return true;
+            return this.validateFields(stepContainer, blockId);
+        },
 
-            const inputs = stepContainer.querySelectorAll('input, textarea, select');
+        validateAll: function (blockId) {
+            const form = document.getElementById(`rq-form-${blockId}`);
+            if (!form) return true;
+            return this.validateFields(form, blockId);
+        },
+
+        validateFields: function (container, blockId) {
+            let isValid = true;
+            const inputs = container.querySelectorAll('input, textarea, select');
 
             inputs.forEach(input => {
                 const fieldName = input.name;
@@ -27,15 +36,12 @@
                     fieldValid = false;
                     errMsg = 'Please select a file.';
                 } else if (input.value.trim() || input.files?.length || (input._rq_files && input._rq_files.length)) {
-
-                    // Advanced Validations Handlers
                     const patternAttr = input.getAttribute('pattern');
                     const valMsgAttr = input.getAttribute('data-val-msg') || 'Invalid format.';
                     const minLenAttr = input.getAttribute('minlength');
                     const maxLenAttr = input.getAttribute('maxlength');
                     const maxMbAttr = input.getAttribute('data-max-mb');
 
-                    // Regex validation
                     if (patternAttr && input.type !== 'file') {
                         const regex = new RegExp(patternAttr);
                         if (!regex.test(input.value.trim())) {
@@ -44,7 +50,6 @@
                         }
                     }
 
-                    // Length validation
                     if (fieldValid && minLenAttr && input.value.trim().length < parseInt(minLenAttr)) {
                         fieldValid = false;
                         errMsg = `Must be at least ${minLenAttr} characters.`;
@@ -54,7 +59,6 @@
                         errMsg = `Cannot exceed ${maxLenAttr} characters.`;
                     }
 
-                    // File Size Validation
                     if (fieldValid && input.type === 'file' && maxMbAttr) {
                         const files = input._rq_files || input.files;
                         if (files && files.length) {
@@ -69,17 +73,19 @@
                         }
                     }
 
-                    // Legacy system fallbacks
                     if (fieldValid) {
                         if (input.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim())) {
                             fieldValid = false;
                             errMsg = 'Invalid email address.';
                         } else if (input.type === 'tel') {
-                            // If they supplied a custom regex or length, let those validators handle it
-                            // Otherwise, enforce default 10-digit validation
                             if (!patternAttr && !minLenAttr && !maxLenAttr && !/^\d{10}$/.test(input.value.trim())) {
                                 fieldValid = false;
                                 errMsg = 'Phone must be 10 digits.';
+                            }
+                        } else if (fieldName === 'pincode') {
+                            if (!/^\d{6}$/.test(input.value.trim())) {
+                                fieldValid = false;
+                                errMsg = 'Pincode must be exactly 6 digits.';
                             }
                         }
                     }

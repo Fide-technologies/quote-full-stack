@@ -97,17 +97,32 @@ export const FormStep: React.FC<FormStepProps> = ({
                 >
                     <BlockStack gap="400">
                         <Box paddingBlockStart="200">
-                            <TextField
-                                label="Step Title"
-                                value={step.title}
-                                onChange={(val) => {
-                                    const updated = [...formState.steps];
-                                    updated[stepIdx].title = val;
-                                    setFormState({ ...formState, steps: updated });
-                                }}
-                                autoComplete="off"
-                                disabled={step.isSystem || readOnly}
-                            />
+                            <BlockStack gap="400">
+                                <TextField
+                                    label="Step Title"
+                                    value={step.title}
+                                    onChange={(val) => {
+                                        const updated = [...formState.steps];
+                                        updated[stepIdx].title = val;
+                                        setFormState({ ...formState, steps: updated });
+                                    }}
+                                    autoComplete="off"
+                                    disabled={step.isSystem || readOnly}
+                                />
+                                <TextField
+                                    label="Step Description"
+                                    value={step.description || ''}
+                                    onChange={(val) => {
+                                        const updated = [...formState.steps];
+                                        updated[stepIdx].description = val;
+                                        setFormState({ ...formState, steps: updated });
+                                    }}
+                                    helpText="Optional: Add a short description for this step."
+                                    autoComplete="off"
+                                    multiline={2}
+                                    disabled={readOnly}
+                                />
+                            </BlockStack>
                         </Box>
 
                         {step.id !== 'step-review' && (

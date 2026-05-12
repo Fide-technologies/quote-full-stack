@@ -102,6 +102,10 @@ export const SETTINGS_DEFAULTS = {
         adminEmail: "",
         customerEmailEnabled: true,
         emailTemplate: "Thank you for your quote request! We will get back to you soon.",
+        title: "Submit Your Quote Request",
+        description: "Fill in your details and we'll get back to you shortly",
+        successTitle: "Quote Requested Successfully!",
+        successMessage: "Thank you for your request. Our team will review your quote and get back to you shortly.",
     },
 };
 

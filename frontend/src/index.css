@@ -9,22 +9,16 @@
   }
 }
 
-/* Custom Scrollbar for Browser Mockup */
-.preview-scrollbar::-webkit-scrollbar {
-  width: 6px;
+/* Hide Scrollbars but maintain functionality */
+.preview-scrollbar::-webkit-scrollbar,
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
-.preview-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.preview-scrollbar::-webkit-scrollbar-thumb {
-  background: #d2d5d8;
-  border-radius: 10px;
-}
-
-.preview-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #bfc3c7;
+.preview-scrollbar,
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
 @keyframes fadeIn {

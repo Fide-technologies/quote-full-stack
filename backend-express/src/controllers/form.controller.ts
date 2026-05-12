@@ -1,5 +1,5 @@
 import { CONTROLLER } from "@/constants";
-import type { IFormService } from "@/interfaces";
+import type { IFormService, ISettingsService } from "@/interfaces";
 import { TYPES } from "@/types";
 import type { Request, Response } from "express";
 import { inject, injectable } from "inversify";
@@ -7,7 +7,10 @@ import { BaseController } from "./base.controller";
 
 @injectable()
 export class FormController extends BaseController {
-    constructor(@inject(TYPES.IFormService) private formService: IFormService) {
+    constructor(
+        @inject(TYPES.IFormService) private formService: IFormService,
+        @inject(TYPES.ISettingsService) private settingsService: ISettingsService,
+    ) {
         super();
     }
 
@@ -170,7 +173,8 @@ export class FormController extends BaseController {
 
     public updateForm = async (req: Request, res: Response) => {
         try {
-            const shop = res.locals.shopify?.session?.shop;
+            const session = res.locals.shopify?.session;
+            const shop = session?.shop || res.locals.shopify?.session.shop;
 
             if (!shop) {
                 return this.handleError(res, new Error(CONTROLLER.MISSING_SHOP), CONTROLLER.MISSING_SHOP);
@@ -178,6 +182,22 @@ export class FormController extends BaseController {
 
             const formData = req.body;
             const updatedForm = await this.formService.saveForm(shop, formData);
+
+            // Sync title and description to Shopify Metafield for storefront liquid visibility
+            if (session) {
+                try {
+                    const currentSettings = await this.settingsService.getSettings(session);
+                    await this.settingsService.updateSettings(session, {
+                        ...currentSettings,
+                        title: formData.title,
+                        description: formData.description,
+                        successTitle: formData.settings?.successTitle,
+                        successMessage: formData.settings?.successMessage,
+                    });
+                } catch (syncError) {
+                    console.error("[FormController] Failed to sync form metadata to Shopify:", syncError);
+                }
+            }
 
             return this.ok(res, updatedForm, "Form configuration saved successfully");
         } catch (error) {

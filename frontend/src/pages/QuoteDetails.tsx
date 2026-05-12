@@ -213,7 +213,7 @@ export const QuoteDetails: React.FC = () => {
 
                             <Card padding="500">
                                 <BlockStack gap="600">
-                                    <QuoteCustomerDetails firstName={quote.firstName} lastName={quote.lastName} email={quote.email} phone={quote.phone} />
+                                    <QuoteCustomerDetails firstName={quote.firstName} lastName={quote.lastName} customerEmail={quote.customerEmail} phone={quote.phone} />
                                     <Divider />
                                     <QuoteAddressDetails
                                         address1={quote.address1} address2={quote.address2} city={quote.city}

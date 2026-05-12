@@ -2,7 +2,7 @@ import { BlockStack, InlineStack, Text, Box, Icon } from "@shopify/polaris";
 import { PersonIcon, EmailIcon, PhoneIcon } from "@shopify/polaris-icons";
 import { type QuoteCustomerDetailsProps } from "@/types/quote-details";
 
-export function QuoteCustomerDetails({ firstName, lastName, email, phone }: QuoteCustomerDetailsProps) {
+export function QuoteCustomerDetails({ firstName, lastName, customerEmail, phone }: QuoteCustomerDetailsProps) {
     const fullName = [firstName, lastName].filter(Boolean).join(' ') || 'Anonymous Customer';
 
     return (
@@ -19,7 +19,7 @@ export function QuoteCustomerDetails({ firstName, lastName, email, phone }: Quot
                     <Box width="20px">
                         <Icon source={EmailIcon} tone="subdued" />
                     </Box>
-                    <Text variant="bodyMd" as="span">{email || 'No email provided'}</Text>
+                    <Text variant="bodyMd" as="span">{customerEmail || 'No email provided'}</Text>
                 </InlineStack>
                 <InlineStack gap="300" blockAlign="center">
                     <Box width="20px">

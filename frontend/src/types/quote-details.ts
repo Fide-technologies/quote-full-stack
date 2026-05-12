@@ -2,7 +2,7 @@
 export interface QuoteCustomerDetailsProps {
     firstName: string | null | undefined;
     lastName: string | null | undefined;
-    email: string | null | undefined;
+    customerEmail: string | null | undefined;
     phone: string | null | undefined;
 }
 

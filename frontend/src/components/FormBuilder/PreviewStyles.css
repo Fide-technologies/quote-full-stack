@@ -1,0 +1,300 @@
+/* Storefront Preview Styles for Admin */
+:root {
+    --rq-primary: #008060;
+    --rq-primary-hover: #006e52;
+    --rq-accent: #6366f1;
+    --rq-accent-hover: #4f46e5;
+    --rq-success: #10b981;
+    --rq-bg: #ffffff;
+    --rq-text: #202223;
+    --rq-text-subdued: #6d7175;
+    --rq-border: #e1e3e5;
+    --rq-radius: 12px;
+    --rq-radius-sm: 8px;
+    --rq-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --rq-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --rq-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes successPop {
+    0% { opacity: 0; transform: scale(0.8); }
+    50% { transform: scale(1.05); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.rq-form-container {
+    padding: 40px 32px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    background: #fff;
+}
+
+.rq-form-header {
+    margin-bottom: 28px;
+    text-align: center;
+}
+
+.rq-success-screen h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--rq-text-primary);
+    margin-bottom: 12px;
+    letter-spacing: -0.025em;
+}
+
+.rq-success-icon {
+    width: 80px;
+    height: 80px;
+    background: #ecfdf5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+}
+
+.rq-success-screen p {
+    font-size: 16px;
+    color: var(--rq-text-secondary);
+    line-height: 1.6;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.rq-review-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    width: 100%;
+    background: #f9fafb;
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    margin-top: 8px;
+}
+
+.rq-review-item {
+    border-bottom: 1px solid #f3f4f6;
+    padding-bottom: 12px;
+}
+
+.rq-review-item:last-child,
+.rq-review-item:nth-last-child(2) {
+    border-bottom: none;
+}
+
+.rq-review-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+}
+
+.rq-review-value {
+    font-size: 15px;
+    color: var(--rq-text-primary);
+    font-weight: 500;
+}
+
+.rq-back-btn {
+    background: white !important;
+    color: var(--rq-text-primary) !important;
+    border: 1.5px solid #e5e7eb !important;
+}
+
+.rq-back-btn:hover {
+    background: #f9fafb !important;
+    border-color: #d1d5db !important;
+}
+
+.rq-submit-final {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Product Hero Section */
+.rq-product-hero {
+    width: 100%;
+    max-width: 650px;
+    margin: 0 auto 32px;
+}
+
+.rq-product-summary {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: var(--rq-radius);
+    border: 1px solid var(--rq-border);
+    margin-bottom: 20px;
+}
+
+.rq-product-summary img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 2px solid white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.rq-product-info {
+    flex: 1;
+}
+
+.rq-product-title {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--rq-text);
+}
+
+.rq-product-variant {
+    display: block;
+    font-size: 13px;
+    color: var(--rq-text-subdued);
+}
+
+.rq-quantity-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.rq-quantity-container label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--rq-text);
+}
+
+.rq-qty-control-group {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--rq-border);
+    border-radius: var(--rq-radius-sm);
+    width: fit-content;
+    background: #fff;
+    height: 46px;
+}
+
+.rq-qty-adjust {
+    background: transparent;
+    border: none;
+    width: 44px;
+    height: 100%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--rq-text);
+}
+
+.rq-qty-control-group input {
+    width: 60px;
+    text-align: center;
+    border: none;
+    border-left: 1px solid var(--rq-border);
+    border-right: 1px solid var(--rq-border);
+    font-weight: 600;
+    font-size: 16px;
+    height: 100%;
+    outline: none;
+}
+
+/* Fields */
+.rq-step-content {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    width: 100%;
+}
+
+.rq-input-group {
+    margin-bottom: 0;
+}
+
+.rq-input-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--rq-text);
+}
+
+.rq-required {
+    color: #ef4444;
+}
+
+.rq-input-group input,
+.rq-input-group textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: var(--rq-radius-sm);
+    font-size: 15px;
+    outline: none;
+    transition: var(--rq-transition);
+}
+
+.rq-input-group input:focus,
+.rq-input-group textarea:focus {
+    border-color: var(--rq-accent);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+/* Dropzone */
+.rq-dropzone {
+    border: 2px dashed #e5e7eb;
+    border-radius: var(--rq-radius);
+    padding: 32px 20px;
+    text-align: center;
+    background: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Success Screen */
+.rq-success-screen {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.rq-success-icon {
+    margin-bottom: 16px;
+}
+
+/* Buttons */
+.rq-submit-btn {
+    width: 100%;
+    height: 52px;
+    background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+    color: #fff;
+    border: none;
+    border-radius: var(--rq-radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: var(--rq-transition);
+}
+
+.rq-submit-final {
+    background: linear-gradient(135deg, var(--rq-accent) 0%, var(--rq-accent-hover) 100%);
+}

@@ -26,7 +26,7 @@ export class DraftOrderMapper {
                     title: quote.productTitle || APP_DEFAULTS.QUOTE_ITEM_TITLE,
                 },
             ],
-            email: quote.email || quote.customerEmail,
+            email: quote.customerEmail,
             phone: this.formatPhone(quote.phone),
             note: this.buildNote(quote),
             customAttributes: [
@@ -52,7 +52,7 @@ export class DraftOrderMapper {
 
     private buildNote(quote: QuoteDocument): string {
         const message =
-            quote.customerMessage || quote.message || `Quote request from ${quote.firstName} ${quote.lastName}`;
+            quote.customerMessage || `Quote request from ${quote.firstName} ${quote.lastName}`;
         return this.sanitize(message);
     }
 

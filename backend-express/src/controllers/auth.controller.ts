@@ -52,7 +52,6 @@ export class AuthController {
 
             await this.merchantService.createOrUpdateMerchant({
                 shop: session.shop,
-                accessToken: session.accessToken,
                 name: shopInfo.name,
                 scopes: session.scope,
                 email: shopInfo.email,
@@ -63,9 +62,6 @@ export class AuthController {
                 subscriptionStatus,
             });
 
-            await shopify.api.webhooks.register({ session });
-
-            // Pass control to the next middleware (shopify.redirectToShopifyOrAppRoot)
             next();
         } catch (error) {
             logger.error(`Error in callbackStore: ${error}`);

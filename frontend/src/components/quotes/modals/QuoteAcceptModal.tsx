@@ -66,7 +66,7 @@ export const QuoteAcceptModal: React.FC<QuoteAcceptModalProps> = ({
                 <BlockStack gap="500">
                     <Banner tone="info">
                         <p>
-                            Confirm the final price and quantity. This will update the quote to <strong>APPROVED</strong> and send an email to <strong>{quote.email}</strong>.
+                            Confirm the final price and quantity. This will update the quote to <strong>APPROVED</strong> and send an email to <strong>{quote.customerEmail}</strong>.
                         </p>
                     </Banner>
 

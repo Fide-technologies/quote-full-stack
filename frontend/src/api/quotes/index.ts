@@ -3,7 +3,7 @@ export interface Quote {
     id: string;
     firstName: string;
     lastName: string;
-    email: string;
+    customerEmail: string;
     phone: string;
     productTitle: string;
     variantTitle?: string;

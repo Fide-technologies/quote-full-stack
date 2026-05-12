@@ -41,6 +41,12 @@ export interface ISettings {
     customerEmailEnabled: boolean;
     emailTemplate: string;
 
+    // 8. Form Display Settings (Synced from Form Builder)
+    title?: string;
+    description?: string;
+    successTitle?: string;
+    successMessage?: string;
+
     // Legacy support (optional, if you want to keep showOnAll for a while)
     showOnAll?: boolean;
 }
