@@ -1,4 +1,3 @@
-// RqApi v1.2.0 - Fixed data mapping and normalization
 (function () {
     const PROXY_PATH = '/apps/request-quote';
     window.RqApi = {
@@ -14,54 +13,18 @@
                 'shop', 'productId', 'handle', 'productTitle', 'variantId', 'variantTitle',
                 'productImage', 'productUrl', 'price', 'quantity',
                 'firstName', 'lastName', 'fname', 'lname', 'email', 'phone',
-                'customerEmail', 'customerPhone',
-                'address1', 'address2', 'city', 'district', 'state', 'pincode', 'message', 'notes'
+                'address1', 'address2', 'city', 'district', 'state', 'pincode', 'message'
             ];
 
             formData.forEach((value, key) => {
-                const trimmedKey = key.trim();
-                const input = form.querySelector(`[name="${key}"]`);
-
-                // Identify email and phone by type if not already identified
-                if (input && input.type === 'email' && !dataObj.email) {
-                    dataObj.email = value;
-                } else if (input && input.type === 'tel' && !dataObj.phone) {
-                    dataObj.phone = value;
-                } else if (input && input.id && input.id.toLowerCase().includes('email') && !dataObj.email) {
-                    dataObj.email = value;
-                } else if (input && input.id && input.id.toLowerCase().includes('phone') && !dataObj.phone) {
-                    dataObj.phone = value;
-                }
-
-                if (systemFields.includes(trimmedKey) ||
-                    trimmedKey.toLowerCase() === 'email' ||
-                    trimmedKey.toLowerCase() === 'phone') {
-
-                    const normalizedKey = trimmedKey.toLowerCase() === 'email' ? 'email' :
-                        (trimmedKey.toLowerCase() === 'phone' ? 'phone' : trimmedKey);
-
-                    if (normalizedKey === 'customerEmail') dataObj['email'] = value;
-                    else if (normalizedKey === 'customerPhone') dataObj['phone'] = value;
-                    else if (normalizedKey === 'fname') dataObj['firstName'] = value;
-                    else if (normalizedKey === 'lname') dataObj['lastName'] = value;
-                    else if (normalizedKey === 'notes') dataObj['message'] = value;
-                    else dataObj[normalizedKey] = value;
+                if (systemFields.includes(key)) {
+                    dataObj[key] = value;
                 } else {
+                    const input = form.querySelector(`[name="${key}"]`);
                     const label = input?.closest('.rq-input-group')?.querySelector('label')?.innerText.replace('*', '').trim() || key;
                     customData[label] = value;
                 }
             });
-
-            // Final fallback normalization
-            if (!dataObj.email && (customData['Email'] || customData['Email Address'] || customData['email'])) {
-                dataObj.email = customData['Email'] || customData['Email Address'] || customData['email'];
-            }
-            if (!dataObj.phone && (customData['Phone'] || customData['Phone Number'] || customData['phone'])) {
-                dataObj.phone = customData['Phone'] || customData['Phone Number'] || customData['phone'];
-            }
-
-            // Ensure notes is populated for message
-            if (dataObj.notes && !dataObj.message) dataObj.message = dataObj.notes;
 
             dataObj['customData'] = customData;
 
@@ -198,18 +161,6 @@
             } catch (err) {
                 console.error(err);
                 return null;
-            }
-        },
-
-        searchProducts: async function (query) {
-            try {
-                const res = await fetch(`/search/suggest.json?q=${encodeURIComponent(query)}&resources[type]=product&resources[limit]=5`);
-                if (!res.ok) throw new Error('Search failed');
-                const data = await res.json();
-                return data.resources.results.products;
-            } catch (err) {
-                console.error('Search error:', err);
-                return [];
             }
         }
     };

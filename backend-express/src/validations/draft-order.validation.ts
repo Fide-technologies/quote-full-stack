@@ -32,7 +32,7 @@ export const validateQuoteForDraftOrder = (quote: QuoteDocument): void => {
         errors.push(ERROR_MESSAGES.DRAFT_ORDER.QUANTITY_INVALID);
     }
 
-    if (!quote.customerEmail) {
+    if (!quote.email && !quote.customerEmail) {
         errors.push(ERROR_MESSAGES.DRAFT_ORDER.EMAIL_MISSING);
     }
 

@@ -13,28 +13,23 @@
         const modal = document.getElementById(`rqModal-${blockId}`);
         if (!modal) return;
 
-        if (!modal.dataset.isBulk || modal.dataset.isBulk === 'undefined' || modal.dataset.isBulk === 'false') {
-            const handleMatch = window.location.pathname.match(/\/products\/([^\/\?]+)/);
-            let handle = modal.dataset.handle || (handleMatch ? handleMatch[1] : null);
-            const cart = window.RqCart.getCart();
+        if (!modal.dataset.isBulk || modal.dataset.isBulk === 'undefined') {
+            modal.dataset.isBulk = 'false';
+        }
 
-            if (handle) {
+        if (modal.dataset.isBulk === 'false') {
+            const handleMatch = window.location.pathname.match(/\/products\/([^\/\?]+)/);
+            if (handleMatch) {
+                const handle = handleMatch[1];
                 try {
                     const product = await window.RqApi.fetchProduct(handle);
-                    if (product && window.RqUi.showProductSummary) {
-                        modal.dataset.isBulk = 'false';
+                    if (product && window.RqUi.populateHiddenFields) {
                         window.RqUi.populateHiddenFields(modal, product);
                         window.RqUi.showProductSummary(modal, product);
                     }
                 } catch (e) {
                     console.error("Failed to populate modal for product:", e);
                 }
-            } else if (cart.length > 0) {
-                modal.dataset.isBulk = 'true';
-                window.RqUi.showBulkSummary(blockId, cart);
-            } else {
-                modal.dataset.isBulk = 'true';
-                window.RqUi.showBulkSummary(blockId, []);
             }
         }
 
@@ -79,7 +74,7 @@
     window.rqAddToQuoteCart = async function (handle, blockId, event) {
         const btn = event ? event.currentTarget : null;
         if (!btn) return;
-
+        
         const originalText = btn.innerHTML;
         btn.innerHTML = 'Adding...';
         btn.disabled = true;
@@ -90,39 +85,15 @@
                 const qtyInput = document.getElementById('rqPageQtyInput-' + blockId) || document.getElementById('rqPageQtyInput');
                 const qty = parseInt(qtyInput?.value) || 1;
 
-                // Try to find selected variant from URL or form
-                let selectedVariant = product.variants[0];
-                const urlParams = new URLSearchParams(window.location.search);
-                const variantIdFromUrl = urlParams.get('variant');
-                
-                // Common Shopify variant selector names
-                const variantSelectors = ['input[name="id"]', 'select[name="id"]', '.variant-input input:checked'];
-                let variantIdFromForm = null;
-                for (const sel of variantSelectors) {
-                    const el = document.querySelector(sel);
-                    if (el && el.value) {
-                        variantIdFromForm = el.value;
-                        break;
-                    }
-                }
-
-                const targetId = variantIdFromUrl || variantIdFromForm;
-                if (targetId) {
-                    const found = product.variants.find(v => String(v.id) === String(targetId));
-                    if (found) selectedVariant = found;
-                }
-
                 const item = {
                     productId: product.id,
-                    variantId: selectedVariant.id,
+                    variantId: product.variants[0].id, 
                     title: product.title,
-                    variantTitle: selectedVariant.title,
-                    price: selectedVariant.price,
-                    featured_image: selectedVariant.featured_image || product.featured_image,
+                    variantTitle: product.variants[0].title,
+                    price: product.variants[0].price,
+                    featured_image: product.featured_image,
                     quantity: qty,
-                    handle: handle,
-                    sku: selectedVariant.sku || "",
-                    vendor: product.vendor || ""
+                    handle: handle
                 };
 
                 window.RqCart.addItem(item);
@@ -147,23 +118,17 @@
             return;
         }
 
-        // Find the first available quote modal
-        const modal = document.querySelector('[id^="rqModal-"]');
+        const blockId = 'global';
+        const modal = document.getElementById(`rqModal-${blockId}`);
         if (!modal) {
             alert('Quote modal not found.');
             return;
         }
 
-        const blockId = modal.id.replace('rqModal-', '');
         window.RqCart.closeCart();
-
-        // Force bulk mode
+        window.RqUi.showBulkSummary(modal, cart);
         modal.dataset.isBulk = 'true';
-        window.RqUi.showBulkSummary(blockId, cart);
-
         await window.rqOpenModal(blockId);
-
-        // Ensure it stays bulk
         modal.dataset.isBulk = 'true';
     };
 
@@ -188,7 +153,6 @@
             const cart = window.RqCart.getCart();
             let itemsHtml = '<div class="rq-review-items-card">';
             let total = 0;
-            const hidePrice = window.rqGlobalSettings && (window.rqGlobalSettings.hidePriceGlobal || window.rqGlobalSettings.loginToSeePrice);
             cart.forEach(item => {
                 const itemTotal = item.price * item.quantity;
                 total += itemTotal;
@@ -200,19 +164,17 @@
                             <div style="font-size: 13px; color: #6d7175;">${item.variantTitle !== 'Default Title' ? item.variantTitle : ''}</div>
                         </div>
                         <div style="text-align: right; flex-shrink: 0;">
-                            <div style="font-size: 14px; font-weight: 700; color: #111827;">× ${item.quantity}</div>
-                            ${hidePrice ? '' : `<div style="font-size: 14px; color: #6366f1; font-weight: 700;">${window.RqCart.formatPrice(item.price)}</div>`}
+                            <div style="font-size: 14px; font-weight: 700; color: #1a1a1b;">× ${item.quantity}</div>
+                            <div style="font-size: 14px; color: #6366f1; font-weight: 700;">${window.RqCart.formatPrice(item.price)}</div>
                         </div>
                     </div>
                 `;
             });
             itemsHtml += `
-                ${hidePrice ? '' : `
                 <div style="margin-top: 16px; padding-top: 16px; border-top: 2px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-weight: 800; font-size: 16px; color: #1a1a1b;">Total Estimate</span>
                     <span style="font-weight: 800; font-size: 20px; color: #6366f1;">${window.RqCart.formatPrice(total)}</span>
                 </div>
-                `}
             `;
             itemsHtml += '</div>';
             setHtml('rq-review-items-', itemsHtml);
@@ -236,15 +198,13 @@
                             </div>
                             <div style="text-align: right; flex-shrink: 0;">
                                 <div style="font-size: 15px; font-weight: 700; color: #1a1a1b;">× ${qty}</div>
-                                ${hidePrice ? '' : `<div style="font-size: 15px; color: #6366f1; font-weight: 700;">${window.RqCart.formatPrice(price * 100)}</div>`}
+                                <div style="font-size: 15px; color: #6366f1; font-weight: 700;">${window.RqCart.formatPrice(price * 100)}</div>
                             </div>
                         </div>
-                        ${hidePrice ? '' : `
                         <div style="margin-top: 16px; padding-top: 16px; border-top: 2px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;">
                             <span style="font-weight: 800; font-size: 16px; color: #1a1a1b;">Total Estimate</span>
                             <span style="font-weight: 800; font-size: 20px; color: #6366f1;">${window.RqCart.formatPrice(total * 100)}</span>
                         </div>
-                        `}
                     </div>
                 `;
                 setHtml('rq-review-items-', itemsHtml);
@@ -329,7 +289,7 @@
 
     window.rqPrevStep = function (blockId, currentStep) {
         const prev = document.getElementById('rq-step-' + (currentStep - 1) + '-' + blockId);
-        if (!prev) return;
+        if(!prev) return;
         document.getElementById('rq-step-' + currentStep + '-' + blockId).classList.remove('active');
         prev.classList.add('active');
         if (window.RqUi && window.RqUi.updateProgressIndicator) {
@@ -338,21 +298,12 @@
     };
 
     window.rqValidateAndSubmit = async function (blockId) {
-        if (window.RqValidation && window.RqValidation.validateAll) {
-            const isValid = window.RqValidation.validateAll(blockId);
-            if (!isValid) {
-                const firstError = document.querySelector('.rq-error:not(:empty)');
-                if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            }
-        }
-
         const modal = document.getElementById(`rqModal-${blockId}`);
         const isBulk = modal?.dataset.isBulk === 'true';
         const cartItems = isBulk ? window.RqCart.getCart() : null;
 
         const btn = document.querySelector(`#rq-step-input-${blockId} button.rq-submit-final`);
-        const originalText = btn ? btn.innerHTML : 'Submit Quote Request';
+        const originalText = btn ? btn.innerHTML : 'Submit Quote';
         if (btn) {
             btn.innerText = 'Requesting...';
             btn.disabled = true;
@@ -363,7 +314,7 @@
             if (result.success) {
                 window.RqUi.showSuccess(blockId, result.data);
                 if (isBulk) {
-                    window.RqCart.saveCart([]);
+                    window.RqCart.saveCart([]); 
                     modal.dataset.isBulk = 'false';
                 }
             } else {
@@ -380,8 +331,8 @@
         }
     };
 
-    window.rqUpdatePageQty = function (change, blockId) {
-        const input = document.getElementById('rqPageQtyInput-' + blockId) || document.getElementById('rqPageQtyInput');
+    window.rqUpdatePageQty = function (change) {
+        const input = document.getElementById('rqPageQtyInput');
         if (!input) return;
         let newVal = (parseInt(input.value) || 1) + change;
         if (newVal < 1) newVal = 1;
@@ -420,7 +371,7 @@
 
     function scanAndInject() {
         if (!SETTINGS.appEnabled || SETTINGS.shouldShow === false) return;
-
+        
         const productBlockExists = !!document.querySelector('.rq-product-page-form');
         const isProductPage = window.location.pathname.includes('/products/') || productBlockExists;
 

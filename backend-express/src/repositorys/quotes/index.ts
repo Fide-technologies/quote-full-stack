@@ -104,12 +104,13 @@ export class QuoteRepository extends MongooseBaseRepository<IQuote> implements I
 
     async redactByCustomerEmail(email: string): Promise<UpdateWriteOpResult> {
         return await Quote.updateMany(
-            { customerEmail: email },
+            { $or: [{ email: email }, { customerEmail: email }] },
             {
                 $set: {
                     firstName: "[REDACTED]",
                     lastName: "[REDACTED]",
                     customerName: "[REDACTED]",
+                    email: "[REDACTED]",
                     customerEmail: "[REDACTED]",
                     phone: "[REDACTED]",
                     address1: "[REDACTED]",
@@ -118,6 +119,7 @@ export class QuoteRepository extends MongooseBaseRepository<IQuote> implements I
                     state: "[REDACTED]",
                     pincode: "[REDACTED]",
                     country: "[REDACTED]",
+                    message: "[REDACTED]",
                     customerMessage: "[REDACTED]",
                 },
             },
@@ -128,7 +130,7 @@ export class QuoteRepository extends MongooseBaseRepository<IQuote> implements I
         return await this.model
             .find({
                 shop,
-                customerEmail: email,
+                $or: [{ email }, { customerEmail: email }],
             })
             .select("_id status createdAt productTitle customerEmail customerName")
             .exec();

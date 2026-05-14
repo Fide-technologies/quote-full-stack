@@ -13,6 +13,7 @@ export const QuoteMapper = {
             customerEmail: quote.customerEmail,
             firstName: quote.firstName,
             lastName: quote.lastName,
+            email: quote.email || quote.customerEmail,
             phone: quote.phone,
             productTitle: quote.productTitle,
             variantTitle: quote.variantTitle,

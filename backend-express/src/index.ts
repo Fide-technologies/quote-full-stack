@@ -20,7 +20,7 @@ async function bootstrap() {
 
         logger.info("port is: ", env.PORT);
 
-        server.listen(env.PORT, "0.0.0.0", () => {
+        server.listen(env.PORT, "0.0.0.0", async () => {
             const actualPort = env.PORT;
 
             console.log(`🚀 SERVER IS LIVE ON PORT: ${actualPort}`);
