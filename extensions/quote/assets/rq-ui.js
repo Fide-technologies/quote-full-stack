@@ -20,65 +20,219 @@
             this.resetForm(blockId);
         },
 
-        showProductSummary: function (modal, product) {
-            let hero = modal.querySelector('.rq-product-hero');
-            if (!hero) {
-                const form = modal.querySelector('form');
-                if (form) {
-                    hero = document.createElement('div');
-                    hero.className = 'rq-product-hero';
-                    form.insertBefore(hero, form.firstChild);
-                }
-            }
-            if (!hero) return;
-
-            let summary = hero.querySelector('.rq-product-summary');
-            if (summary) {
-                summary.style.display = 'flex';
-                const img = summary.querySelector('img');
-                if (img) {
-                    if (product.featured_image) {
-                        img.src = product.featured_image;
-                        img.style.display = 'block';
-                    } else {
-                        img.style.display = 'none';
-                    }
-                }
-                const titleEl = summary.querySelector('.rq-product-title');
-                if (titleEl) titleEl.innerText = product.title;
-
-                const variantEl = summary.querySelector('.rq-product-variant');
-                const vTitle = (product.variants && product.variants[0]) ? product.variants[0].title : '';
-                if (variantEl) {
-                    if (vTitle && vTitle !== 'Default Title') {
-                        variantEl.innerText = vTitle;
-                        variantEl.style.display = 'block';
-                    } else {
-                        variantEl.style.display = 'none';
-                    }
-                }
-                const priceEl = summary.querySelector('.rq-product-price');
-                if (priceEl && window.RqCart) {
-                    priceEl.innerText = window.RqCart.formatPrice((product.variants && product.variants[0]) ? product.variants[0].price : 0);
-                }
+        showProductSummary: function (modalOrBlockId, product) {
+            let blockId = modalOrBlockId;
+            let modal = null;
+            if (typeof modalOrBlockId !== 'string') {
+                modal = modalOrBlockId;
+                blockId = modal.id.replace('rqModal-', '');
             } else {
-                summary = document.createElement('div');
-                summary.className = 'rq-product-summary';
-                const imgSrc = product.featured_image || '';
-                const imgDisp = imgSrc ? 'block' : 'none';
-                const vTitle = (product.variants && product.variants[0]) ? product.variants[0].title : '';
-                const vDisp = (vTitle && vTitle !== 'Default Title') ? 'block' : 'none';
-                const priceText = window.RqCart ? window.RqCart.formatPrice((product.variants && product.variants[0]) ? product.variants[0].price : 0) : '';
+                modal = document.getElementById(`rqModal-${blockId}`);
+            }
 
-                summary.innerHTML = `
-                      <img src="${imgSrc}" alt="${product.title}" style="display: ${imgDisp}; width: 64px; height: 64px; min-width: 64px; border-radius: 8px; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-shrink: 0;">
-                      <div class="rq-product-info" style="margin-left: 16px;">
-                          <span class="rq-product-title" style="font-weight: 700; font-size: 16px;">${product.title}</span>
-                          <span class="rq-product-variant" style="display: ${vDisp}; font-size: 13px; color: #6d7175;">${vTitle}</span>
-                          <span class="rq-product-price" style="display: block; font-size: 15px; color: var(--rq-accent); font-weight: 700; margin-top: 4px;">${priceText}</span>
-                      </div>
-                  `;
-                hero.prepend(summary);
+            const listContainer = document.getElementById(`rq-cart-items-list-${blockId}`);
+            if (!listContainer) return;
+
+            const vTitle = (product.variants && product.variants[0]) ? product.variants[0].title : '';
+            const priceText = window.RqCart ? window.RqCart.formatPrice((product.variants && product.variants[0]) ? product.variants[0].price : 0) : '';
+
+            // Get current quantity from hidden field if it exists, default to 1
+            const form = modal?.querySelector('form');
+            const qtyInputHidden = form?.querySelector('input[name="quantity"]');
+            const currentQty = parseInt(qtyInputHidden?.value) || 1;
+
+            const borderStyle = '1px solid #e1e3e5'; // Fallback border color
+            listContainer.innerHTML = `
+                <div class="rq-product-summary" style="margin-bottom: 16px; padding: 16px; border: 1px solid #f3f4f6; border-radius: 12px; position: relative; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;">
+                    <button class="rq-cart-item-remove" onclick="window.RqUi.resetToEmpty('${blockId}')" title="Remove item" 
+                            style="position: absolute; top: 12px; right: 12px; background: #fef2f2; border: none; cursor: pointer; color: #ef4444; padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                    <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px;">
+                        <div style="position: relative; flex-shrink: 0;">
+                            <img src="${product.featured_image || ''}" alt="${product.title}" width="70" height="70" style="object-fit: cover; border-radius: 10px; border: 1px solid #f3f4f6; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        </div>
+                        <div class="rq-product-info" style="flex: 1; min-width: 0; padding-top: 2px;">
+                            <div class="rq-product-title" style="font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding-right: 24px; line-height: 1.4;">${product.title}</div>
+                            <div class="rq-product-variant" style="display: inline-block; padding: 2px 8px; background: #f3f4f6; border-radius: 4px; font-size: 11px; font-weight: 600; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px;">${vTitle !== 'Default Title' ? vTitle : 'Standard'}</div>
+                            ${(window.rqGlobalSettings && (window.rqGlobalSettings.hidePriceGlobal || window.rqGlobalSettings.loginToSeePrice)) ? '' : `
+                            <div class="rq-product-price" style="font-size: 16px; font-weight: 800; margin-top: 8px; color: #111827; display: flex; align-items: baseline; gap: 4px;">
+                                ${priceText}
+                                <span style="font-size: 11px; color: #9ca3af; font-weight: 400;">/ item</span>
+                            </div>
+                            `}
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px dashed #e5e7eb;">
+                        <span style="font-size: 13px; font-weight: 600; color: #374151;">Request Quantity</span>
+                        <div class="rq-cart-item-qty" style="display: flex; align-items: center; gap: 2px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 3px;">
+                            <button type="button" class="rq-cart-item-qty-btn" onclick="window.RqUi.updateSingleQty('${blockId}', -1)" 
+                                    style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: white; border: 1px solid #e5e7eb; border-radius: 6px; cursor: pointer; color: #374151; font-weight: 700; transition: all 0.2s;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </button>
+                            <input type="number" id="rq-single-qty-input-${blockId}" value="${currentQty}" min="1" 
+                                   style="width: 44px; height: 28px; text-align: center; border: none; background: transparent; font-size: 14px; font-weight: 700; color: #111827; -moz-appearance: textfield;"
+                                   onchange="window.RqUi.updateSingleQty('${blockId}', 0, this.value)">
+                            <button type="button" class="rq-cart-item-qty-btn" onclick="window.RqUi.updateSingleQty('${blockId}', 1)" 
+                                    style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: white; border: 1px solid #e5e7eb; border-radius: 6px; cursor: pointer; color: #374151; font-weight: 700; transition: all 0.2s;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            `;
+        },
+
+        updateSingleQty: function (blockId, delta, explicitVal = null) {
+            const qtyInput = document.getElementById(`rq-single-qty-input-${blockId}`);
+            const form = document.getElementById(`rq-form-${blockId}`);
+            const qtyInputHidden = form?.querySelector('input[name="quantity"]');
+
+            if (qtyInput && qtyInputHidden) {
+                let newVal = explicitVal !== null ? parseInt(explicitVal) : (parseInt(qtyInput.value) || 1) + delta;
+                if (isNaN(newVal) || newVal < 1) newVal = 1;
+                qtyInput.value = newVal;
+                qtyInputHidden.value = newVal;
+            }
+        },
+
+        resetToEmpty: function (blockId) {
+            const listContainer = document.getElementById(`rq-cart-items-list-${blockId}`);
+            if (listContainer) listContainer.innerHTML = '';
+
+            const modal = document.getElementById(`rqModal-${blockId}`);
+            if (modal) {
+                modal.dataset.isBulk = 'true'; // Switch to bulk mode so it shows empty cart next time
+            }
+
+            window.rqCloseModal(blockId);
+        },
+
+        rqOpenProductSelector: function (blockId) {
+            // Create or get the picker modal element
+            let picker = document.getElementById(`rq-picker-${blockId}`);
+            if (!picker) {
+                picker = document.createElement('div');
+                picker.id = `rq-picker-${blockId}`;
+                picker.className = 'rq-picker-modal';
+                picker.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 10000; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; pointer-events: none;';
+
+                picker.innerHTML = `
+                    <div style="background: white; width: 90%; max-width: 500px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.15); overflow: hidden; transform: translateY(20px); transition: transform 0.3s ease;">
+                        <div style="padding: 24px; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #111827;">Add Products</h3>
+                            <button onclick="window.RqUi.cancelProductSelector('${blockId}')" style="background: #f3f4f6; border: none; padding: 6px; border-radius: 50%; cursor: pointer; color: #6b7280;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+                        </div>
+                        <div style="padding: 24px;">
+                            <div style="position: relative; margin-bottom: 16px;">
+                                <svg style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <input type="text" id="rq-prod-search-${blockId}" placeholder="Search products..." 
+                                       style="width: 100%; padding: 14px 14px 14px 44px; border: 2px solid #f3f4f6; border-radius: 12px; font-size: 15px; transition: all 0.2s; outline: none;"
+                                       oninput="window.RqUi.rqHandleProductSearch(this.value, '${blockId}')"
+                                       onfocus="this.style.borderColor='#111827'; this.style.boxShadow='0 0 0 4px rgba(0, 0, 0, 0.1)';"
+                                       onblur="this.style.borderColor='#f3f4f6'; this.style.boxShadow='none';">
+                            </div>
+                            <div id="rq-search-results-${blockId}" style="max-height: 350px; overflow-y: auto; margin: 0 -12px; padding: 0 12px;">
+                                <div style="padding: 40px 0; text-align: center; color: #9ca3af;">
+                                    <svg style="margin-bottom: 12px; opacity: 0.5;" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    <p style="margin: 0; font-size: 14px;">Type at least 2 characters to search</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(picker);
+            }
+
+            // Show with animation
+            setTimeout(() => {
+                picker.style.opacity = '1';
+                picker.style.pointerEvents = 'auto';
+                picker.querySelector('div').style.transform = 'translateY(0)';
+                picker.querySelector('input').focus();
+            }, 10);
+        },
+
+        cancelProductSelector: function (blockId) {
+            const picker = document.getElementById(`rq-picker-${blockId}`);
+            if (picker) {
+                picker.style.opacity = '0';
+                picker.style.pointerEvents = 'none';
+                picker.querySelector('div').style.transform = 'translateY(20px)';
+            }
+        },
+
+        rqHandleProductSearch: async function (query, blockId) {
+            const resultsContainer = document.getElementById(`rq-search-results-${blockId}`);
+            if (!resultsContainer) return;
+
+            if (!query || query.length < 2) {
+                resultsContainer.style.display = 'none';
+                return;
+            }
+
+            try {
+                const products = await window.RqApi.searchProducts(query);
+                if (products && products.length > 0) {
+                    resultsContainer.innerHTML = products.map(p => `
+                        <div class="rq-search-result-item" onclick="window.RqUi.rqAddFromSelector('${p.handle}', '${blockId}')" 
+                             style="display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer; border-radius: 12px; margin-bottom: 8px; transition: all 0.2s; border: 1px solid transparent;"
+                             onmouseover="this.style.background='#f9fafb'; this.style.borderColor='#e5e7eb'; this.style.transform='translateX(4px)';"
+                             onmouseout="this.style.background='transparent'; this.style.borderColor='transparent'; this.style.transform='none';">
+                            <img src="${p.image || ''}" width="50" height="50" style="object-fit: cover; border-radius: 8px; border: 1px solid #f3f4f6;">
+                            <div style="flex: 1; overflow: hidden;">
+                                <div style="font-size: 14px; font-weight: 700; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;">${p.title}</div>
+                                <div style="font-size: 13px; font-weight: 600; color: #111827;">${window.RqCart.formatPrice(p.price)}</div>
+                            </div>
+                            <div style="background: #f3f4f6; color: #111827; padding: 6px; border-radius: 8px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    resultsContainer.innerHTML = '<div style="padding: 40px 0; text-align: center; color: #9ca3af; font-size: 14px;">No products found for "' + query + '"</div>';
+                }
+                resultsContainer.style.display = 'block';
+            } catch (err) {
+                console.error("Search failed:", err);
+            }
+        },
+
+        rqAddFromSelector: async function (handle, blockId) {
+            try {
+                const product = await window.RqApi.fetchProduct(handle);
+                if (product) {
+                    const item = {
+                        productId: product.id,
+                        variantId: product.variants[0].id,
+                        title: product.title,
+                        variantTitle: product.variants[0].title,
+                        price: product.variants[0].price,
+                        featured_image: product.featured_image,
+                        quantity: 1,
+                        handle: handle,
+                        sku: product.variants[0].sku || "",
+                        vendor: product.vendor || ""
+                    };
+
+                    // If it was a single product request, we need to convert to bulk mode
+                    const modal = document.getElementById(`rqModal-${blockId}`);
+                    if (modal && modal.dataset.isBulk !== 'true') {
+                        // Add existing single product to cart first if it's not already there?
+                        // Actually, better to just merge everything into RqCart.
+                        modal.dataset.isBulk = 'true';
+                    }
+
+                    window.RqCart.addItem(item);
+                    this.cancelProductSelector(blockId); // Close picker
+                    window.RqCart.refreshModalUI(blockId);
+                }
+            } catch (err) {
+                console.error("Failed to add product from selector:", err);
             }
         },
 
@@ -97,39 +251,112 @@
                 setVal('variantTitle', product.variants[0]?.title || '');
                 setVal('price', (product.variants[0]?.price || 0) / 100.0);
                 setVal('productImage', product.featured_image || '');
+                setVal('quantity', 1);
             }
         },
 
-        showBulkSummary: function (modal, cart) {
-            let hero = modal.querySelector('.rq-product-hero');
-            if (!hero) {
-                const form = modal.querySelector('form');
-                if (form) {
-                    hero = document.createElement('div');
-                    hero.className = 'rq-product-hero';
-                    form.insertBefore(hero, form.firstChild);
-                }
+        showBulkSummary: function (modalOrBlockId, cart) {
+            let blockId = modalOrBlockId;
+            let modal = null;
+            if (typeof modalOrBlockId !== 'string') {
+                modal = modalOrBlockId;
+                blockId = modal.id.replace('rqModal-', '');
+            } else {
+                modal = document.getElementById(`rqModal-${blockId}`);
             }
-            if (!hero) return;
 
-            const count = cart.reduce((acc, i) => acc + i.quantity, 0);
-            const totalText = window.RqCart ? window.RqCart.formatPrice(cart.reduce((acc, i) => acc + (i.price * i.quantity), 0)) : '';
+            const listContainer = document.getElementById(`rq-cart-items-list-${blockId}`);
+            if (!listContainer) return;
 
-            hero.innerHTML = `
-                <div class="rq-product-summary" style="display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 650px; margin: 0 auto 24px;">
-                    <div style="display: flex; align-items: center; flex: 1;">
-                       <div style="background: var(--rq-accent); color: white; width: 48px; height: 48px; min-width: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 16px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);">
-                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6zM3 6h18M16 10a4 4 0 01-8 0"/></svg>
-                       </div>
-                        <div class="rq-product-info">
-                            <span class="rq-product-title" style="font-size: 17px; font-weight: 800; color: #1a1a1b;">Bulk Quote Request</span>
-                            <span class="rq-product-variant" style="font-size: 14px; margin-top: 1px;">${cart.length} products, ${count} total items</span>
-                            <span class="rq-product-price" style="display: block; font-size: 15px; color: var(--rq-accent); font-weight: 700; margin-top: 4px;">Total Estimate: ${totalText}</span>
+            const count = cart.reduce((acc, i) => acc + (parseInt(i.quantity) || 0), 0);
+            const hidePrice = window.rqGlobalSettings && (window.rqGlobalSettings.hidePriceGlobal || window.rqGlobalSettings.loginToSeePrice);
+            const totalText = window.RqCart ? window.RqCart.formatPrice(cart.reduce((acc, i) => acc + (i.price * (parseInt(i.quantity) || 1)), 0)) : '';
+
+            const borderStyle = '1px solid #f3f4f6';
+            const settings = window.rqGlobalSettings || {};
+            let itemsHtml = '';
+            cart.forEach(item => {
+                const itemPriceTotal = window.RqCart ? window.RqCart.formatPrice(item.price * (parseInt(item.quantity) || 1)) : '';
+
+                let metadataHtml = '';
+                const showSku = settings.showSku === true || settings.showSku === 'true';
+                const showVendor = settings.showVendor === true || settings.showVendor === 'true';
+                const showNote = settings.showProductNote === true || settings.showProductNote === 'true';
+
+                if (showSku && item.sku) {
+                    metadataHtml += `<div class="rq-product-metadata-item"><span>SKU:</span> ${item.sku}</div>`;
+                }
+                if (showVendor && item.vendor) {
+                    metadataHtml += `<div class="rq-product-metadata-item"><span>Vendor:</span> ${item.vendor}</div>`;
+                }
+
+                const qtyControlsHtml = (settings.showQuantity !== false && settings.showQuantity !== 'false') ? `
+                    <div class="rq-qty-controls">
+                        <button onclick="window.RqCart.updateQuantity('${item.variantId}', -1, '${blockId}')" class="rq-qty-btn">−</button>
+                        <input type="number" value="${item.quantity}" min="1" 
+                               onchange="window.RqCart.updateQuantity('${item.variantId}', 0, '${blockId}', this.value)"
+                               class="rq-qty-input">
+                        <button onclick="window.RqCart.updateQuantity('${item.variantId}', 1, '${blockId}')" class="rq-qty-btn">+</button>
+                    </div>
+                ` : `<div class="rq-qty-static">Qty: ${item.quantity}</div>`;
+
+                const noteFieldHtml = showNote ? `
+                    <div class="rq-product-note-wrapper">
+                        <textarea 
+                            placeholder="Add a note for this item..." 
+                            onchange="window.RqCart.updateItemNote('${item.variantId}', this.value)"
+                            class="rq-product-note-input"
+                        >${item.note || ''}</textarea>
+                    </div>
+                ` : '';
+
+                itemsHtml += `
+                    <div class="rq-product-summary">
+                        <div class="rq-product-row">
+                            <div class="rq-product-img-col">
+                                <img src="${item.featured_image || ''}" alt="${item.title}" class="rq-product-img">
+                            </div>
+                            
+                            <div class="rq-product-info-col">
+                                <div class="rq-product-title-line">
+                                    <span class="rq-product-title">${item.title}</span>
+                                    <button class="rq-cart-item-remove-small" onclick="window.RqCart.removeItem('${item.variantId}', '${blockId}')" title="Remove">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                                    </button>
+                                </div>
+                                <div class="rq-product-variant-line">${item.variantTitle && item.variantTitle !== 'Default Title' ? item.variantTitle : 'Standard'}</div>
+                                ${metadataHtml}
+                                
+                                <div class="rq-product-actions-line">
+                                    ${qtyControlsHtml}
+                                    ${hidePrice ? '' : `<div class="rq-product-price-small">${itemPriceTotal}</div>`}
+                                </div>
+                            </div>
                         </div>
+                        ${noteFieldHtml}
                     </div>
-                    <div style="margin-left: 20px;">
-                        <button type="button" onclick="window.RqCart.openCart()" style="background: #fff; border: 2px solid #e1e3e5; font-weight: 700; border-radius: 8px; padding: 8px 16px; font-size: 13px; cursor: pointer; color: #1a1a1b; transition: all 0.2s ease;">View Items</button>
+                `;
+            });
+
+            listContainer.innerHTML = `
+                <div class="rq-bulk-summary-wrapper">
+                    <div style="padding-right: 4px;">
+                        ${itemsHtml}
                     </div>
+                    
+                    ${hidePrice ? '' : `
+                    <div style="margin-top: 16px; padding: 16px; background: #f9fafb; border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span style="font-size: 14px; color: #6b7280; font-weight: 600;">Estimate Subtotal</span>
+                            <span style="font-size: 24px; font-weight: 800; color: #111827; letter-spacing: -0.5px;">${totalText}</span>
+                        </div>
+                        <div style="height: 1px; background: #e5e7eb; margin: 8px 0;"></div>
+                        <p style="font-size: 12px; color: #6b7280; margin: 0; display: flex; align-items: center; gap: 6px; font-weight: 500;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            Final quote includes applicable taxes and shipping.
+                        </p>
+                    </div>
+                    `}
                 </div>
             `;
         },
@@ -138,121 +365,106 @@
             const container = document.getElementById(`rq-dynamic-form-${blockId}`);
             if (!container || !formConfig || !formConfig.steps) return;
 
-            const reviewStep = formConfig.steps.find(s => s.id === 'step-review');
-            const otherSteps = formConfig.steps.filter(s => s.id !== 'step-review');
-            if (reviewStep) {
-                formConfig.steps = [...otherSteps, reviewStep];
-            } else {
-                formConfig.steps.push({ id: 'step-review', title: 'Review', fields: [] });
-            }
+            const formTitle = document.getElementById(`rq-form-title-${blockId}`);
+            const formDesc = document.getElementById(`rq-form-desc-${blockId}`);
+            if (formTitle) formTitle.innerText = formConfig.title || 'Request Your Quote';
+            if (formDesc) formDesc.innerHTML = formConfig.description || "Fill in your details and we'll get back to you shortly";
 
-            const emailIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-            const phoneIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-            const backIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-            const nextIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-            const submitIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+            const successTitle = document.getElementById(`rq-success-title-${blockId}`);
+            const successDesc = document.getElementById(`rq-success-desc-${blockId}`);
+            if (successTitle) successTitle.innerText = formConfig.settings?.successTitle || 'Quote Requested Successfully!';
+            if (successDesc) successDesc.innerHTML = formConfig.settings?.successMessage || 'Thank you for your request. Our team will review your quote and get back to you shortly.';
+
+            const submitIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
             const fileIcon = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`;
 
-            let html = '';
+            let html = '<div class="rq-single-page-form-container">';
 
             formConfig.steps.forEach((step, index) => {
-                const stepNum = index + 1;
-                const isLastStep = stepNum === formConfig.steps.length;
-                const isActive = stepNum === 1 ? 'active' : '';
+                if (step.id === 'step-review') return;
 
-                html += `<div id="rq-step-${stepNum}-${blockId}" class="rq-step ${isActive}">`;
+                html += `<div class="rq-step active" style="margin-bottom: 32px;">`;
+                if (step.title) {
+                    html += `<h3 class="rq-step-title" style="font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; gap: 12px;">
+                        <span style="background: #111827; color: white; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px;">${index + 1}</span>
+                        ${step.title}
+                    </h3>`;
+                }
+
+                if (step.description) {
+                    html += `<p class="rq-step-description" style="font-size: 14px; color: #6b7280; margin: -4px 0 24px 0; line-height: 1.6; font-weight: 500;">${step.description}</p>`;
+                }
+
                 html += `<div class="rq-step-content">`;
+                step.fields.forEach(field => {
+                    const isFull = field.layoutWidth === 'full' || field.type === 'textarea' || field.type === 'file';
+                    const gridSpan = isFull ? 'grid-column: span 2;' : '';
 
-                if (step.id !== "step-review") {
-                    step.fields.forEach(field => {
-                        const layoutClass = field.layoutWidth === 'half' ? ' rq-col-half' : '';
-                        html += `<div class="rq-input-group${layoutClass}" data-field-id="${field.id}">`;
-                        html += `<label>${field.label} ${field.required ? '<span class="rq-required">*</span>' : ''}</label>`;
+                    html += `<div class="rq-input-group" style="${gridSpan} margin-bottom: 4px;">`;
+                    html += `<label style="display: block; font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 6px;">${field.label} ${field.required ? '<span class="rq-required" style="color: #ef4444;">*</span>' : ''}</label>`;
 
-                        const fieldName = field.id.replace('field-', '');
-                        const fieldId = `rq-${fieldName}-${blockId}`;
-                        const requiredAttr = field.required ? 'required' : '';
+                    const fieldDescription = field.helpText || field.description;
+                    if (fieldDescription) {
+                        html += `<p class="rq-field-description" style="font-size: 12px; color: #6b7280; margin: -4px 0 10px 0; font-weight: 500; line-height: 1.5;">${fieldDescription}</p>`;
+                    }
 
-                        let attrs = requiredAttr;
-                        if (field.minLength) attrs += ` minlength="${field.minLength}"`;
-                        if (field.maxLength) attrs += ` maxlength="${field.maxLength}"`;
-                        if (field.validationRegex) attrs += ` pattern="${field.validationRegex}"`;
-                        if (field.validationMessage) attrs += ` data-val-msg="${field.validationMessage}"`;
+                    const fieldName = field.id.replace('field-', '');
+                    const fieldId = `rq-${fieldName}-${blockId}`;
+                    const requiredAttr = field.required ? 'required' : '';
 
-                        if (field.type === 'email') {
-                            html += `<div class="rq-input-icon">${emailIcon}<input type="email" name="${fieldName}" id="${fieldId}" ${attrs}></div>`;
-                        } else if (field.type === 'phone') {
-                            const placeholderStr = field.maxLength ? `Max ${field.maxLength} digits` : '10 digits';
-                            html += `<div class="rq-input-icon">${phoneIcon}<input type="tel" name="${fieldName}" id="${fieldId}" placeholder="${placeholderStr}" oninput="this.value = this.value.replace(/[^0-9]/g, '');" ${attrs}></div>`;
-                        } else if (field.type === 'number') {
-                            html += `<input type="text" inputmode="numeric" name="${fieldName}" id="${fieldId}" oninput="this.value = this.value.replace(/[^0-9]/g, '');" ${attrs}>`;
-                        } else if (field.type === 'textarea') {
-                            html += `<textarea name="${fieldName}" id="${fieldId}" rows="5" placeholder="Tell us more about your requirements..." ${attrs}></textarea>`;
-                            if (field.maxLength) html += `<small class="rq-char-count">Max ${field.maxLength} characters</small>`;
-                        } else if (field.type === 'file') {
-                            const isMultiple = field.allowMultiple || field.isMultiple || field.id.includes('multiple') || (field.label && field.label.toLowerCase().includes('multiple'));
-                            const maxFiles = isMultiple ? 3 : 1;
-                            const acceptAttr = field.allowedFileTypes ? `accept="${field.allowedFileTypes}"` : 'accept="image/*"';
-                            const maxMbAttr = field.maxFileSizeMB ? `data-max-mb="${field.maxFileSizeMB}"` : 'data-max-mb="5"';
+                    let attrs = `${requiredAttr}`;
 
-                            html += `
-                                <div class="rq-image-upload-wrapper" id="rq-file-wrapper-${fieldId}">
-                                    <div class="rq-dropzone" onclick="document.getElementById('${fieldId}').click()" 
-                                         ondragover="event.preventDefault(); this.classList.add('dragover')" 
-                                         ondragleave="this.classList.remove('dragover')"
-                                         ondrop="window.RqUi.handleFileDrop(event, '${fieldId}', ${maxFiles})">
-                                        <div class="rq-dropzone-icon">${fileIcon}</div>
-                                        <div class="rq-dropzone-text">Click to upload or drag and drop</div>
-                                        <div class="rq-dropzone-subtext">${field.allowedFileTypes || 'Images only'} (Max ${maxFiles} file${maxFiles > 1 ? 's' : ''}, ${field.maxFileSizeMB || '5'}MB each)</div>
-                                        <input type="file" name="${fieldName}" id="${fieldId}" ${acceptAttr} ${maxMbAttr} ${requiredAttr} ${isMultiple ? 'multiple' : ''} style="display:none;" onchange="window.RqUi.handleFileSelect(event, '${fieldId}', ${maxFiles})">
+                    if (field.minLength) attrs += ` minlength="${field.minLength}"`;
+                    if (field.maxLength) attrs += ` maxlength="${field.maxLength}"`;
+
+                    if (field.type === 'textarea') {
+                        html += `<textarea name="${fieldName}" id="${fieldId}" rows="4" placeholder="${field.placeholder || field.label || 'Enter details...'}" class="rq-form-input" ${attrs}></textarea>`;
+                    } else if (field.type === 'file') {
+                        const isMultiple = field.allowMultiple || field.id.includes('multiple');
+                        const maxFiles = isMultiple ? 3 : 1;
+                        const acceptAttr = field.allowedFileTypes ? `accept="${field.allowedFileTypes}"` : 'accept="image/*"';
+                        html += `
+                            <div class="rq-image-upload-wrapper" id="rq-file-wrapper-${fieldId}" style="margin-top: 4px;">
+                                <div class="rq-dropzone" onclick="document.getElementById('${fieldId}').click()" 
+                                     style="border: 2px dashed #e5e7eb; border-radius: 16px; padding: 24px 16px; text-align: center; background: #f9fafb; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 12px; transition: all 0.2s;"
+                                     onmouseover="this.style.borderColor='#111827'; this.style.background='#f3f4f6';"
+                                     onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='#f9fafb';">
+                                    <div style="background: #fff; color: #111827; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">${fileIcon}</div>
+                                    <div>
+                                        <div style="font-weight: 800; font-size: 15px; color: #111827; margin-bottom: 4px;">Upload Files</div>
+                                        <div style="font-size: 12px; color: #6b7280; font-weight: 500;">PNG, JPG or PDF up to 5MB (Max ${maxFiles})</div>
                                     </div>
-                                    <div class="rq-file-previews" id="rq-previews-${fieldId}"></div>
+                                    <input type="file" name="${fieldName}" id="${fieldId}" ${acceptAttr} ${requiredAttr} ${isMultiple ? 'multiple' : ''} style="display:none;" onchange="window.RqUi.handleFileSelect(event, '${fieldId}', ${maxFiles})">
                                 </div>
-                            `;
-                        } else if (field.type === 'price') {
-                            html += `<div class="rq-input-currency"><span class="rq-currency-symbol">$</span><input type="number" name="${fieldName}" id="${fieldId}" step="0.01" min="0" placeholder="0.00" ${attrs}></div>`;
-                        } else {
-                            if (fieldName === 'pincode' || field.validationRegex === '^[0-9]+$') {
-                                html += `<input type="text" name="${fieldName}" id="${fieldId}" oninput="this.value = this.value.replace(/[^0-9]/g, '');" ${attrs}>`;
-                            } else {
-                                html += `<input type="text" name="${fieldName}" id="${fieldId}" ${attrs}>`;
-                            }
-                        }
-
-                        html += `<span class="rq-error" id="rq-error-${fieldName}-${blockId}"></span>`;
-                        html += `</div>`;
-                    });
-                } else {
-                    html += `
-                        <div class="rq-review-container">
-                            <h3 class="rq-review-main-title">Review Your Request</h3>
-                            <div class="rq-items-review-list" id="rq-review-items-${blockId}"></div>
-                            <div id="rq-review-custom-fields-${blockId}" class="rq-custom-fields-review"></div>
-                        </div>
-                    `;
-                }
-
-                html += `</div>`; 
-
-                html += `<div class="rq-btn-group" ${stepNum === 1 ? 'style="display: flex; justify-content: flex-end;"' : ''}>`;
-                if (stepNum > 1) {
-                    html += `<button type="button" onclick="rqPrevStep('${blockId}', ${stepNum})" class="rq-submit-btn rq-back-btn">${backIcon}Back</button>`;
-                }
-
-                if (isLastStep) {
-                    html += `<button type="button" onclick="rqValidateAndSubmit('${blockId}')" class="rq-submit-btn rq-submit-final">${submitIcon}${formConfig.settings?.submitButtonText || 'Submit Quote'}</button>`;
-                } else if (stepNum === formConfig.steps.length - 1) {
-                    html += `<button type="button" onclick="rqNextStep('${blockId}', ${stepNum})" class="rq-submit-btn">Review Info${nextIcon}</button>`;
-                } else {
-                    html += `<button type="button" onclick="rqNextStep('${blockId}', ${stepNum})" class="rq-submit-btn">Continue${nextIcon}</button>`;
-                }
+                                <div class="rq-file-previews" id="rq-previews-${fieldId}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; margin-top: 16px;"></div>
+                            </div>
+                        `;
+                    } else {
+                        html += `<input type="${field.type === 'email' ? 'email' : (field.type === 'phone' || field.type === 'tel' ? 'tel' : 'text')}" 
+                                       name="${fieldName}" id="${fieldId}" placeholder="${field.placeholder || field.label || ''}" 
+                                       class="rq-form-input" ${attrs}
+                                       style="width: 100%; padding: 14px 16px; border: 2px solid #f3f4f6; border-radius: 12px; font-size: 15px; transition: all 0.2s; outline: none;">`;
+                    }
+                    html += `<span class="rq-error" id="rq-error-${fieldName}-${blockId}" style="display: block; color: #ef4444; font-size: 12px; margin-top: 4px; min-height: 18px; font-weight: 500;"></span>`;
+                    html += `</div>`;
+                });
                 html += `</div>`;
-
                 html += `</div>`;
             });
 
+            html += `
+                <div style="margin-top: 32px; display: flex; justify-content: center;">
+                    <button type="button" onclick="rqValidateAndSubmit('${blockId}')" class="rq-submit-btn rq-submit-final" 
+                            style="width: 100%; height: 54px; background: #111827; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);"
+                            onmouseover="this.style.background='#000000';"
+                            onmouseout="this.style.background='#111827';">
+                        ${formConfig.settings?.submitButtonText || 'Submit Quote Request'}
+                    </button>
+                </div>
+            `;
+
+            html += '</div>';
             container.innerHTML = html;
-            this.buildProgressSteps(blockId, formConfig.steps);
         },
 
         buildProgressSteps: function (blockId, steps) {
@@ -287,23 +499,14 @@
             const form = document.getElementById('rq-form-' + blockId);
             if (form) form.reset();
 
-            const errorSpans = document.querySelectorAll(`#rq-form-${blockId} .rq-error`);
+            const errorSpans = document.querySelectorAll(`#rqModal-${blockId} .rq-error`);
             errorSpans.forEach(el => el.innerText = '');
 
-            const steps = document.querySelectorAll(`#rq-step-input-${blockId} .rq-step`);
-            steps.forEach(s => s.classList.remove('active'));
-            const firstStep = document.getElementById(`rq-step-1-${blockId}`);
-            if (firstStep) firstStep.classList.add('active');
-
-            this.updateProgressIndicator(blockId, 1);
-
-            const progressWrapper = document.querySelector(`#rqModal-${blockId} .rq-progress-wrapper`);
-            if (progressWrapper) progressWrapper.style.display = 'block';
+            const formContainer = document.getElementById(`rq-form-container-${blockId}`);
+            if (formContainer) formContainer.style.display = 'flex';
 
             const successSection = document.getElementById('rq-step-success-' + blockId);
             if (successSection) successSection.style.display = 'none';
-            const inputSection = document.getElementById('rq-step-input-' + blockId);
-            if (inputSection) inputSection.style.display = 'block';
 
             if (form) {
                 const fileInputs = form.querySelectorAll('input[type="file"]');
@@ -314,8 +517,8 @@
                 });
             }
 
-            const nextBtns = document.querySelectorAll(`#rq-step-input-${blockId} .rq-submit-btn`);
-            nextBtns.forEach(b => {
+            const submitBtns = document.querySelectorAll(`#rqModal-${blockId} .rq-submit-btn`);
+            submitBtns.forEach(b => {
                 b.disabled = false;
             });
         },
@@ -371,16 +574,9 @@
                 }
             }
 
-            setSuccessText('quantity', formData.quantity);
-            setSuccessText('fname', formData.firstName);
-            setSuccessText('lname', formData.lastName);
-            setSuccessText('email', formData.email);
-            setSuccessText('phone', formData.phone);
-            setSuccessText('message', formData.message);
-
-            document.getElementById(`rq-step-input-${blockId}`).style.display = 'none';
+            document.getElementById(`rq-form-container-${blockId}`).style.display = 'none';
             const successEl = document.getElementById(`rq-step-success-${blockId}`);
-            if (successEl) successEl.style.display = 'block';
+            if (successEl) successEl.style.display = 'flex';
 
             const progressWrapper = document.querySelector(`#rqModal-${blockId} .rq-progress-wrapper`);
             if (progressWrapper) progressWrapper.style.display = 'none';
@@ -440,30 +636,33 @@
             previewContainer.innerHTML = '';
 
             files.forEach((file, index) => {
-                const reader = new FileReader();
                 const previewItem = document.createElement('div');
                 previewItem.className = 'rq-preview-item';
+                previewItem.style.cssText = 'position: relative; width: 100%; aspect-ratio: 1; border-radius: 12px; overflow: hidden; border: 2px solid #f3f4f6; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #fff;';
 
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'rq-preview-remove';
                 removeBtn.type = 'button';
-                removeBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+                removeBtn.style.cssText = 'position: absolute; top: 6px; right: 6px; z-index: 10; background: rgba(255,255,255,0.9); backdrop-filter: blur(4px); border: none; cursor: pointer; color: #ef4444; padding: 5px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s;';
+                removeBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+                removeBtn.onmouseover = () => { removeBtn.style.background = '#ef4444'; removeBtn.style.color = '#fff'; };
+                removeBtn.onmouseout = () => { removeBtn.style.background = 'rgba(255,255,255,0.9)'; removeBtn.style.color = '#ef4444'; };
                 removeBtn.onclick = (e) => {
                     e.stopPropagation();
                     this.removeFile(fieldId, index);
                 };
 
                 const img = document.createElement('img');
-                reader.onload = (e) => { img.src = e.target.result; };
+                img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    img.src = e.target.result;
+                };
                 reader.readAsDataURL(file);
 
-                const filename = document.createElement('div');
-                filename.className = 'rq-preview-filename';
-                filename.innerText = file.name;
-
-                previewItem.appendChild(img);
                 previewItem.appendChild(removeBtn);
-                previewItem.appendChild(filename);
+                previewItem.appendChild(img);
                 previewContainer.appendChild(previewItem);
             });
         },

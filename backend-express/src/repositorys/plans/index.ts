@@ -1,3 +1,4 @@
+import type { PlanType } from "@/constants";
 import type { IPlanRepository } from "@/interfaces";
 import { Plan } from "@/models/plan.model";
 import type { IPlan, PlanDocument } from "@/types";
@@ -7,7 +8,7 @@ import type { QueryFilter } from "mongoose";
 @injectable()
 export class PlanRepository implements IPlanRepository {
     async findByName(name: string): Promise<PlanDocument | null> {
-        return await Plan.findOne({ name });
+        return (await Plan.findOne({ name: name as PlanType })) as PlanDocument | null;
     }
 
     async findById(id: string): Promise<PlanDocument | null> {

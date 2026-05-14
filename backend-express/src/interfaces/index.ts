@@ -3,6 +3,7 @@ export type { IMerchantRepository } from "./repositories/IMerchantRepository";
 export type { IQuoteRepository } from "./repositories/IQuoteRepository";
 export type { IPlanRepository } from "./repositories/IPlanRepository";
 export type { IFormRepository } from "./repositories/IFormRepository";
+export type { IEmailConfigRepository } from "./repositories/IEmailConfigRepository";
 
 export type { IMerchantService } from "./services/IMerchantService";
 export type { IPlanService } from "./services/IPlanService";
@@ -15,5 +16,8 @@ export type { IUsageService } from "./services/IUsageService";
 export type { IDashboardService, IDashboardStats } from "./services/IDashboardService";
 export type { IFormService } from "./services/IFormService";
 export type { IUploadService } from "./services/IUploadService";
+export type { IEmailConfigService } from "./services/IEmailConfigService";
+export type { IEmailConfigData } from "./services/IEmailConfigData";
+export type { ISMTPProviderPreset } from "./services/ISMTPProviderPreset";
 
 export type { PaginatedResult, PaginationOptions } from "./IPagination";

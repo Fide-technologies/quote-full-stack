@@ -53,8 +53,7 @@ export class QuoteService implements IQuoteService {
                 lastName: String(quoteDataInput.lastName || ""),
                 customerName: `${quoteDataInput.firstName || ""} ${quoteDataInput.lastName || ""}`.trim(),
                 customerEmail: String(quoteDataInput.email || ""),
-                email: String(quoteDataInput.email || ""),
-                phone: String(quoteDataInput.phone || ""),
+                phone: quoteDataInput.phone as string,
 
                 // Address Details
                 address1: String(quoteDataInput.address1 || ""),
@@ -67,9 +66,8 @@ export class QuoteService implements IQuoteService {
                 ),
                 pincode: String(quoteDataInput.pincode || ""),
 
-                // Message
+                // Message / Communication
                 customerMessage: String(quoteDataInput.message || ""),
-                message: String(quoteDataInput.message || ""),
 
                 // Product & Pricing
                 productId: String(quoteDataInput.productId || ""),

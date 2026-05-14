@@ -30,7 +30,6 @@ export interface IQuote {
     firstName?: string;
     lastName?: string;
     customerEmail: string;
-    email?: string;
     phone?: string;
 
     // Address
@@ -44,7 +43,6 @@ export interface IQuote {
 
     // Messages / Files
     customerMessage?: string;
-    message?: string;
     fileUrl?: string;
 
     // Pricing

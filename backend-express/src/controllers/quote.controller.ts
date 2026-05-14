@@ -124,7 +124,7 @@ export class QuoteController extends BaseController {
             for (const quote of quotes as QuoteDocument[]) {
                 const dateVal = quote.createdAt ? quote.createdAt.toLocaleDateString() : "";
                 const customer = `"${((quote.customerName as string) || `${(quote.firstName as string) || ""} ${(quote.lastName as string) || ""}`).trim().replace(/"/g, '""')}"`;
-                const email = `"${((quote.email as string) || "").replace(/"/g, '""')}"`;
+                const email = `"${((quote.customerEmail as string) || "").replace(/"/g, '""')}"`;
                 const phone = `"${((quote.phone as string) || "").replace(/"/g, '""')}"`;
                 const product = `"${((quote.productTitle as string) || "").replace(/"/g, '""')}"`;
                 const quantity = quote.quantity?.toString() || "";

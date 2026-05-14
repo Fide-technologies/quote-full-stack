@@ -19,10 +19,13 @@ export const TYPES = {
     DraftOrderMapper: Symbol.for("DraftOrderMapper"),
     PlanController: Symbol.for("PlanController"),
     IFormRepository: Symbol.for("IFormRepository"),
+    IEmailConfigRepository: Symbol.for("IEmailConfigRepository"),
     IFormService: Symbol.for("IFormService"),
     FormController: Symbol.for("FormController"),
     IDashboardService: Symbol.for("IDashboardService"),
     DashboardController: Symbol.for("DashboardController"),
     UploadController: Symbol.for("UploadController"),
     IUploadService: Symbol.for("IUploadService"),
+    IEmailConfigService: Symbol.for("IEmailConfigService"),
+    EmailConfigController: Symbol.for("EmailConfigController"),
 };

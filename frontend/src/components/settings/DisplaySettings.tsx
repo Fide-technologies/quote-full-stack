@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, BlockStack, Text, Checkbox, Select, Banner } from '@shopify/polaris';
+import { Banner, BlockStack, Card, Checkbox, Select, Text } from '@shopify/polaris';
+import type React from 'react';
 import type { ISettings } from '../../types/settings';
 
 interface Props {
@@ -17,7 +17,9 @@ export const DisplaySettings: React.FC<Props> = ({ settings, onChange }) => {
     <BlockStack gap="400">
       <Card>
         <BlockStack gap="400">
-          <Text as="h2" variant="headingMd">Platform Display Rules</Text>
+          <Text as="h2" variant="headingMd">
+            Platform Display Rules
+          </Text>
           <Checkbox
             label="Show on Product Page"
             checked={settings.showOnProductPage}
@@ -40,10 +42,12 @@ export const DisplaySettings: React.FC<Props> = ({ settings, onChange }) => {
           />
         </BlockStack>
       </Card>
-      
+
       <Card>
         <BlockStack gap="400">
-          <Text as="h2" variant="headingMd">UI Preference</Text>
+          <Text as="h2" variant="headingMd">
+            UI Preference
+          </Text>
           <Select
             label="Form Presentation style"
             options={formOptions}
@@ -60,7 +64,10 @@ export const DisplaySettings: React.FC<Props> = ({ settings, onChange }) => {
       </Card>
 
       <Banner tone="warning" title="App Embed Required">
-        <p>Ensure the <b>App Embed</b> is enabled in your theme editor for these display settings to take effect.</p>
+        <p>
+          Ensure the <b>App Embed</b> is enabled in your theme editor for these display settings to
+          take effect.
+        </p>
       </Banner>
     </BlockStack>
   );
