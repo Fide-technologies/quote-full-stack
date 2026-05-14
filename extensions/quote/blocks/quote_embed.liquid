@@ -80,14 +80,10 @@
       buttonTextColor: {{ current_text_color | json }},
       hideAddToCart: {{ config.hideAddToCart | default: false | json }},
       hideBuyNow: {{ config.hideBuyNow | default: false | json }},
-      hidePriceGlobal: {{ config.hidePriceGlobal | default: false | json }},
+      hidePriceGlobal: {% if config.hidePriceGlobal and hide_content_for_guests %}true{% else %}false{% endif %},
       loginToSeePrice: {% if config.loginToSeePrice and hide_content_for_guests %}true{% else %}false{% endif %},
       placementLocation: {{ config.placementLocation | default: "above" | json }},
-      visibility: {{ config.visibility | default: "all" | json }},
-      showSku: {{ config.showSku | default: false | json }},
-      showVendor: {{ config.showVendor | default: false | json }},
-      showQuantity: {{ config.showQuantity | default: true | json }},
-      showProductNote: {{ config.showProductNote | default: false | json }}
+      visibility: {{ config.visibility | default: "all" | json }}
     };
   </script>
 
@@ -106,11 +102,7 @@
           display: none !important; margin: 0 !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important;
         }
       {% endif %}
-      {% if config.hidePriceGlobal %}
-        .price, .product-price, .product__price, .product-single__price, .price-item, .product__tax {
-          display: none !important; margin: 0 !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; padding: 0 !important;
-        }
-      {% elsif config.loginToSeePrice %}
+      {% if config.hidePriceGlobal or config.loginToSeePrice %}
         {% if customer == null %}
           .price, .product-price, .product__price, .product-single__price, .price-item, .product__tax {
             display: none !important; margin: 0 !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; padding: 0 !important;

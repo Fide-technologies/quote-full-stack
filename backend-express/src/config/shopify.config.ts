@@ -37,4 +37,4 @@ const shopify = shopifyApp({
     sessionStorage,
 });
 
-export { shopify, sessionStorage };
+export { shopify };

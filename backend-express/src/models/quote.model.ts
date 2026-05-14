@@ -43,6 +43,7 @@ const quoteSchema = new Schema<IQuote>(
             type: String,
             required: true,
         },
+        email: String,
         phone: String,
 
         // --------------------
@@ -60,6 +61,7 @@ const quoteSchema = new Schema<IQuote>(
         // Messages / Files
         // --------------------
         customerMessage: String,
+        message: String,
         fileUrl: String,
 
         // --------------------

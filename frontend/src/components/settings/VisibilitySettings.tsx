@@ -1,5 +1,5 @@
-import { Banner, BlockStack, Card, Select, Text, TextField } from '@shopify/polaris';
-import type React from 'react';
+import React from 'react';
+import { Card, BlockStack, Text, Select, TextField, Banner } from '@shopify/polaris';
 import type { ISettings } from '../../types/settings';
 
 interface Props {
@@ -19,9 +19,7 @@ export const VisibilitySettings: React.FC<Props> = ({ settings, onChange }) => {
     <BlockStack gap="400">
       <Card>
         <BlockStack gap="400">
-          <Text as="h2" variant="headingMd">
-            Access Control
-          </Text>
+          <Text as="h2" variant="headingMd">Access Control</Text>
           <Select
             label="Who can see the quote button?"
             options={visibilityOptions}
@@ -31,29 +29,19 @@ export const VisibilitySettings: React.FC<Props> = ({ settings, onChange }) => {
           />
           {settings.visibility === 'tags' && (
             <TextField
-              label="Required customer tags (comma separated)"
-              value={settings.customerTags.join(', ')}
-              onChange={(v) =>
-                onChange(
-                  'customerTags',
-                  v
-                    .split(',')
-                    .map((t) => t.trim())
-                    .filter(Boolean),
-                )
-              }
-              autoComplete="off"
-              placeholder="PRO, WHOLESALE"
+                label="Required customer tags (comma separated)"
+                value={settings.customerTags.join(", ")}
+                onChange={(v) => onChange('customerTags', v.split(",").map(t => t.trim()).filter(Boolean))}
+                autoComplete="off"
+                placeholder="PRO, WHOLESALE"
             />
           )}
         </BlockStack>
       </Card>
-
+      
       {settings.visibility === 'b2b' && (
         <Banner tone="info" title="B2B Visibility">
-          <p>
-            The quote option will only be displayed for customers linked to a Shopify B2B company.
-          </p>
+          <p>The quote option will only be displayed for customers linked to a Shopify B2B company.</p>
         </Banner>
       )}
     </BlockStack>

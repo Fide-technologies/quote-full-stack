@@ -31,7 +31,6 @@ export interface IFormField {
     allowMultiple?: boolean;
     // UI layout Grid
     layoutWidth?: "full" | "half";
-    helpText?: string;
     // Access control
     isSystem?: boolean; // True for default locked fields
 }
@@ -47,17 +46,11 @@ export interface IFormStep {
 export interface IFormSettings {
     successTitle?: string;
     successMessage?: string;
-    // Product display settings
-    showSku?: boolean;
-    showVendor?: boolean;
-    showProductNote?: boolean;
-    showQuantity?: boolean;
 }
 
 export interface IForm {
     shop: string;
     title: string;
-    description?: string;
     settings: IFormSettings;
     steps: IFormStep[];
     createdAt: Date;

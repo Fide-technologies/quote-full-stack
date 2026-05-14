@@ -10,12 +10,11 @@ import { QuoteController } from "./controllers/quote.controller";
 import { SettingsController } from "./controllers/settings.controller";
 import { UploadController } from "./controllers/upload.controller";
 import { WebhooksController } from "./controllers/webhoook.controller";
-import type { IFormRepository, IMerchantRepository, IPlanRepository, IQuoteRepository, IWebhookRegistry } from "./interfaces";
+import type { IFormRepository, IMerchantRepository, IPlanRepository, IQuoteRepository } from "./interfaces";
 import { DraftOrderMapper } from "./mappers/draft-order.mapper";
 import { FormRepository } from "./repositorys/forms";
 import { MerchantRepository } from "./repositorys/merchants";
 import { QuoteRepository } from "./repositorys/quotes";
-import { EmailConfigRepository } from "./repositorys/email-config";
 import { CloudinaryUploadService } from "./services/cloudinary-upload.service";
 import { DashboardService } from "./services/dashboard.service";
 import { DraftOrderService } from "./services/draft-order.service";
@@ -24,6 +23,7 @@ import { FormService } from "./services/form.service";
 import { MerchantService } from "./services/merchant.service";
 import { PlanService } from "./services/plan.service";
 import { QuoteService } from "./services/quote.service";
+import { S3UploadService } from "./services/s3-upload.service";
 import { SettingsService } from "./services/settings.service";
 import { UsageService } from "./services/usage.service";
 import { WebhookRegistry } from "./services/webhook-registry.service";
@@ -40,19 +40,14 @@ import type {
     ISettingsService,
     IUploadService,
     IUsageService,
-    IEmailConfigService,
-    IEmailConfigRepository,
+    IWebhookRegistry,
 } from "./interfaces";
-import { EmailConfigService } from "./services/email-config.service";
-import { EmailConfigController } from "./controllers/email-config.controller";
-
 
 const container = new Container();
 
 container.bind<IMerchantRepository>(TYPES.IMerchantRepository).to(MerchantRepository).inSingletonScope();
 container.bind<IQuoteRepository>(TYPES.IQuoteRepository).to(QuoteRepository).inSingletonScope();
 container.bind<IPlanRepository>(TYPES.IPlanRepository).to(PlanRepository).inSingletonScope();
-container.bind<IEmailConfigRepository>(TYPES.IEmailConfigRepository).to(EmailConfigRepository).inSingletonScope();
 
 container.bind<IMerchantService>(TYPES.IMerchantService).to(MerchantService).inSingletonScope();
 container.bind<IQuoteService>(TYPES.IQuoteService).to(QuoteService).inSingletonScope();
@@ -62,7 +57,6 @@ container.bind<ISettingsService>(TYPES.ISettingsService).to(SettingsService).inS
 container.bind<IDraftOrderService>(TYPES.IDraftOrderService).to(DraftOrderService).inSingletonScope();
 container.bind<IUsageService>(TYPES.IUsageService).to(UsageService).inSingletonScope();
 container.bind<IWebhookRegistry>(TYPES.IWebhookRegistry).to(WebhookRegistry).inSingletonScope();
-container.bind<IEmailConfigService>(TYPES.IEmailConfigService).to(EmailConfigService).inSingletonScope();
 container.bind(TYPES.DraftOrderMapper).to(DraftOrderMapper).inSingletonScope();
 
 container.bind<AuthController>(TYPES.AuthController).to(AuthController).inSingletonScope();
@@ -84,6 +78,5 @@ container.bind<DashboardController>(TYPES.DashboardController).to(DashboardContr
 container.bind<IUploadService>(TYPES.IUploadService).to(CloudinaryUploadService).inSingletonScope();
 
 container.bind<UploadController>(TYPES.UploadController).to(UploadController).inSingletonScope();
-container.bind<EmailConfigController>(TYPES.EmailConfigController).to(EmailConfigController).inSingletonScope();
 
 export { container };
