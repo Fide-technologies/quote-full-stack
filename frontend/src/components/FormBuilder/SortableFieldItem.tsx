@@ -1,364 +1,366 @@
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
-    Badge,
-    BlockStack,
-    Box,
-    Button,
-    Checkbox,
-    ChoiceList,
-    Collapsible,
-    Divider,
-    Icon,
-    InlineStack,
-    Select,
-    Text,
-    TextField,
-    Tooltip,
-} from "@shopify/polaris";
-import {
-    ChevronDownIcon,
-    ChevronUpIcon,
-    DeleteIcon,
-    DragHandleIcon,
-} from "@shopify/polaris-icons";
-import React, { useCallback, useEffect, useState } from "react";
-import type { IForm, IFormField } from "../../api/forms";
+  Badge,
+  BlockStack,
+  Box,
+  Button,
+  Checkbox,
+  ChoiceList,
+  Collapsible,
+  Divider,
+  Icon,
+  InlineStack,
+  Select,
+  Text,
+  TextField,
+  Tooltip,
+} from '@shopify/polaris';
+import { ChevronDownIcon, ChevronUpIcon, DeleteIcon, DragHandleIcon } from '@shopify/polaris-icons';
+import type React from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import type { IForm, IFormField } from '../../api/forms';
 
 const fieldTypes = [
-    { label: "Text", value: "text" },
-    { label: "Email", value: "email" },
-    { label: "Phone", value: "phone" },
-    { label: "Number", value: "number" },
-    { label: "Long Text", value: "textarea" },
-    { label: "Dropdown", value: "select" },
-    { label: "Radio Buttons", value: "radio" },
-    { label: "Checkboxes", value: "checkbox" },
-    { label: "File Upload", value: "file" },
-    { label: "Price (Propose)", value: "price" },
+  { label: 'Text', value: 'text' },
+  { label: 'Email', value: 'email' },
+  { label: 'Phone', value: 'phone' },
+  { label: 'Number', value: 'number' },
+  { label: 'Long Text', value: 'textarea' },
+  { label: 'Dropdown', value: 'select' },
+  { label: 'Radio Buttons', value: 'radio' },
+  { label: 'Checkboxes', value: 'checkbox' },
+  { label: 'File Upload', value: 'file' },
+  { label: 'Price (Propose)', value: 'price' },
 ];
 
 const regexOptions = [
-    { label: "None", value: "" },
-    { label: "Letters Only (a-z, A-Z)", value: "^[a-zA-Z\\s]+$" },
-    { label: "Numbers Only (0-9)", value: "^[0-9]+$" },
-    { label: "Alphanumeric", value: "^[a-zA-Z0-9\\s]+$" },
+  { label: 'None', value: '' },
+  { label: 'Letters Only (a-z, A-Z)', value: '^[a-zA-Z\\s]+$' },
+  { label: 'Numbers Only (0-9)', value: '^[0-9]+$' },
+  { label: 'Alphanumeric', value: '^[a-zA-Z0-9\\s]+$' },
 ];
 
 interface SortableFieldProps {
-    field: IFormField;
-    fieldIdx: number;
-    stepIdx: number;
-    formState: IForm;
-    setFormState: React.Dispatch<React.SetStateAction<IForm | null>>;
-    readOnly?: boolean;
+  field: IFormField;
+  fieldIdx: number;
+  stepIdx: number;
+  formState: IForm;
+  setFormState: React.Dispatch<React.SetStateAction<IForm | null>>;
+  readOnly?: boolean;
 }
 
 export function SortableFieldItem({
-    field,
-    fieldIdx,
-    stepIdx,
-    formState,
-    setFormState,
-    readOnly = false,
+  field,
+  fieldIdx,
+  stepIdx,
+  formState,
+  setFormState,
+  readOnly = false,
 }: SortableFieldProps) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id: field.id,
-        disabled: field.isSystem || readOnly,
-    });
-    const [isExpanded, setIsExpanded] = useState(false);
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: field.id,
+    disabled: field.isSystem || readOnly,
+  });
+  const [isExpanded, setIsExpanded] = useState(false);
 
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        zIndex: isDragging ? 999 : 1,
-        position: (isDragging ? "relative" : "static") as "relative" | "static",
-    };
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 999 : 1,
+    position: (isDragging ? 'relative' : 'static') as 'relative' | 'static',
+  };
 
-    const updateFieldProperty = useCallback(
-        (prop: keyof IFormField, value: unknown) => {
-            if (!formState) return;
+  const updateFieldProperty = useCallback(
+    (prop: keyof IFormField, value: unknown) => {
+      if (!formState) return;
 
-            const updatedSteps = [...formState.steps];
-            const updatedFields = [...updatedSteps[stepIdx].fields];
-            updatedFields[fieldIdx] = {
-                ...updatedFields[fieldIdx],
-                [prop]: value,
-            };
-            updatedSteps[stepIdx].fields = updatedFields;
+      const updatedSteps = [...formState.steps];
+      const updatedFields = [...updatedSteps[stepIdx].fields];
+      updatedFields[fieldIdx] = {
+        ...updatedFields[fieldIdx],
+        [prop]: value,
+      };
+      updatedSteps[stepIdx].fields = updatedFields;
 
-            setFormState({
-                ...formState,
-                steps: updatedSteps,
-            });
-        },
-        [formState, stepIdx, fieldIdx, setFormState],
-    );
+      setFormState({
+        ...formState,
+        steps: updatedSteps,
+      });
+    },
+    [formState, stepIdx, fieldIdx, setFormState],
+  );
 
-    const updateFieldLabel = useCallback((val: string) => updateFieldProperty("label", val), [updateFieldProperty]);
+  const updateFieldLabel = useCallback(
+    (val: string) => updateFieldProperty('label', val),
+    [updateFieldProperty],
+  );
 
-    const updateFieldType = useCallback((val: string) => updateFieldProperty("type", val), [updateFieldProperty]);
+  const updateFieldType = useCallback(
+    (val: string) => updateFieldProperty('type', val),
+    [updateFieldProperty],
+  );
 
-    const updateFieldRequired = useCallback(
-        (checked: boolean) => updateFieldProperty("required", checked),
-        [updateFieldProperty],
-    );
+  const updateFieldRequired = useCallback(
+    (checked: boolean) => updateFieldProperty('required', checked),
+    [updateFieldProperty],
+  );
 
-    // Auto-fix system fields to be required if they aren't
-    useEffect(() => {
-        if (field.isSystem && !field.required && formState) {
-            updateFieldRequired(true);
-        }
-    }, [field.isSystem, field.required, formState, updateFieldRequired]);
+  // Auto-fix system fields to be required if they aren't
+  useEffect(() => {
+    if (field.isSystem && !field.required && formState) {
+      updateFieldRequired(true);
+    }
+  }, [field.isSystem, field.required, formState, updateFieldRequired]);
 
-    const removeField = () => {
-        const updated = { ...formState, steps: [...formState.steps] };
-        updated.steps[stepIdx].fields.splice(fieldIdx, 1);
-        setFormState(updated);
-    };
+  const removeField = () => {
+    const updated = { ...formState, steps: [...formState.steps] };
+    updated.steps[stepIdx].fields.splice(fieldIdx, 1);
+    setFormState(updated);
+  };
 
-    return (
-        <div ref={setNodeRef} style={style}>
-            <Box
-                background={field.isSystem ? "bg-surface-secondary" : "bg-surface"}
-                padding="150"
-                borderRadius="200"
-                borderColor="border"
-                borderWidth="025"
-                shadow={isDragging ? "400" : "100"}
-            >
-                <InlineStack align="start" blockAlign="center" gap="200" wrap={false}>
-                    {field.isSystem || readOnly ? (
-                        <div className="p-1 opacity-30 cursor-not-allowed">
-                            <Icon source={DragHandleIcon} tone="base" />
-                        </div>
-                    ) : (
-                        <div {...attributes} {...listeners} className="cursor-grab p-1">
-                            <Icon source={DragHandleIcon} tone="base" />
-                        </div>
-                    )}
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Box
+        background={field.isSystem ? 'bg-surface-secondary' : 'bg-surface'}
+        padding="150"
+        borderRadius="200"
+        borderColor="border"
+        borderWidth="025"
+        shadow={isDragging ? '400' : '100'}
+      >
+        <InlineStack align="start" blockAlign="center" gap="200" wrap={false}>
+          {field.isSystem || readOnly ? (
+            <div className="p-1 opacity-30 cursor-not-allowed">
+              <Icon source={DragHandleIcon} tone="base" />
+            </div>
+          ) : (
+            <div {...attributes} {...listeners} className="cursor-grab p-1">
+              <Icon source={DragHandleIcon} tone="base" />
+            </div>
+          )}
 
-                    <div className="flex-[2]">
+          <div className="flex-[2]">
+            <TextField
+              label="Label"
+              labelHidden
+              value={field.label}
+              onChange={updateFieldLabel}
+              autoComplete="off"
+              disabled={readOnly}
+            />
+          </div>
+
+          <div className="flex-1">
+            <Select
+              label="Type"
+              labelHidden
+              options={fieldTypes}
+              value={field.type}
+              onChange={updateFieldType}
+              disabled={field.isSystem || readOnly}
+            />
+          </div>
+
+          <div className="flex-1">
+            <Select
+              label="Layout Width"
+              labelHidden
+              options={[
+                { label: 'Full Width', value: 'full' },
+                { label: 'Half Width', value: 'half' },
+              ]}
+              value={field.layoutWidth || 'full'}
+              onChange={(val) => updateFieldProperty('layoutWidth', val)}
+              disabled={readOnly}
+            />
+          </div>
+
+          <div className="flex items-center min-w-[90px]">
+            <Checkbox
+              label="Required"
+              checked={field.required || field.isSystem}
+              onChange={updateFieldRequired}
+              disabled={field.isSystem || readOnly}
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="plain"
+              icon={isExpanded ? ChevronUpIcon : ChevronDownIcon}
+              onClick={() => setIsExpanded(!isExpanded)}
+              accessibilityLabel="Toggle advanced settings"
+            />
+            {field.isSystem || readOnly ? (
+              <div className="min-w-[85px] flex justify-center">
+                <Badge tone="info">{field.isSystem ? 'System' : 'Read Only'}</Badge>
+              </div>
+            ) : (
+              <div className="min-w-[85px] flex justify-center">
+                <Tooltip content="Remove field">
+                  <Button
+                    variant="plain"
+                    tone="critical"
+                    icon={DeleteIcon}
+                    onClick={removeField}
+                    accessibilityLabel="Remove field"
+                  />
+                </Tooltip>
+              </div>
+            )}
+          </div>
+        </InlineStack>
+
+        {/* Advanced Validation & Layout Configuration Box */}
+        <Collapsible
+          open={isExpanded}
+          id={`field-collapsible-${field.id}`}
+          transition={{ duration: '500ms', timingFunction: 'ease-in-out' }}
+        >
+          <Box paddingBlockStart="400">
+            <Divider />
+            <Box paddingBlockStart="300">
+              <BlockStack gap="400">
+                <Text variant="bodyMd" as="h4" tone="subdued">
+                  Advanced Settings
+                </Text>
+
+                <TextField
+                  label="Field Description / Help Text"
+                  value={field.helpText || ''}
+                  onChange={(val) => updateFieldProperty('helpText', val)}
+                  placeholder="Optional instructions for this field"
+                  autoComplete="off"
+                  multiline={2}
+                  disabled={readOnly}
+                />
+
+                <InlineStack gap="400">
+                  {['text', 'textarea', 'number', 'phone', 'price', 'email'].includes(
+                    field.type,
+                  ) && (
+                    <>
+                      <div className="flex-1">
                         <TextField
-                            label="Label"
-                            labelHidden
-                            value={field.label}
-                            onChange={updateFieldLabel}
-                            autoComplete="off"
-                            disabled={readOnly}
+                          label="Min Length"
+                          type="number"
+                          value={field.minLength?.toString() || ''}
+                          onChange={(val) =>
+                            updateFieldProperty('minLength', val ? Number.parseInt(val, 10) : undefined)
+                          }
+                          autoComplete="off"
+                          disabled={readOnly}
                         />
-                    </div>
-
-                    <div className="flex-1">
-                        <Select
-                            label="Type"
-                            labelHidden
-                            options={fieldTypes}
-                            value={field.type}
-                            onChange={updateFieldType}
-                            disabled={field.isSystem || readOnly}
+                      </div>
+                      <div className="flex-1">
+                        <TextField
+                          label="Max Length"
+                          type="number"
+                          value={field.maxLength?.toString() || ''}
+                          onChange={(val) =>
+                            updateFieldProperty('maxLength', val ? Number.parseInt(val, 10) : undefined)
+                          }
+                          autoComplete="off"
+                          disabled={readOnly}
                         />
-                    </div>
+                      </div>
+                    </>
+                  )}
 
-                    <div className="flex-1">
-                        <Select
-                            label="Layout Width"
-                            labelHidden
-                            options={[
-                                { label: "Full Width", value: "full" },
-                                { label: "Half Width", value: "half" },
+                  {['text', 'number', 'phone', 'price', 'email'].includes(field.type) && (
+                    <div className="flex-[2]">
+                      <Select
+                        label="Validation Rule (Regex)"
+                        options={regexOptions}
+                        value={field.validationRegex || ''}
+                        onChange={(val) => updateFieldProperty('validationRegex', val)}
+                        disabled={readOnly}
+                      />
+                    </div>
+                  )}
+
+                  {field.type === 'file' && (
+                    <div className="w-full">
+                      <BlockStack gap="400">
+                        <InlineStack gap="400">
+                          <div className="flex-1">
+                            <Select
+                              label="Upload Type"
+                              options={[
+                                { label: 'Single Image', value: 'single' },
+                                { label: 'Multiple Images', value: 'multiple' },
+                              ]}
+                              value={field.allowMultiple ? 'multiple' : 'single'}
+                              onChange={(val) =>
+                                updateFieldProperty('allowMultiple', val === 'multiple')
+                              }
+                              disabled={readOnly}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <TextField
+                              label="Max File Size (MB)"
+                              type="number"
+                              value={field.maxFileSizeMB?.toString() || ''}
+                              onChange={(val) =>
+                                updateFieldProperty(
+                                  'maxFileSizeMB',
+                                  val ? Number.parseInt(val, 10) : undefined,
+                                )
+                              }
+                              autoComplete="off"
+                              disabled={readOnly}
+                            />
+                          </div>
+                        </InlineStack>
+
+                        <Box paddingBlockStart="200">
+                          <ChoiceList
+                            allowMultiple
+                            title="Supported Image Formats"
+                            choices={[
+                              { label: 'JPEG (.jpg, .jpeg)', value: '.jpg' },
+                              { label: 'PNG (.png)', value: '.png' },
+                              { label: 'WebP (.webp)', value: '.webp' },
+                              { label: 'GIF (.gif)', value: '.gif' },
+                              { label: 'SVG (.svg)', value: '.svg' },
                             ]}
-                            value={field.layoutWidth || "full"}
-                            onChange={(val) => updateFieldProperty("layoutWidth", val)}
+                            selected={field.allowedImageFormats || []}
+                            onChange={(val) => updateFieldProperty('allowedImageFormats', val)}
                             disabled={readOnly}
-                        />
-                    </div>
+                          />
+                        </Box>
 
-                    <div className="flex items-center min-w-[90px]">
-                        <Checkbox
-                            label="Required"
-                            checked={field.required || field.isSystem}
-                            onChange={updateFieldRequired}
-                            disabled={field.isSystem || readOnly}
+                        <TextField
+                          label="Other Allowed File Types (optional, comma-separated)"
+                          value={field.allowedFileTypes || ''}
+                          onChange={(val) => updateFieldProperty('allowedFileTypes', val)}
+                          placeholder="application/pdf, .zip"
+                          autoComplete="off"
+                          helpText="If you select image formats above, they will be combined with these."
+                          disabled={readOnly}
                         />
+                      </BlockStack>
                     </div>
-
-                    <div className="flex gap-2">
-                        <Button
-                            variant="plain"
-                            icon={isExpanded ? ChevronUpIcon : ChevronDownIcon}
-                            onClick={() => setIsExpanded(!isExpanded)}
-                            accessibilityLabel="Toggle advanced settings"
-                        />
-                        {field.isSystem || readOnly ? (
-                            <div className="min-w-[85px] flex justify-center">
-                                <Badge tone="info">{field.isSystem ? "System" : "Read Only"}</Badge>
-                            </div>
-                        ) : (
-                            <div className="min-w-[85px] flex justify-center">
-                                <Tooltip content="Remove field">
-                                    <Button
-                                        variant="plain"
-                                        tone="critical"
-                                        icon={DeleteIcon}
-                                        onClick={removeField}
-                                        accessibilityLabel="Remove field"
-                                    />
-                                </Tooltip>
-                            </div>
-                        )}
-                    </div>
+                  )}
                 </InlineStack>
 
-                {/* Advanced Validation & Layout Configuration Box */}
-                <Collapsible
-                    open={isExpanded}
-                    id={`field-collapsible-${field.id}`}
-                    transition={{ duration: "500ms", timingFunction: "ease-in-out" }}
-                >
-                    <Box paddingBlockStart="400">
-                        <Divider />
-                        <Box paddingBlockStart="300">
-                            <BlockStack gap="400">
-                                <Text variant="bodyMd" as="h4" tone="subdued">
-                                    Advanced Settings
-                                </Text>
-
-                                <TextField
-                                    label="Field Description / Help Text"
-                                    value={field.helpText || ""}
-                                    onChange={(val) => updateFieldProperty("helpText", val)}
-                                    placeholder="Optional instructions for this field"
-                                    autoComplete="off"
-                                    multiline={2}
-                                    disabled={readOnly}
-                                />
-
-                                <InlineStack gap="400">
-                                    {["text", "textarea", "number", "phone", "price", "email"].includes(field.type) && (
-                                        <>
-                                            <div className="flex-1">
-                                                <TextField
-                                                    label="Min Length"
-                                                    type="number"
-                                                    value={field.minLength?.toString() || ""}
-                                                    onChange={(val) =>
-                                                        updateFieldProperty("minLength", val ? Number.parseInt(val) : undefined)
-                                                    }
-                                                    autoComplete="off"
-                                                    disabled={readOnly}
-                                                />
-                                            </div>
-                                            <div className="flex-1">
-                                                <TextField
-                                                    label="Max Length"
-                                                    type="number"
-                                                    value={field.maxLength?.toString() || ""}
-                                                    onChange={(val) =>
-                                                        updateFieldProperty("maxLength", val ? Number.parseInt(val) : undefined)
-                                                    }
-                                                    autoComplete="off"
-                                                    disabled={readOnly}
-                                                />
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {["text", "number", "phone", "price", "email"].includes(field.type) && (
-                                        <div className="flex-[2]">
-                                            <Select
-                                                label="Validation Rule (Regex)"
-                                                options={regexOptions}
-                                                value={field.validationRegex || ""}
-                                                onChange={(val) => updateFieldProperty("validationRegex", val)}
-                                                disabled={readOnly}
-                                            />
-                                        </div>
-                                    )}
-
-                                    {field.type === "file" && (
-                                        <div className="w-full">
-                                            <BlockStack gap="400">
-                                                <InlineStack gap="400">
-                                                    <div className="flex-1">
-                                                        <Select
-                                                            label="Upload Type"
-                                                            options={[
-                                                                { label: "Single Image", value: "single" },
-                                                                { label: "Multiple Images", value: "multiple" },
-                                                            ]}
-                                                            value={field.allowMultiple ? "multiple" : "single"}
-                                                            onChange={(val) =>
-                                                                updateFieldProperty("allowMultiple", val === "multiple")
-                                                            }
-                                                            disabled={readOnly}
-                                                        />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <TextField
-                                                            label="Max File Size (MB)"
-                                                            type="number"
-                                                            value={field.maxFileSizeMB?.toString() || ""}
-                                                            onChange={(val) =>
-                                                                updateFieldProperty(
-                                                                    "maxFileSizeMB",
-                                                                    val ? Number.parseInt(val) : undefined,
-                                                                )
-                                                            }
-                                                            autoComplete="off"
-                                                            disabled={readOnly}
-                                                        />
-                                                    </div>
-                                                </InlineStack>
-
-                                                <Box paddingBlockStart="200">
-                                                    <ChoiceList
-                                                        allowMultiple
-                                                        title="Supported Image Formats"
-                                                        choices={[
-                                                            { label: "JPEG (.jpg, .jpeg)", value: ".jpg" },
-                                                            { label: "PNG (.png)", value: ".png" },
-                                                            { label: "WebP (.webp)", value: ".webp" },
-                                                            { label: "GIF (.gif)", value: ".gif" },
-                                                            { label: "SVG (.svg)", value: ".svg" },
-                                                        ]}
-                                                        selected={field.allowedImageFormats || []}
-                                                        onChange={(val) =>
-                                                            updateFieldProperty("allowedImageFormats", val)
-                                                        }
-                                                        disabled={readOnly}
-                                                    />
-                                                </Box>
-
-                                                <TextField
-                                                    label="Other Allowed File Types (optional, comma-separated)"
-                                                    value={field.allowedFileTypes || ""}
-                                                    onChange={(val) => updateFieldProperty("allowedFileTypes", val)}
-                                                    placeholder="application/pdf, .zip"
-                                                    autoComplete="off"
-                                                    helpText="If you select image formats above, they will be combined with these."
-                                                    disabled={readOnly}
-                                                />
-                                            </BlockStack>
-                                        </div>
-                                    )}
-                                </InlineStack>
-
-                                {field.validationRegex && (
-                                    <TextField
-                                        label="Custom Regex Error Message"
-                                        value={field.validationMessage || ""}
-                                        onChange={(val) => updateFieldProperty("validationMessage", val)}
-                                        placeholder="Please enter a valid format."
-                                        autoComplete="off"
-                                        disabled={readOnly}
-                                    />
-                                )}
-                            </BlockStack>
-                        </Box>
-                    </Box>
-                </Collapsible>
+                {field.validationRegex && (
+                  <TextField
+                    label="Custom Regex Error Message"
+                    value={field.validationMessage || ''}
+                    onChange={(val) => updateFieldProperty('validationMessage', val)}
+                    placeholder="Please enter a valid format."
+                    autoComplete="off"
+                    disabled={readOnly}
+                  />
+                )}
+              </BlockStack>
             </Box>
-        </div>
-    );
+          </Box>
+        </Collapsible>
+      </Box>
+    </div>
+  );
 }

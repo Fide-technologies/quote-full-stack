@@ -22,7 +22,6 @@ export const validate = (schema: ZodSchema) => {
             const zodError = error as ZodError;
             logger.warn(`Validation failed for ${req.path}:`, {
                 errors: zodError.issues,
-                body: req.body,
             });
             const errorResponse: ErrorResponseDto = {
                 success: false,

@@ -1,92 +1,94 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export interface ExtensionActivation {
-    target: string;
-    handle: string;
-    name: string;
-    status: 'active' | 'available' | 'unavailable';
-    activations?: unknown[];
+  target: string;
+  handle: string;
+  name: string;
+  status: 'active' | 'available' | 'unavailable';
+  activations?: unknown[];
 }
 
 export interface ExtensionInfo {
-    handle: string;
-    type: 'ui_extension' | 'theme_app_extension';
-    activations: ExtensionActivation[];
+  handle: string;
+  type: 'ui_extension' | 'theme_app_extension';
+  activations: ExtensionActivation[];
 }
 
 interface ShopifyAppBridge {
-    app?: {
-        extensions: () => Promise<ExtensionInfo[]>;
-    };
+  app?: {
+    extensions: () => Promise<ExtensionInfo[]>;
+  };
 }
 
 export const useAppExtensions = () => {
-    const [isEmbedded, setIsEmbedded] = useState<boolean | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
+  const [isEmbedded, setIsEmbedded] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-    const checkExtensions = useCallback(async (showLoading = true) => {
+  const checkExtensions = useCallback(async (showLoading = true) => {
+    if (showLoading) {
+      setIsLoading((prev) => (prev ? prev : true));
+    }
+    try {
+      const shopify = (window as unknown as Window & { shopify?: ShopifyAppBridge }).shopify;
+
+      if (!shopify?.app?.extensions) {
         if (showLoading) {
-            setIsLoading(prev => prev ? prev : true);
+          console.warn('[useAppExtensions] Shopify App Bridge extensions API not available');
+          setIsEmbedded(false);
         }
-        try {
-            const shopify = (window as unknown as Window & { shopify?: ShopifyAppBridge }).shopify;
+        return;
+      }
 
-            if (!shopify || !shopify.app || !shopify.app.extensions) {
-                if (showLoading) {
-                    console.warn('[useAppExtensions] Shopify App Bridge extensions API not available');
-                    setIsEmbedded(false);
-                }
-                return;
-            }
+      const extensions: ExtensionInfo[] = await shopify.app.extensions();
+      console.debug('[useAppExtensions] Fetched extensions:', extensions);
 
-            const extensions: ExtensionInfo[] = await shopify.app.extensions();
-            console.debug('[useAppExtensions] Fetched extensions:', extensions);
+      const themeExtension = extensions.find((ext) => ext.type === 'theme_app_extension');
 
-            const themeExtension = extensions.find(ext => ext.type === 'theme_app_extension');
+      if (!themeExtension) {
+        setIsEmbedded(false);
+      } else {
+        const quoteEmbed = themeExtension.activations.find((act) => act.handle === 'quote_embed');
 
-            if (!themeExtension) {
-                setIsEmbedded(false);
-            } else {
-                const quoteEmbed = themeExtension.activations.find(act => act.handle === 'quote_embed');
-
-                if (quoteEmbed) {
-                    const activeStatus = quoteEmbed.status === 'active';
-                    setIsEmbedded(activeStatus);
-                    console.debug(`[useAppExtensions] Embed status: ${activeStatus ? 'Active' : 'Disabled'}`);
-                } else {
-                    setIsEmbedded(false);
-                }
-            }
-        } catch (err) {
-            console.error('[useAppExtensions] Error fetching extensions:', err);
-            setError(err instanceof Error ? err : new Error('Unknown error'));
-            setIsEmbedded(false);
-        } finally {
-            if (showLoading) setIsLoading(false);
+        if (quoteEmbed) {
+          const activeStatus = quoteEmbed.status === 'active';
+          setIsEmbedded(activeStatus);
+          console.debug(`[useAppExtensions] Embed status: ${activeStatus ? 'Active' : 'Disabled'}`);
+        } else {
+          setIsEmbedded(false);
         }
-    }, []);
+      }
+    } catch (err) {
+      console.error('[useAppExtensions] Error fetching extensions:', err);
+      setError(err instanceof Error ? err : new Error('Unknown error'));
+      setIsEmbedded(false);
+    } finally {
+      if (showLoading) setIsLoading(false);
+    }
+  }, []);
 
-    useEffect(() => {
-        // Run checkExtensions asynchronously to avoid the lint warning about sync setState in effects
-        const init = async () => {
-            await checkExtensions();
-        };
-        init();
-
-        const handleWindowFocus = () => {
-            console.debug('[useAppExtensions] Window focus detected, manually refreshing extension status...');
-            checkExtensions(false);
-        };
-
-        window.addEventListener('focus', handleWindowFocus);
-        return () => window.removeEventListener('focus', handleWindowFocus);
-    }, [checkExtensions]);
-
-    return {
-        isEmbedded,
-        isLoading,
-        error,
-        refresh: () => checkExtensions(true)
+  useEffect(() => {
+    // Run checkExtensions asynchronously to avoid the lint warning about sync setState in effects
+    const init = async () => {
+      await checkExtensions();
     };
+    init();
+
+    const handleWindowFocus = () => {
+      console.debug(
+        '[useAppExtensions] Window focus detected, manually refreshing extension status...',
+      );
+      checkExtensions(false);
+    };
+
+    window.addEventListener('focus', handleWindowFocus);
+    return () => window.removeEventListener('focus', handleWindowFocus);
+  }, [checkExtensions]);
+
+  return {
+    isEmbedded,
+    isLoading,
+    error,
+    refresh: () => checkExtensions(true),
+  };
 };

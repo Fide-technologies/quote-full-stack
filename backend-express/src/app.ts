@@ -17,6 +17,7 @@ import settingsRouter from "./routes/settings.routes";
 import uploadRouter from "./routes/upload.routes";
 import webhooksRouter from "./routes/webhooks.routes";
 import legalRouter from "./routes/legal.routes";
+import emailConfigRouter from "./routes/email-config.routes";
 import { globalLimiter } from "./config/rate-limit.config";
 import { globalErrorHandler } from "./middlewares/error.middleware";
 
@@ -76,6 +77,7 @@ export class App {
         this.app.use("/api/forms", formRouter);
         this.app.use("/api/dashboard", dashboardRouter);
         this.app.use("/api/upload", uploadRouter);
+        this.app.use("/api/email-settings", emailConfigRouter);
 
         // Frontend Fallback (SPA)
         // Must be last

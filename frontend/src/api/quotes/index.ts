@@ -1,188 +1,174 @@
 export interface Quote {
-    shop: string;
-    id: string;
-    firstName: string;
-    lastName: string;
-    customerEmail: string;
-    phone: string;
-    productTitle: string;
-    variantTitle?: string;
-    quantity: number;
-    originalPrice: string;
-    totalPrice: number;
-    address1?: string;
-    address2?: string;
-    city?: string;
-    district?: string;
-    state?: string;
-    pincode?: string;
-    country?: string;
-    customerMessage?: string;
-    status: 'NEW' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEGOTIATION';
-    createdAt: string;
-    productId?: string;
-    productDetails?: {
-        vendor?: string;
-        productType?: string;
-        featuredImage?: {
-            url: string;
-            altText: string;
-        };
-        variants?: {
-            nodes: Array<{
-                id: string;
-                title: string;
-                sku: string;
-                price: string;
-                inventoryQuantity: number;
-            }>;
-        };
-    }
+  shop: string;
+  id: string;
+  firstName: string;
+  lastName: string;
+  customerEmail: string;
+  phone: string;
+  productTitle: string;
+  variantTitle?: string;
+  quantity: number;
+  originalPrice: string;
+  totalPrice: number;
+  address1?: string;
+  address2?: string;
+  city?: string;
+  district?: string;
+  state?: string;
+  pincode?: string;
+  country?: string;
+  customerMessage?: string;
+  status: 'NEW' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEGOTIATION';
+  createdAt: string;
+  productId?: string;
+  productDetails?: {
+    vendor?: string;
+    productType?: string;
+    featuredImage?: {
+      url: string;
+      altText: string;
+    };
+    variants?: {
+      nodes: Array<{
+        id: string;
+        title: string;
+        sku: string;
+        price: string;
+        inventoryQuantity: number;
+      }>;
+    };
+  };
 
-    draftOrderId?: string;
-    draftOrderUrl?: string;
-    customData?: Record<string, unknown>;
-    customImages?: string[];
+  draftOrderId?: string;
+  draftOrderUrl?: string;
+  customData?: Record<string, unknown>;
+  customImages?: string[];
 }
 
 interface QuotesResponse {
-    success: boolean;
-    data: {
-        quotes: Quote[];
-        totalCount: number;
-        page: number;
-        limit: number;
-        totalPages: number;
-    }
+  success: boolean;
+  data: {
+    quotes: Quote[];
+    totalCount: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }
 
 interface QuoteFilters {
-    page?: number;
-    limit?: number;
-    q?: string;
-    status?: string;
-    date?: string;
-    hasDraftOrder?: boolean;
+  page?: number;
+  limit?: number;
+  q?: string;
+  status?: string;
+  date?: string;
+  hasDraftOrder?: boolean;
 }
 
 export async function getQuotes(filters: QuoteFilters = {}): Promise<QuotesResponse['data']> {
-    const params = new URLSearchParams();
-    if (filters.page) params.append("page", filters.page.toString());
-    if (filters.limit) params.append("limit", filters.limit.toString());
-    if (filters.q) params.append("q", filters.q);
-    if (filters.status) params.append("status", filters.status);
-    if (filters.date) params.append("date", filters.date);
-    if (filters.hasDraftOrder !== undefined) params.append("hasDraftOrder", filters.hasDraftOrder.toString());
+  const params = new URLSearchParams();
+  if (filters.page) params.append('page', filters.page.toString());
+  if (filters.limit) params.append('limit', filters.limit.toString());
+  if (filters.q) params.append('q', filters.q);
+  if (filters.status) params.append('status', filters.status);
+  if (filters.date) params.append('date', filters.date);
+  if (filters.hasDraftOrder !== undefined)
+    params.append('hasDraftOrder', filters.hasDraftOrder.toString());
 
-    const res = await fetch(`/api/quotes?${params.toString()}`, {
-    });
-    if (!res.ok) throw new Error("Failed to fetch quotes");
+  const res = await fetch(`/api/quotes?${params.toString()}`, {});
+  if (!res.ok) throw new Error('Failed to fetch quotes');
 
-    const json = await res.json();
-    return json.data;
+  const json = await res.json();
+  return json.data;
 }
 
 export async function getQuoteById(id: string): Promise<Quote> {
-    const res = await fetch(`/api/quotes/${id}`);
-    if (!res.ok) throw new Error("Failed to fetch quote details");
-    const json = await res.json();
-    return json.data;
+  const res = await fetch(`/api/quotes/${id}`);
+  if (!res.ok) throw new Error('Failed to fetch quote details');
+  const json = await res.json();
+  return json.data;
 }
 
-export async function createDraftOrder(quoteId: string): Promise<{ draftOrderId: string; invoiceUrl: string }> {
-    const res = await fetch(`/api/draft-orders/${quoteId}`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-    });
+export async function createDraftOrder(
+  quoteId: string,
+): Promise<{ draftOrderId: string; invoiceUrl: string }> {
+  const res = await fetch(`/api/draft-orders/${quoteId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 
-    if (!res.ok) {
-        const error = await res.json();
-        console.log("error is: ", error)
-        throw new Error(error.message || "Failed to create draft order");
-    }
+  if (!res.ok) {
+    const error = await res.json();
+    console.log('error is: ', error);
+    throw new Error(error.message || 'Failed to create draft order');
+  }
 
-    const json = await res.json();
-    return json.data;
+  const json = await res.json();
+  return json.data;
 }
 
-export async function exportQuotesCSV(filters: QuoteFilters = {}): Promise<void> {
-    const params = new URLSearchParams();
-    if (filters.q) params.append("q", filters.q);
-    if (filters.status) params.append("status", filters.status);
-    if (filters.date) params.append("date", filters.date);
-    if (filters.hasDraftOrder !== undefined) params.append("hasDraftOrder", filters.hasDraftOrder.toString());
+export type { QuoteFilters };
 
-    const res = await fetch(`/api/quotes/export?${params.toString()}`);
-    if (!res.ok) throw new Error("Failed to export quotes");
+export async function acceptQuote(
+  id: string,
+  data: { price: number; quantity: number; message: string },
+): Promise<void> {
+  const res = await fetch(`/api/quotes/${id}/accept`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
 
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "quotes_export.csv";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
-}
-
-export async function acceptQuote(id: string, data: { price: number; quantity: number; message: string }): Promise<void> {
-    const res = await fetch(`/api/quotes/${id}/accept`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    });
-
-    if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to accept quote");
-    }
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Failed to accept quote');
+  }
 }
 
 export async function updateQuoteStatus(id: string, status: Quote['status']): Promise<Quote> {
-    const res = await fetch(`/api/quotes/${id}/status`, {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status }),
-    });
+  const res = await fetch(`/api/quotes/${id}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ status }),
+  });
 
-    if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to update status");
-    }
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Failed to update status');
+  }
 
-    const json = await res.json();
-    return json.data;
+  const json = await res.json();
+  return json.data;
 }
 
 export async function deleteQuote(id: string): Promise<void> {
-    const res = await fetch(`/api/quotes/${id}`, {
-        method: "DELETE",
-    });
+  const res = await fetch(`/api/quotes/${id}`, {
+    method: 'DELETE',
+  });
 
-    if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to delete quote");
-    }
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Failed to delete quote');
+  }
 }
 
 export async function rejectQuote(id: string, data: { message: string }): Promise<void> {
-    const res = await fetch(`/api/quotes/${id}/reject`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    });
+  const res = await fetch(`/api/quotes/${id}/reject`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
 
-    if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to reject quote");
-    }
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Failed to reject quote');
+  }
 }

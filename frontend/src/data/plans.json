@@ -1,79 +1,79 @@
 [
-    {
-        "id": "FREE",
-        "name": "Starter",
-        "price": "Free",
-        "period": "/ month",
-        "description": "Everything you need to start.",
-        "features": [
-            {
-                "text": "50 quotes / month",
-                "included": true
-            },
-            {
-                "text": "Basic email notifications",
-                "included": true
-            },
-            {
-                "text": "Remove app branding",
-                "included": false
-            }
-        ]
-    },
-    {
-        "id": "PRO",
-        "name": "Pro",
-        "price": "$14.99",
-        "period": "/ mo",
-        "description": "Best for growing teams.",
-        "isPopular": true,
-        "trialDays": 7,
-        "features": [
-            {
-                "text": "10,000 quotes / month",
-                "included": true,
-                "bold": true
-            },
-            {
-                "text": "Remove app branding",
-                "included": true
-            },
-            {
-                "text": "Draft order support",
-                "included": true
-            },
-            {
-                "text": "Unlimited notifications",
-                "included": true
-            }
-        ]
-    },
-    {
-        "id": "ULTIMATE",
-        "name": "Ultimate",
-        "price": "$49.99",
-        "period": "/ mo",
-        "description": "For large scale operations.",
-        "trialDays": 14,
-        "features": [
-            {
-                "text": "Everything in Pro, plus:",
-                "included": true,
-                "bold": true
-            },
-            {
-                "text": "Unlimited quotes",
-                "included": true
-            },
-            {
-                "text": "Wholesale features",
-                "included": true
-            },
-            {
-                "text": "Priority 24/7 Support",
-                "included": true,
-                "highlighted": true
-            }
-        ]
-    }
+  {
+    "id": "FREE",
+    "name": "Starter",
+    "price": "Free",
+    "period": "/ month",
+    "description": "Everything you need to start.",
+    "features": [
+      {
+        "text": "50 quotes / month",
+        "included": true
+      },
+      {
+        "text": "Basic email notifications",
+        "included": true
+      },
+      {
+        "text": "Remove app branding",
+        "included": false
+      }
+    ]
+  },
+  {
+    "id": "PRO",
+    "name": "Pro",
+    "price": "$14.99",
+    "period": "/ mo",
+    "description": "Best for growing teams.",
+    "isPopular": true,
+    "trialDays": 7,
+    "features": [
+      {
+        "text": "10,000 quotes / month",
+        "included": true,
+        "bold": true
+      },
+      {
+        "text": "Remove app branding",
+        "included": true
+      },
+      {
+        "text": "Draft order support",
+        "included": true
+      },
+      {
+        "text": "Unlimited notifications",
+        "included": true
+      }
+    ]
+  },
+  {
+    "id": "ULTIMATE",
+    "name": "Ultimate",
+    "price": "$49.99",
+    "period": "/ mo",
+    "description": "For large scale operations.",
+    "trialDays": 14,
+    "features": [
+      {
+        "text": "Everything in Pro, plus:",
+        "included": true,
+        "bold": true
+      },
+      {
+        "text": "Unlimited quotes",
+        "included": true
+      },
+      {
+        "text": "Wholesale features",
+        "included": true
+      },
+      {
+        "text": "Priority 24/7 Support",
+        "included": true,
+        "highlighted": true
+      }
+    ]
+  }
 ]

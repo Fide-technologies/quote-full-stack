@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, BlockStack, Text, Checkbox, TextField } from '@shopify/polaris';
+import { BlockStack, Card, Checkbox, Text, TextField } from '@shopify/polaris';
+import type React from 'react';
 import type { ISettings } from '../../types/settings';
 
 interface Props {
@@ -12,7 +12,9 @@ export const QuoteBehaviorSettings: React.FC<Props> = ({ settings, onChange }) =
     <BlockStack gap="400">
       <Card>
         <BlockStack gap="400">
-          <Text as="h2" variant="headingMd">Submission Logic</Text>
+          <Text as="h2" variant="headingMd">
+            Submission Logic
+          </Text>
           <Checkbox
             label="Allow customers to suggest prices"
             checked={settings.allowPriceSuggestion}
@@ -31,12 +33,12 @@ export const QuoteBehaviorSettings: React.FC<Props> = ({ settings, onChange }) =
             helpText="Shows a 'Request Quote' button on the cart page instead of checkout."
           />
           <TextField
-              label="Redirect after quote submission"
-              value={settings.redirectAfterSubmit}
-              onChange={(v) => onChange('redirectAfterSubmit', v)}
-              autoComplete="off"
-              helpText="Specify a URL to redirect the customer to after they successfully request a quote."
-              placeholder="e.g. /pages/thank-you"
+            label="Redirect after quote submission"
+            value={settings.redirectAfterSubmit}
+            onChange={(v) => onChange('redirectAfterSubmit', v)}
+            autoComplete="off"
+            helpText="Specify a URL to redirect the customer to after they successfully request a quote."
+            placeholder="e.g. /pages/thank-you"
           />
           <Checkbox
             label="Automatically create draft order (unstable)"

@@ -21,7 +21,7 @@
             formData.forEach((value, key) => {
                 const trimmedKey = key.trim();
                 const input = form.querySelector(`[name="${key}"]`);
-                
+
                 // Identify email and phone by type if not already identified
                 if (input && input.type === 'email' && !dataObj.email) {
                     dataObj.email = value;
@@ -33,12 +33,12 @@
                     dataObj.phone = value;
                 }
 
-                if (systemFields.includes(trimmedKey) || 
-                    trimmedKey.toLowerCase() === 'email' || 
+                if (systemFields.includes(trimmedKey) ||
+                    trimmedKey.toLowerCase() === 'email' ||
                     trimmedKey.toLowerCase() === 'phone') {
-                    
-                    const normalizedKey = trimmedKey.toLowerCase() === 'email' ? 'email' : 
-                                         (trimmedKey.toLowerCase() === 'phone' ? 'phone' : trimmedKey);
+
+                    const normalizedKey = trimmedKey.toLowerCase() === 'email' ? 'email' :
+                        (trimmedKey.toLowerCase() === 'phone' ? 'phone' : trimmedKey);
 
                     if (normalizedKey === 'customerEmail') dataObj['email'] = value;
                     else if (normalizedKey === 'customerPhone') dataObj['phone'] = value;
@@ -142,9 +142,6 @@
                     throw err;
                 }
             };
-
-            console.log('[RqApi] Submitting quote with dataObj:', dataObj);
-            console.log('[RqApi] FormData keys:', Array.from(formData.keys()));
 
             try {
                 const response = await fetchWithRetry(`${PROXY_PATH}/quotes`, {

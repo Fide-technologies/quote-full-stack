@@ -181,19 +181,16 @@
 }
 
 .rq-modal-content {
-    background: transparent;
-    /* Changed to transparent to show separation */
-    width: 98%;
-    max-width: 1500px;
-    /* Even larger for expansive layout */
-    max-height: 95vh;
+    background: #ffffff;
+    width: 95%;
+    max-width: 1250px;
+    max-height: 90vh;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
     overflow: hidden;
-    /* Changed to hidden, internal columns will scroll */
-    border-radius: 0;
     position: relative;
-    box-shadow: none;
     transform: scale(0.95);
-    
+    transition: all 0.3s ease;
     z-index: 1;
     display: flex;
     flex-direction: column;
@@ -205,13 +202,10 @@
 
 .rq-modal-close {
     position: absolute;
-    top: 0;
-    right: -60px;
-    /* Move it outside the content cards */
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    top: 20px;
+    right: 20px;
+    background: #f3f4f6;
+    border: none;
     cursor: pointer;
     padding: 0;
     display: flex;
@@ -219,10 +213,10 @@
     justify-content: center;
     z-index: 30;
     border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    color: #fff;
-    
+    width: 40px;
+    height: 40px;
+    color: #111827;
+    transition: all 0.2s ease;
 }
 
 .rq-modal-close:hover {
@@ -258,46 +252,33 @@
 .rq-form-container {
     display: flex;
     flex-direction: row;
-    /* Split layout */
     width: 100%;
     height: 100%;
     overflow: hidden;
     padding: 0;
-    gap: 32px;
-    /* Increased gap */
-    justify-content: center;
-    /* Center the cards */
+    gap: 0;
+    justify-content: flex-start;
 }
 
 .rq-column-left {
     width: 380px;
-    /* Smaller, fixed width for cart */
     flex-shrink: 0;
-    background: #fff;
-    /* Changed to white */
-    border-radius: 16px;
-    /* Card style */
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    border: none;
+    background: transparent;
+    padding: 32px;
     display: flex;
     flex-direction: column;
-    padding: 32px 24px;
+    height: 100%;
     overflow-y: auto;
 }
 
 .rq-column-right {
-    width: 100%;
-    max-width: 800px;
-    /* Condensed form width */
+    flex: 1;
     background: #fff;
-    /* Card style */
-    border-radius: 16px;
-    /* Card style */
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    padding: 32px 40px;
+    padding: 40px 48px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .rq-column-right form {
@@ -855,51 +836,67 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 80px 40px;
+    padding: 60px 40px;
     background: #fff;
-    border-radius: 24px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-    max-width: 550px;
-    width: calc(100% - 40px);
+    width: 100%;
+    min-height: 400px;
+    flex: 1;
     margin: auto;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    
     z-index: 100;
+    animation: rqFadeIn 0.5s ease-out;
 }
 
+@keyframes rqFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
 .rq-success-icon {
-    margin-bottom: 24px;
+    margin-bottom: 32px;
     display: flex;
     justify-content: center;
     align-items: center;
+    background: #f0fdf4;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
     margin-left: auto;
     margin-right: auto;
-    position: relative;
 }
+
+.rq-success-icon svg {
+    color: #16a34a;
+}
+
 
 .rq-success-icon-circle {
     fill: none;
-    stroke: var(--rq-success);
+    stroke: #16a34a;
     stroke-width: 2;
     stroke-dasharray: 63;
     stroke-dashoffset: 63;
-    
+    animation: rqDrawCircle 0.6s ease-out forwards;
 }
 
 .rq-success-icon-check {
     fill: none;
-    stroke: var(--rq-success);
+    stroke: #16a34a;
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-dasharray: 12;
     stroke-dashoffset: 12;
-    
+    animation: rqDrawCheck 0.3s ease-out 0.6s forwards;
 }
+
+@keyframes rqDrawCircle {
+    to { stroke-dashoffset: 0; }
+}
+
+@keyframes rqDrawCheck {
+    to { stroke-dashoffset: 0; }
+}
+
 
 
 
@@ -915,8 +912,6 @@
     margin: 0 0 16px 0;
     line-height: 1.2;
     word-break: break-word;
-    opacity: 0;
-    
 }
 
 .rq-success-screen p {
@@ -924,16 +919,12 @@
     color: #6d7175;
     margin: 0 0 32px 0;
     line-height: 1.6;
-    opacity: 0;
-    
 }
 
 .rq-success-screen .rq-submit-btn {
     width: auto;
     min-width: 220px;
     padding: 0 40px;
-    opacity: 0;
-    
 }
 
 

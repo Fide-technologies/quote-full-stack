@@ -41,19 +41,34 @@ export interface ISettings {
     customerEmailEnabled: boolean;
     emailTemplate: string;
 
-    // 8. Form Display Settings (Synced from Form Builder)
+    // 8. SMTP Settings (Non-sensitive)
+    smtpEnabled: boolean;
+    smtpProvider: string;
+    smtpHost: string;
+    smtpPort: number;
+    smtpSecure: boolean;
+    smtpFrom: string;
+
+    // 9. Form Display Settings (Synced from Form Builder)
     title?: string;
     description?: string;
     successTitle?: string;
     successMessage?: string;
 
-    // Legacy support (optional, if you want to keep showOnAll for a while)
+    // Legacy support
     showOnAll?: boolean;
+}
+
+export interface IPrivateSettings {
+    smtpUser?: string;
+    smtpPass?: string;
 }
 
 export interface ISettingsService {
     getSettings(session: Session): Promise<ISettings>;
+    getPrivateSettings(session: Session): Promise<IPrivateSettings>;
     updateSettings(session: Session, settings: ISettings): Promise<void>;
+    updatePrivateSettings(session: Session, settings: IPrivateSettings): Promise<void>;
     ensureMetafieldDefinitions(session: Session): Promise<void>;
     checkAppEmbedStatus(session: Session): Promise<{ isEmbedded: boolean; themeId: string }>;
 }

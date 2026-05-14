@@ -2,7 +2,7 @@ export const APP_DEFAULTS = {
     CURRENCY_CODE: "USD",
     QUOTE_ITEM_TITLE: "Quote Item",
     QUOTE_AMOUNT: "0.00",
-    EMAIL_FROM: "fidetechonologies@gmail.com",
+    EMAIL_FROM: "udhay@fidelabs.io",
     EMAIL_SENDER_NAME: "Fide Technologies",
 };
 
@@ -102,12 +102,32 @@ export const SETTINGS_DEFAULTS = {
         adminEmail: "",
         customerEmailEnabled: true,
         emailTemplate: "Thank you for your quote request! We will get back to you soon.",
+        smtpEnabled: false,
+        smtpProvider: "google",
+        smtpHost: "smtp.gmail.com",
+        smtpPort: 587,
+        smtpSecure: false,
+        smtpFrom: "",
         title: "Submit Your Quote Request",
         description: "Fill in your details and we'll get back to you shortly",
         successTitle: "Quote Requested Successfully!",
         successMessage: "Thank you for your request. Our team will review your quote and get back to you shortly.",
     },
+    PRIVATE_KEY: "private_config",
 };
+
+export const SMTP_PROVIDER_PRESETS = [
+    { label: "Gmail / Google Workspace", value: "google", host: "smtp.gmail.com", port: 587, secure: false },
+    { label: "Outlook / Office 365", value: "outlook", host: "smtp.office365.com", port: 587, secure: false },
+    { label: "Zoho Mail", value: "zoho", host: "smtp.zoho.com", port: 587, secure: false },
+    { label: "SendGrid", value: "sendgrid", host: "smtp.sendgrid.net", port: 587, secure: false },
+    { label: "Brevo (formerly Sendinblue)", value: "brevo", host: "smtp-relay.brevo.com", port: 587, secure: false },
+    { label: "Mailgun", value: "mailgun", host: "smtp.mailgun.org", port: 587, secure: false },
+    { label: "Amazon SES", value: "ses", host: "email-smtp.us-east-1.amazonaws.com", port: 587, secure: false },
+    { label: "Elastic Email", value: "elastic", host: "smtp.elasticemail.com", port: 2525, secure: false },
+    { label: "Netcore / Pepipost", value: "netcore", host: "smtp.pepipost.com", port: 587, secure: false },
+    { label: "Custom SMTP", value: "custom", host: "", port: 587, secure: false },
+];
 
 export const SHOPIFY_DEFAULTS = {
     PRODUCT_GID_PREFIX: "gid://shopify/Product/",

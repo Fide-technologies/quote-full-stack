@@ -1,5 +1,7 @@
-import { APP_DEFAULTS, EMAIL_SUBJECTS, PlanType } from "@/constants";
-import type { IEmailService, IMerchantService, IPlanService } from "@/interfaces";
+import { shopify, sessionStorage } from "@/config";
+import { APP_DEFAULTS, EMAIL_SUBJECTS, PlanType, SETTINGS_DEFAULTS } from "@/constants";
+import type { IEmailService, IMerchantService, IPlanService, ISettings } from "@/interfaces";
+import type { IEmailConfigData, IEmailConfigService } from "@/interfaces";
 import { TYPES } from "@/types";
 import type { MerchantDocument, QuoteDocument } from "@/types";
 import { logger } from "@/utils/logger";
@@ -14,10 +16,9 @@ export class EmailService implements IEmailService {
     constructor(
         @inject(TYPES.IMerchantService) private merchantService: IMerchantService,
         @inject(TYPES.IPlanService) private planService: IPlanService,
+        @inject(TYPES.IEmailConfigService) private emailConfigService: IEmailConfigService,
     ) {
-        logger.debug(
-            `[EmailService] Initializing. SMTP_USER: ${env.SMTP_USER ? "Set" : "Missing"}, SMTP_PASS: ${env.SMTP_PASS ? "Set" : "Missing"}`,
-        );
+        logger.debug("[EmailService] Initializing transporter...");
 
         if (env.SMTP_USER && env.SMTP_PASS) {
             this.transporter = nodemailer.createTransport({
@@ -36,36 +37,94 @@ export class EmailService implements IEmailService {
     }
 
     async sendQuoteNotification(shop: string, quote: QuoteDocument): Promise<void> {
-        // Guard against missing transporter
-        if (!this.transporter) {
+        const merchant: MerchantDocument | null = await this.merchantService.getMerchantByShop(shop);
+        if (!merchant) {
+            logger.error(`[EmailService] Merchant not found for shop: ${shop}`);
+            return;
+        }
+
+        const sessions = await sessionStorage.findSessionsByShop(shop);
+        if (!sessions || sessions.length === 0 || !sessions[0]) {
+            logger.warn(`[EmailService] No active sessions found for shop: ${shop}. Falling back to default SMTP.`);
+            const transporter = await this.getTransporter(SETTINGS_DEFAULTS.DEFAULTS as unknown as IEmailConfigData);
+            if (transporter) {
+                await this.sendToMerchant(merchant.email as string, quote, transporter, SETTINGS_DEFAULTS.DEFAULTS as unknown as IEmailConfigData);
+            }
+            return;
+        }
+        const session = sessions[0];
+        const emailConfig = await this.emailConfigService.getConfig(session);
+
+        const transporter = await this.getTransporter(emailConfig);
+
+        if (!transporter) {
             logger.warn(
-                "[EmailService] Quote created but email notifications are skipped because SMTP_USER or SMTP_PASS is not set.",
+                `[EmailService] Quote created but email notifications are skipped for ${shop} because no SMTP is configured.`,
             );
             return;
         }
 
         try {
-            const merchant: MerchantDocument | null = await this.merchantService.getMerchantByShop(shop);
-            if (!merchant) {
-                logger.error(`[EmailService] Merchant not found for shop: ${shop}`);
-                return;
-            }
-
             const plan = await this.planService.getMerchantPlan(shop);
             const isPro = plan?.name === PlanType.PRO;
 
-            // MERCHANT NOTIFICATION (Always sent, no plan limits)
-            await this.sendToMerchant(merchant.email as string, quote);
+            await this.sendToMerchant(merchant.email as string, quote, transporter, emailConfig);
 
-            // CUSTOMER CONFIRMATION (Always sent, no plan limits)
-            await this.sendToCustomer(quote.customerEmail, quote, isPro);
+            await this.sendToCustomer(quote.customerEmail, quote, isPro, transporter, emailConfig);
         } catch (error) {
             logger.error("[EmailService] Failed to send quote notification:", error);
         }
     }
 
+    async testSmtpConnection(publicSettings: Partial<IEmailConfigData>, privateSettings: Partial<IEmailConfigData>): Promise<boolean> {
+        const config = { ...publicSettings, ...privateSettings } as IEmailConfigData;
+        const transporter = await this.getTransporter(config);
+        if (!transporter) return false;
+
+        try {
+            await transporter.verify();
+
+            // Send a test email
+            const mailOptions = {
+                from: config.smtpFrom || env.SMTP_FROM || APP_DEFAULTS.EMAIL_FROM,
+                to: config.adminEmail || env.SMTP_FROM || APP_DEFAULTS.EMAIL_FROM,
+                subject: "SMTP Test Connection - Success",
+                text: "This is a test email to verify your SMTP configuration. If you received this, your settings are correct!",
+            };
+
+            await transporter.sendMail(mailOptions);
+            return true;
+        } catch (error) {
+            logger.error("[EmailService] SMTP Verification failed:", error);
+            throw error;
+        }
+    }
+
+    private async getTransporter(config: IEmailConfigData): Promise<nodemailer.Transporter | undefined> {
+        if (config.smtpEnabled && config.smtpHost && config.smtpUser && config.smtpPass) {
+            return nodemailer.createTransport({
+                host: config.smtpHost,
+                port: config.smtpPort,
+                secure: config.smtpSecure,
+                auth: {
+                    user: config.smtpUser,
+                    pass: config.smtpPass,
+                },
+            });
+        }
+
+        // Fallback to global
+        return this.transporter;
+    }
+
     async sendQuoteAcceptance(quote: QuoteDocument, price: number, quantity: number, message: string): Promise<void> {
-        if (!this.transporter) {
+        const sessions = await sessionStorage.findSessionsByShop(quote.shop);
+        if (!sessions || sessions.length === 0 || !sessions[0]) return;
+        const session = sessions[0];
+        const emailConfig = await this.emailConfigService.getConfig(session);
+        const transporter = await this.getTransporter(emailConfig);
+
+        if (!transporter) {
             logger.warn("[EmailService] Quote acceptance email skipped: Transporter missing.");
             return;
         }
@@ -75,7 +134,7 @@ export class EmailService implements IEmailService {
             const storeName = this.getStoreDisplayName(merchant, quote.shop);
 
             const mailOptions = {
-                from: `"${APP_DEFAULTS.EMAIL_SENDER_NAME}" <${env.SMTP_FROM || APP_DEFAULTS.EMAIL_FROM}>`,
+                from: emailConfig.smtpFrom || `"${APP_DEFAULTS.EMAIL_SENDER_NAME}" <${env.SMTP_FROM || APP_DEFAULTS.EMAIL_FROM}>`,
                 to: quote.customerEmail,
                 subject: `Accepted Quote Request - ${quote.productTitle}`,
                 html: `
@@ -103,7 +162,7 @@ export class EmailService implements IEmailService {
                 `,
             };
 
-            await this.transporter.sendMail(mailOptions);
+            await transporter.sendMail(mailOptions);
             logger.info(`[EmailService] Acceptance email sent to ${quote.customerEmail} for quote ${quote._id}`);
         } catch (error) {
             logger.error("[EmailService] Failed to send quote acceptance email:", error);
@@ -111,7 +170,13 @@ export class EmailService implements IEmailService {
     }
 
     async sendQuoteRejection(quote: QuoteDocument, message: string): Promise<void> {
-        if (!this.transporter) {
+        const sessions = await sessionStorage.findSessionsByShop(quote.shop);
+        if (!sessions || sessions.length === 0 || !sessions[0]) return;
+        const session = sessions[0];
+        const emailConfig = await this.emailConfigService.getConfig(session);
+        const transporter = await this.getTransporter(emailConfig);
+
+        if (!transporter) {
             logger.warn("[EmailService] Quote rejection email skipped: Transporter missing.");
             return;
         }
@@ -121,7 +186,7 @@ export class EmailService implements IEmailService {
             const storeName = this.getStoreDisplayName(merchant, quote.shop);
 
             const mailOptions = {
-                from: `"${APP_DEFAULTS.EMAIL_SENDER_NAME}" <${env.SMTP_FROM || APP_DEFAULTS.EMAIL_FROM}>`,
+                from: emailConfig.smtpFrom || `"${APP_DEFAULTS.EMAIL_SENDER_NAME}" <${env.SMTP_FROM || APP_DEFAULTS.EMAIL_FROM}>`,
                 to: quote.customerEmail,
                 subject: `Update regarding your Quote Request - ${quote.productTitle}`,
                 html: `
@@ -150,41 +215,37 @@ export class EmailService implements IEmailService {
                 `,
             };
 
-            await this.transporter.sendMail(mailOptions);
+            await transporter.sendMail(mailOptions);
             logger.info(`[EmailService] Rejection email sent to ${quote.customerEmail} for quote ${quote._id}`);
         } catch (error) {
             logger.error("[EmailService] Failed to send quote rejection email:", error);
         }
     }
 
-    private async sendToMerchant(merchantEmail: string, quote: QuoteDocument) {
-        if (!this.transporter) return;
-
+    private async sendToMerchant(merchantEmail: string, quote: QuoteDocument, transporter: nodemailer.Transporter, emailConfig: IEmailConfigData) {
         const mailOptions = {
-            from: `"${APP_DEFAULTS.EMAIL_SENDER_NAME}" <${env.SMTP_FROM || APP_DEFAULTS.EMAIL_FROM}>`,
-            to: merchantEmail,
+            from: emailConfig.smtpFrom || `"${APP_DEFAULTS.EMAIL_SENDER_NAME}" <${env.SMTP_FROM || APP_DEFAULTS.EMAIL_FROM}>`,
+            to: emailConfig.adminEmail || merchantEmail,
             subject: EMAIL_SUBJECTS.NEW_QUOTE(quote.customerName || ""),
             html: this.getMerchantTemplate(quote),
         };
 
-        await this.transporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions);
         logger.info(`[EmailService] Notification sent to merchant: ${merchantEmail}`);
     }
 
-    private async sendToCustomer(customerEmail: string, quote: QuoteDocument, isPro: boolean) {
-        if (!this.transporter) return;
-
+    private async sendToCustomer(customerEmail: string, quote: QuoteDocument, isPro: boolean, transporter: nodemailer.Transporter, emailConfig: IEmailConfigData) {
         const merchant = await this.merchantService.getMerchantByShop(quote.shop);
         const storeName = this.getStoreDisplayName(merchant, quote.shop);
 
         const mailOptions = {
-            from: `"${storeName}" <${env.SMTP_FROM || APP_DEFAULTS.EMAIL_FROM}>`,
+            from: emailConfig.smtpFrom || `"${storeName}" <${env.SMTP_FROM || APP_DEFAULTS.EMAIL_FROM}>`,
             to: customerEmail,
             subject: EMAIL_SUBJECTS.CUSTOMER_CONFIRMATION,
             html: this.getCustomerTemplate(quote, isPro, storeName),
         };
 
-        await this.transporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions);
         logger.info(`[EmailService] Confirmation sent to customer: ${customerEmail}`);
     }
 
@@ -246,12 +307,12 @@ export class EmailService implements IEmailService {
 
     private getStoreDisplayName(merchant: MerchantDocument | null, shop: string): string {
         if (merchant?.name) return merchant.name;
-        
+
         // Fallback: clean up the .myshopify.com URL
         if (!shop) return "Our Store";
-        
+
         const shopHandle = shop.split(".")[0] || "Our Store";
-        
+
         return shopHandle
             .replace(/-/g, " ")
             .split(" ")

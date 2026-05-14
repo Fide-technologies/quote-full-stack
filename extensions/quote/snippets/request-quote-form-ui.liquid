@@ -1,3 +1,4 @@
+{% # theme-check-disable OrphanedSnippet %}
 {%- assign block_id = block_id | default: 'global' -%}
 <div id="rqModal-{{ block_id }}" class="rq-modal" aria-hidden="true" role="dialog">
   <div id="rq-app-root-{{ block_id }}" data-shop="{{ shop.permanent_domain }}" style="display:none;"></div>
@@ -87,6 +88,14 @@
       <h2 id="rq-success-title-{{ block_id }}" style="font-size: 28px; margin-bottom: 12px; color: var(--rq-text);">
         {{ config.successTitle | default: 'Quote Requested Successfully!' }}
       </h2>
+      
+      <div id="rq-success-variant-row-{{ block_id }}" style="display: none; margin-bottom: 8px;">
+          <span style="color: #6d7175;">Product: </span>
+          <span id="rq-success-product-{{ block_id }}" style="font-weight: 600; color: var(--rq-text);"></span>
+          <span style="color: #6d7175; margin-left: 8px;">Variant: </span>
+          <span id="rq-success-variant-{{ block_id }}" style="font-weight: 600; color: var(--rq-text);"></span>
+      </div>
+
       <p
         id="rq-success-desc-{{ block_id }}"
         style="font-size: 16px; color: #6d7175; margin-bottom: 32px; max-width: 500px; margin-left: auto; margin-right: auto;"

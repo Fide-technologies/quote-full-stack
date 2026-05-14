@@ -25,6 +25,8 @@ const merchantSchema = new Schema<IMerchant>(
             quotesUsed: { type: Number, default: 0 },
             quotaPeriodStart: { type: Date, default: null },
         },
+        settings: { type: Schema.Types.Mixed },
+        privateSettings: { type: Schema.Types.Mixed },
         installedAt: { type: Date, default: Date.now },
     },
     { timestamps: true },

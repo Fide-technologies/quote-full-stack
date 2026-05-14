@@ -1,4 +1,5 @@
 import type { SubscriptionStatus } from "@/constants";
+import type { IPrivateSettings, ISettings } from "../interfaces/services/ISettingsService";
 import type { HydratedDocument, Types } from "mongoose";
 
 export interface IMerchantUsage {
@@ -17,6 +18,8 @@ export interface IMerchant {
     isActive: boolean;
     planId?: Types.ObjectId;
     usage: IMerchantUsage;
+    settings?: ISettings;
+    privateSettings?: IPrivateSettings;
     installedAt: Date;
     createdAt: Date;
     updatedAt: Date;

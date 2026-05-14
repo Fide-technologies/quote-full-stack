@@ -1,38 +1,37 @@
-
 export interface QuoteCustomerDetailsProps {
-    firstName: string | null | undefined;
-    lastName: string | null | undefined;
-    customerEmail: string | null | undefined;
-    phone: string | null | undefined;
+  firstName: string | null | undefined;
+  lastName: string | null | undefined;
+  customerEmail: string | null | undefined;
+  phone: string | null | undefined;
 }
 
 export interface QuoteAddressDetailsProps {
-    address1?: string | null | undefined;
-    address2?: string | null | undefined;
-    city?: string | null | undefined;
-    district?: string | null | undefined;
-    state?: string | null | undefined;
-    pincode?: string | null | undefined;
-    country?: string | null | undefined;
+  address1?: string | null | undefined;
+  address2?: string | null | undefined;
+  city?: string | null | undefined;
+  district?: string | null | undefined;
+  state?: string | null | undefined;
+  pincode?: string | null | undefined;
+  country?: string | null | undefined;
 }
 
 export interface QuoteProductDetailsProps {
-    productTitle: string;
-    variantTitle: string | null | undefined;
-    quantity: number;
-    featuredImage: { url: string; altText: string } | null | undefined;
+  productTitle: string;
+  variantTitle: string | null | undefined;
+  quantity: number;
+  featuredImage: { url: string; altText: string } | null | undefined;
 }
 
 export interface QuoteMessageProps {
-    message: string | null | undefined;
+  message: string | null | undefined;
 }
 
 export interface QuoteDraftOrderInfoProps {
-    draftOrderId: string | number | null | undefined;
-    draftOrderUrl: string | null | undefined;
+  draftOrderId: string | number | null | undefined;
+  draftOrderUrl: string | null | undefined;
 }
 
 export interface QuoteSystemInfoProps {
-    status: string;
-    createdAt: string;
+  status: string;
+  createdAt: string;
 }

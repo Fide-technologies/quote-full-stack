@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { getDashboardStats, type DashboardStats } from '../api/dashboard';
+import { type DashboardStats, getDashboardStats } from '../api/dashboard';
 
 export function useDashboardStats() {
-    return useQuery<DashboardStats>({
-        queryKey: ['dashboard-stats'],
-        queryFn: getDashboardStats,
-        refetchOnWindowFocus: true,
-    });
+  return useQuery<DashboardStats>({
+    queryKey: ['dashboard-stats'],
+    queryFn: getDashboardStats,
+    refetchOnWindowFocus: true,
+  });
 }
